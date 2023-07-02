@@ -6,9 +6,7 @@ public class CardScript : MonoBehaviour
     public GameObject Card;
     private bool IsDragging = false;
     private Vector2 InitialPosition;
-    private bool IsHoveringCell = false;
     private Transform currentCell;
-
 
     public string Name;
     public string Class;
@@ -23,7 +21,6 @@ public class CardScript : MonoBehaviour
     public int magic;
     public int range;
     public int prio;
-
     private void Start()
     {
         Name = Race + " " + Class;
@@ -31,38 +28,84 @@ public class CardScript : MonoBehaviour
 
     private void Update()
     {
+        // Create a raycast
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.zero);
+
+        if (hit.collider != null)
+        {
+            // If the raycast hits a card in the playerArea, the card should get a little bigger
+            var cardScript = hit.collider.gameObject.GetComponent<CardScript>();
+            if (cardScript != null && cardScript.transform.parent != null)
+            {
+                var parentName = cardScript.transform.parent.gameObject.name;
+                if (parentName == "PlayerArea")
+                {
+                    // transform.localScale = new Vector3(1.2f, 1.2f, 1f);
+                }
+            }
+        }
+        else
+        {
+            // When the raycast stops hitting the card, it should go back to its original size
+            transform.localScale = Vector3.one;
+        }
+
         if (IsDragging)
         {
+            // While dragging the card, move it with the mouse
             transform.position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
 
-            // Check if the card is hovering over a cell
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.zero);
             if (hit.collider != null)
             {
-                var cell = hit.collider.transform;
-                if (cell != currentCell)
+                // When the card collides with a cell, the cell image creates borders
+                if (hit.collider.gameObject.TryGetComponent<CellScript>(out var cellScript))
                 {
-                    // Reset previous cell's color if any
-                    if (currentCell != null)
-                    {
-                        var previousCellImage = currentCell.GetComponent<Image>();
-                        previousCellImage.color = Color.white;
-                    }
+                    // Set the border color or change opacity to indicate the collision
+                    // For example, you can set the border color to black:
+                    cellScript.SetBorderColor(Color.black);
 
-                    // Set current cell's color
-                    var cellImage = cell.GetComponent<Image>();
-                    cellImage.color = Color.yellow;
-                    currentCell = cell;
+                    // Shrink the card to fit the cell size
+                    ResizeCardToCell(hit.collider.gameObject);
                 }
             }
             else if (currentCell != null)
             {
-                // Reset cell's color if card is not hovering over any cell
-                var cellImage = currentCell.GetComponent<Image>();
-                cellImage.color = Color.white;
+                // If the card stops colliding with a cell, the cell image returns to the original color
+                if (currentCell.TryGetComponent<CellScript>(out var cellScript))
+                {
+                    cellScript.ResetBorderColor();
+                }
+
+                // Reset the card size to the original
+                ResetCardSize();
                 currentCell = null;
             }
         }
+    }
+
+    private void ResizeCardToCell(GameObject cell)
+    {
+        // Shrink the card to fit the cell size
+        var cellRectTransform = cell.GetComponent<RectTransform>();
+        var cardRectTransform = GetComponent<RectTransform>();
+
+        // Set the card size to fit the cell size while maintaining the original proportions
+        float cellWidth = cellRectTransform.rect.width;
+        float cellHeight = cellRectTransform.rect.height;
+        float cardWidth = cardRectTransform.rect.width;
+        float cardHeight = cardRectTransform.rect.height;
+
+        float scaleX = cellWidth / cardWidth;
+        float scaleY = cellHeight / cardHeight;
+
+        float scale = Mathf.Min(scaleX, scaleY);
+        transform.localScale = new Vector3(scale, scale, 1f);
+    }
+
+    private void ResetCardSize()
+    {
+        // Reset the card size to the original
+        transform.localScale = Vector3.one;
     }
 
     public void StartDrag()
@@ -80,7 +123,7 @@ public class CardScript : MonoBehaviour
         if (currentCell != null)
         {
             // Set the card's parent to the cell
-            transform.SetParent(currentCell, false);
+            transform.SetParent(currentCell.transform, false);
             transform.localPosition = Vector3.zero;
         }
         else
@@ -89,5 +132,4 @@ public class CardScript : MonoBehaviour
             transform.position = InitialPosition;
         }
     }
-
 }
