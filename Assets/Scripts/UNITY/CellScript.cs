@@ -1,28 +1,47 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Burst.CompilerServices;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class CellScript : MonoBehaviour
+public class CellScript : MonoBehaviour //, IPointerEnterHandler, IPointerExitHandler
 {
-    private GameObject Cell;
-    private Image Image;
-    private Outline Outline;
+    private Image cellImage;
+    private Outline cellOutline;
+    private bool isCollidingWithCard;
 
     private void Awake()
     {
-        Cell = gameObject;
-        Image = Cell.GetComponent<Image>();
-        Outline = Image.GetComponent<Outline>();
+        cellImage = GetComponent<Image>();
+        cellOutline = GetComponent<Outline>();
     }
 
-    public void ShowBorder()
+    public void ShowOutline()
     {
-        Outline.enabled = true; // Enable the outline component
+        isCollidingWithCard = true;
+        cellOutline.enabled = true;
     }
 
-    public void HideBorder()
+    public void HideOutline()
     {
-        Outline.enabled = false; // Disable the outline component
+        isCollidingWithCard = false;
+        cellOutline.enabled = false;
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Card"))
+        {
+            ShowOutline();
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("Card"))
+        {
+            HideOutline();
+        }
     }
 }

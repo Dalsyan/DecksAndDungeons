@@ -296,6 +296,14 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8778690784946967829, guid: f9ada52084a99254fbddb9091e70b7c0, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8778690784946967829, guid: f9ada52084a99254fbddb9091e70b7c0, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8778690784946967830, guid: f9ada52084a99254fbddb9091e70b7c0, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -383,6 +391,10 @@ PrefabInstance:
     - target: {fileID: 8778690784946967831, guid: f9ada52084a99254fbddb9091e70b7c0, type: 3}
       propertyPath: m_Name
       value: EnemyArea
+      objectReference: {fileID: 0}
+    - target: {fileID: 8778690784946967831, guid: f9ada52084a99254fbddb9091e70b7c0, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f9ada52084a99254fbddb9091e70b7c0, type: 3}
@@ -549,7 +561,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.392}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -578,32 +590,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 8778690784946967831, guid: f9ada52084a99254fbddb9091e70b7c0, type: 3}
   m_PrefabInstance: {fileID: 482047383}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1269856066 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5639447075669144275, guid: 6365557cb98c566408c7b24833b3fd80, type: 3}
-  m_PrefabInstance: {fileID: 5639447074289402747}
-  m_PrefabAsset: {fileID: 0}
 --- !u!224 &1383936425 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5639447075669144274, guid: 6365557cb98c566408c7b24833b3fd80, type: 3}
   m_PrefabInstance: {fileID: 5639447074289402747}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1383936431
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1269856066}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0d29a4ede212054baa95b6bb342eaa3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Table: {fileID: 1269856066}
-  CellPrefab: {fileID: 6043044249640348237, guid: 2a9b35e14936dd741b47bb3b6e843c0f, type: 3}
-  Rows: 6
-  Columns: 6
 --- !u!224 &1403634153 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8778690784946967830, guid: f9ada52084a99254fbddb9091e70b7c0, type: 3}
@@ -1102,6 +1093,14 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5639447075669144273, guid: 6365557cb98c566408c7b24833b3fd80, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5639447075669144273, guid: 6365557cb98c566408c7b24833b3fd80, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5639447075669144274, guid: 6365557cb98c566408c7b24833b3fd80, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -1190,6 +1189,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Table
       objectReference: {fileID: 0}
+    - target: {fileID: 5639447075669144275, guid: 6365557cb98c566408c7b24833b3fd80, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: -4670551844896867011, guid: 6365557cb98c566408c7b24833b3fd80, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 6365557cb98c566408c7b24833b3fd80, type: 3}
@@ -1218,11 +1221,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8778690784946967829, guid: f9ada52084a99254fbddb9091e70b7c0, type: 3}
       propertyPath: m_Enabled
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8778690784946967829, guid: f9ada52084a99254fbddb9091e70b7c0, type: 3}
       propertyPath: m_RaycastTarget
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8778690784946967830, guid: f9ada52084a99254fbddb9091e70b7c0, type: 3}
       propertyPath: m_Pivot.x
