@@ -20,40 +20,22 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
     {
         CellImage = GetComponent<Image>();
     }
-
-    private void Update()
+    
+    public void OnPointerEnter(PointerEventData eventData)
     {
-        if (transform.childCount > 0)
+        if (HasCard)
         {
-            HasCard = true;
+            CellImage.color = new Color(1f, 0f, 0f, 0.5f);
         }
         else
         {
-            HasCard = false;
-        }
-    }
-
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        if (WithCard)
-        {
-            if (HasCard)
-            {
-                CellImage.color = new Color(1f, 0f, 0f, 0.5f);
-            }
-            else
-            {
-                CellImage.color = new Color(0f, 1f, 0f, 0.5f);
-            }
+            CellImage.color = new Color(0f, 1f, 0f, 0.5f);
         }
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (WithCard)
-        {
-            CellImage.color = Color.clear;
-        }
+        CellImage.color = Color.clear;
     }
 
     public void OnDrop(PointerEventData eventData)

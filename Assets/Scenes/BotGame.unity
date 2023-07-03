@@ -1077,9 +1077,37 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1826746165}
     m_Modifications:
+    - target: {fileID: 2877858582247740724, guid: 928df424940fb9440a23a87c58a403e4, type: 3}
+      propertyPath: m_CellSize.x
+      value: 232
+      objectReference: {fileID: 0}
+    - target: {fileID: 2877858582247740724, guid: 928df424940fb9440a23a87c58a403e4, type: 3}
+      propertyPath: m_CellSize.y
+      value: 105
+      objectReference: {fileID: 0}
     - target: {fileID: 2877858582247740728, guid: 928df424940fb9440a23a87c58a403e4, type: 3}
       propertyPath: m_Name
       value: Table
+      objectReference: {fileID: 0}
+    - target: {fileID: 2877858582247740730, guid: 928df424940fb9440a23a87c58a403e4, type: 3}
+      propertyPath: m_Color.a
+      value: 0.039215688
+      objectReference: {fileID: 0}
+    - target: {fileID: 2877858582247740730, guid: 928df424940fb9440a23a87c58a403e4, type: 3}
+      propertyPath: m_Color.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2877858582247740730, guid: 928df424940fb9440a23a87c58a403e4, type: 3}
+      propertyPath: m_Color.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2877858582247740730, guid: 928df424940fb9440a23a87c58a403e4, type: 3}
+      propertyPath: m_Color.r
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2877858582247740730, guid: 928df424940fb9440a23a87c58a403e4, type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2877858582589756805, guid: 928df424940fb9440a23a87c58a403e4, type: 3}
       propertyPath: m_Pivot.x
