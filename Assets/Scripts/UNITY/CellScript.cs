@@ -5,36 +5,24 @@ using UnityEngine.UI;
 
 public class CellScript : MonoBehaviour
 {
-    public GameObject Cell;
-    public Image borderImage;
-
-    private Color originalColor;
-    private Color borderColor;
+    private GameObject Cell;
+    private Image Image;
+    private Outline Outline;
 
     private void Awake()
     {
-        originalColor = Cell.GetComponent<Image>().color;
-        ResetBorderColor();
+        Cell = gameObject;
+        Image = Cell.GetComponent<Image>();
+        Outline = Image.GetComponent<Outline>();
     }
 
-    public void SetBorderColor(Color color)
+    public void ShowBorder()
     {
-        borderColor = color;
-        borderImage.color = borderColor;
+        Outline.enabled = true; // Enable the outline component
     }
 
-    public void ResetBorderColor()
+    public void HideBorder()
     {
-        borderImage.color = Color.clear;
-    }
-
-    public void SetCellColor(Color color)
-    {
-        Cell.GetComponent<Image>().color = color;
-    }
-
-    public void ResetCellColor()
-    {
-        Cell.GetComponent<Image>().color = originalColor;
+        Outline.enabled = false; // Disable the outline component
     }
 }

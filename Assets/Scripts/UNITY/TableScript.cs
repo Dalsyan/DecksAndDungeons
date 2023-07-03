@@ -16,16 +16,17 @@ public class TableScript : MonoBehaviour
 
     private void FillTableWithCells()
     {
-        // Get the size of the table
-        Vector3 tableSize = Table.transform.localScale;
+        // Get the size of the cell prefab
+        RectTransform cellRectTransform = CellPrefab.GetComponent<RectTransform>();
+        Vector2 cellSize = cellRectTransform.rect.size;
 
-        // Calculate the size of each cell based on the table's size and number of rows/columns
-        float cellWidth = tableSize.x / Columns;
-        float cellHeight = tableSize.y / Rows;
+        // Calculate the total size of the grid based on the cell size and number of rows/columns
+        float gridWidth = cellSize.x * Columns;
+        float gridHeight = cellSize.y * Rows;
 
-        // Calculate the offset to position the cells at the top-left corner of the table
-        float offsetX = -tableSize.x / 2f + cellWidth / 2f;
-        float offsetY = tableSize.y / 2f - cellHeight / 2f;
+        // Calculate the offset to position the grid at the top-left corner of the table
+        float offsetX = -gridWidth / 2f + cellSize.x / 2f;
+        float offsetY = gridHeight / 2f - cellSize.y / 2f;
 
         // Loop through each row and column to instantiate the cell prefab
         for (int row = 0; row < Rows; row++)
@@ -33,13 +34,13 @@ public class TableScript : MonoBehaviour
             for (int column = 0; column < Columns; column++)
             {
                 // Calculate the position of the cell based on its row and column
-                float posX = offsetX + column * cellWidth;
-                float posY = offsetY - row * cellHeight;
+                float posX = offsetX + column * cellSize.x;
+                float posY = offsetY - row * cellSize.y;
                 Vector3 cellPosition = new Vector3(posX, posY, 0f);
 
                 // Instantiate the cell prefab at the calculated position
-                GameObject cell = Instantiate(CellPrefab, Table.transform);
-                cell.transform.localPosition = cellPosition;
+                var cell = Instantiate(CellPrefab, cellPosition, Quaternion.identity);
+                cell.transform.SetParent(Table.transform, false);
 
                 // Set the name of the cell based on its position
                 cell.name = string.Format("({0}, {1})", row, column);

@@ -21,35 +21,32 @@ public class CardScript : MonoBehaviour
     public int magic;
     public int range;
     public int prio;
+
     private void Start()
     {
         Name = Race + " " + Class;
     }
 
+    private void OnMouseOver()
+    {
+        if (!IsDragging)
+        {
+            transform.localScale = new Vector3(1.2f, 1.2f, 1f); // Increase card size
+        }
+    }
+
+    private void OnMouseExit()
+    {
+        if (!IsDragging)
+        {
+            transform.localScale = Vector3.one; // Reset card size
+        }
+    }
+
     private void Update()
     {
-        // Create a raycast
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.zero);
-
-        if (hit.collider != null)
-        {
-            // If the raycast hits a card in the playerArea, the card should get a little bigger
-            var cardScript = hit.collider.gameObject.GetComponent<CardScript>();
-            if (cardScript != null && cardScript.transform.parent != null)
-            {
-                var parentName = cardScript.transform.parent.gameObject.name;
-                if (parentName == "PlayerArea")
-                {
-                    // transform.localScale = new Vector3(1.2f, 1.2f, 1f);
-                }
-            }
-        }
-        else
-        {
-            // When the raycast stops hitting the card, it should go back to its original size
-            transform.localScale = Vector3.one;
-        }
-
+        var hit = Physics2D.Raycast(transform.position, Vector2.zero);
+        
         if (IsDragging)
         {
             // While dragging the card, move it with the mouse
@@ -60,9 +57,7 @@ public class CardScript : MonoBehaviour
                 // When the card collides with a cell, the cell image creates borders
                 if (hit.collider.gameObject.TryGetComponent<CellScript>(out var cellScript))
                 {
-                    // Set the border color or change opacity to indicate the collision
-                    // For example, you can set the border color to black:
-                    cellScript.SetBorderColor(Color.black);
+                    cellScript.ShowBorder(); // Show the border of the cell
 
                     // Shrink the card to fit the cell size
                     ResizeCardToCell(hit.collider.gameObject);
@@ -73,7 +68,7 @@ public class CardScript : MonoBehaviour
                 // If the card stops colliding with a cell, the cell image returns to the original color
                 if (currentCell.TryGetComponent<CellScript>(out var cellScript))
                 {
-                    cellScript.ResetBorderColor();
+                    cellScript.HideBorder(); // Hide the border of the cell
                 }
 
                 // Reset the card size to the original
@@ -82,7 +77,7 @@ public class CardScript : MonoBehaviour
             }
         }
     }
-
+    
     private void ResizeCardToCell(GameObject cell)
     {
         // Shrink the card to fit the cell size
@@ -123,7 +118,7 @@ public class CardScript : MonoBehaviour
         if (currentCell != null)
         {
             // Set the card's parent to the cell
-            transform.SetParent(currentCell.transform, false);
+            transform.SetParent(currentCell.transform, true);
             transform.localPosition = Vector3.zero;
         }
         else

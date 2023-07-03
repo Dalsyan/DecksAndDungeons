@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5639447075669144274}
   - component: {fileID: 5639447075669144272}
   - component: {fileID: 5639447075669144273}
-  - component: {fileID: -4670551844896867011}
+  - component: {fileID: 4113345637265053656}
   m_Layer: 5
   m_Name: Table
   m_TagString: Untagged
@@ -77,7 +77,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &-4670551844896867011
+--- !u!114 &4113345637265053656
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -86,10 +86,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 5639447075669144275}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8d72e9550e0756e4f9a5c8317f7fd25d, type: 3}
+  m_Script: {fileID: 11500000, guid: d0d29a4ede212054baa95b6bb342eaa3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridSizeX: 6
-  gridSizeY: 6
-  Cell: {fileID: 6043044249640348237, guid: 2a9b35e14936dd741b47bb3b6e843c0f, type: 3}
-  cellSize: {x: 0, y: 0}
+  Table: {fileID: 5639447075669144275}
+  CellPrefab: {fileID: 6043044249640348237, guid: 2a9b35e14936dd741b47bb3b6e843c0f, type: 3}
+  Rows: 6
+  Columns: 6

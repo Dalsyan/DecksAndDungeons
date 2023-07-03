@@ -588,7 +588,7 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 5639447075669144274, guid: 6365557cb98c566408c7b24833b3fd80, type: 3}
   m_PrefabInstance: {fileID: 5639447074289402747}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1383936428
+--- !u!114 &1383936431
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1172,7 +1172,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5639447075669144274, guid: 6365557cb98c566408c7b24833b3fd80, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -0.0015258
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5639447075669144274, guid: 6365557cb98c566408c7b24833b3fd80, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
