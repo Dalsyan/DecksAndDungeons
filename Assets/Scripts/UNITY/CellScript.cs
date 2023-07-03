@@ -1,47 +1,65 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Unity.Burst.CompilerServices;
+using Unity.VisualScripting;
+using UnityEditor.PackageManager.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class CellScript : MonoBehaviour //, IPointerEnterHandler, IPointerExitHandler
+public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
 {
-    private Image cellImage;
-    private Outline cellOutline;
-    private bool isCollidingWithCard;
+    public GameObject Card;
+    public bool WithCard = false;
+    public bool HasCard = false;
+
+    private Image CellImage;
 
     private void Awake()
     {
-        cellImage = GetComponent<Image>();
-        cellOutline = GetComponent<Outline>();
+        CellImage = GetComponent<Image>();
     }
 
-    public void ShowOutline()
+    private void Update()
     {
-        isCollidingWithCard = true;
-        cellOutline.enabled = true;
-    }
-
-    public void HideOutline()
-    {
-        isCollidingWithCard = false;
-        cellOutline.enabled = false;
-    }
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.CompareTag("Card"))
+        if (transform.childCount > 0)
         {
-            ShowOutline();
+            HasCard = true;
+        }
+        else
+        {
+            HasCard = false;
         }
     }
 
-    private void OnTriggerExit2D(Collider2D other)
+    public void OnPointerEnter(PointerEventData eventData)
     {
-        if (other.CompareTag("Card"))
+        if (WithCard)
         {
-            HideOutline();
+            if (HasCard)
+            {
+                CellImage.color = new Color(1f, 0f, 0f, 0.5f);
+            }
+            else
+            {
+                CellImage.color = new Color(0f, 1f, 0f, 0.5f);
+            }
         }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (WithCard)
+        {
+            CellImage.color = Color.clear;
+        }
+    }
+
+    public void OnDrop(PointerEventData eventData)
+    {
+        Card = eventData.pointerDrag;
+        CardScript cardScript = Card.GetComponent<CardScript>();
+        cardScript.ParentAfterDrag = transform;
     }
 }

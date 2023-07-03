@@ -37,7 +37,6 @@ public class AgentServer : MonoBehaviour
     public List<Dictionary<string, object>> PlayerCards = new();
     public List<Dictionary<string, object>> EnemyCards = new();
 
-
     void Start()
     {
         Open = true;
