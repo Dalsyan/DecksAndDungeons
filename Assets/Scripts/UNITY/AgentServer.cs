@@ -34,8 +34,12 @@ public class AgentServer : MonoBehaviour
     public GameObject Card;
     public int PlayerHand = 0;
     public int EnemyHand = 0;
+    public int PlayersTable = 0;
+    public int EnemiesTable = 0;
     public List<Dictionary<string, object>> PlayerCards = new();
     public List<Dictionary<string, object>> EnemyCards = new();
+    public List<Dictionary<string, object>> PlayersInTable = new();
+    public List<Dictionary<string, object>> EnemiesInTable = new();
 
     void Start()
     {
@@ -52,7 +56,6 @@ public class AgentServer : MonoBehaviour
             System.Action action = ActionsQueue.Dequeue();
             action.Invoke();
         }
-
     }
 
     private void OnDestroy()
@@ -160,12 +163,9 @@ public class AgentServer : MonoBehaviour
     {
         ActionsQueue.Enqueue(() =>
         {
-            int playerCardCount = 0;
-            int enemyCardCount = 0;
-
             foreach (Dictionary<string, object> cardDataDict in data)
             {
-                if (cardDataDict is not Dictionary<string, object>)
+                if (cardDataDict is null)
                 {
                     UnityEngine.Debug.LogWarning("Invalid card data format.");
                     return;
@@ -177,6 +177,7 @@ public class AgentServer : MonoBehaviour
                 int hp = Convert.ToInt32(cardDataDict["hp"]);
                 int ac = Convert.ToInt32(cardDataDict["ac"]);
                 int str = Convert.ToInt32(cardDataDict["str"]);
+                // int con = Convert.ToInt32(cardDataDict["con"]);
                 int dex = Convert.ToInt32(cardDataDict["dex"]);
                 int magic = Convert.ToInt32(cardDataDict["magic"]);
                 int range = Convert.ToInt32(cardDataDict["range"]);
@@ -184,7 +185,7 @@ public class AgentServer : MonoBehaviour
 
                 if (sender == "player")
                 {
-                    if (playerCardCount < 5)
+                    if (PlayerHand < 5)
                     {
                         var card = Instantiate(Card, new Vector3(0, 0, 0), Quaternion.identity);
                         card.GetComponent<CardScript>().Owner = sender;
@@ -195,11 +196,12 @@ public class AgentServer : MonoBehaviour
                         card.GetComponent<CardScript>().hp = hp;
                         card.GetComponent<CardScript>().ac = ac;
                         card.GetComponent<CardScript>().str = str;
+                        // card.GetComponent<CardScript>().con = con;
                         card.GetComponent<CardScript>().dex = dex;
                         card.GetComponent<CardScript>().magic = magic;
                         card.GetComponent<CardScript>().range = range;
                         card.GetComponent<CardScript>().prio = prio;
-                        playerCardCount++;
+                        PlayerHand++;
                     }
                     else
                     {
@@ -211,6 +213,7 @@ public class AgentServer : MonoBehaviour
                             ["hp"] = hp,
                             ["ac"] = ac,
                             ["str"] = str,
+                            // ["con"] = con,
                             ["dex"] = dex,
                             ["magic"] = magic,
                             ["range"] = range,
@@ -221,7 +224,7 @@ public class AgentServer : MonoBehaviour
                 }
                 else if (sender == "enemy")
                 {
-                    if (enemyCardCount < 5)
+                    if (EnemyHand < 5)
                     {
                         var card = Instantiate(Card, new Vector3(0, 0, 0), Quaternion.identity);
                         card.GetComponent<CardScript>().Owner = sender;
@@ -232,11 +235,12 @@ public class AgentServer : MonoBehaviour
                         card.GetComponent<CardScript>().hp = hp;
                         card.GetComponent<CardScript>().ac = ac;
                         card.GetComponent<CardScript>().str = str;
+                        // card.GetComponent<CardScript>().con = con;
                         card.GetComponent<CardScript>().dex = dex;
                         card.GetComponent<CardScript>().magic = magic;
                         card.GetComponent<CardScript>().range = range;
                         card.GetComponent<CardScript>().prio = prio;
-                        enemyCardCount++;
+                        EnemyHand++;
                     }
                     else
                     {
@@ -248,6 +252,7 @@ public class AgentServer : MonoBehaviour
                             ["hp"] = hp,
                             ["ac"] = ac,
                             ["str"] = str,
+                            // ["con"] = con,
                             ["dex"] = dex,
                             ["magic"] = magic,
                             ["range"] = range,

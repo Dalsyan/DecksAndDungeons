@@ -11,9 +11,6 @@ using UnityEngine.UI;
 public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
 {
     public GameObject Card;
-    public bool WithCard = false;
-    public bool HasCard = false;
-
     private Image CellImage;
 
     private void Awake()
@@ -23,7 +20,7 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
     
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (HasCard)
+        if (transform.childCount > 0)
         {
             CellImage.color = new Color(1f, 0f, 0f, 0.5f);
         }
@@ -40,8 +37,12 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
 
     public void OnDrop(PointerEventData eventData)
     {
-        Card = eventData.pointerDrag;
-        CardScript cardScript = Card.GetComponent<CardScript>();
-        cardScript.ParentAfterDrag = transform;
+        if (transform.childCount <= 0)
+        {
+            Card = eventData.pointerDrag;
+            var cardImage = Card.GetComponent<Image>();
+            CardScript cardScript = Card.GetComponent<CardScript>();
+            cardScript.ParentAfterDrag = transform;
+        }
     }
 }

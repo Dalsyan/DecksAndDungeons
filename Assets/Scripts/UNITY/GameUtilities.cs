@@ -11,8 +11,6 @@ public class GameUtilities : MonoBehaviour
     public GameObject Card;
     public GameObject PlayerArea;
     public GameObject EnemyArea;
-    public GameObject PlayerDeck;
-    public GameObject EnemyDeck;
     public List<Dictionary<string, object>> PlayerDeckList;
     public List<Dictionary<string, object>> EnemyDeckList;
 
@@ -93,6 +91,11 @@ public class GameUtilities : MonoBehaviour
             enemyCard.GetComponent<CardScript>().range = range;
             enemyCard.GetComponent<CardScript>().prio = prio;
         }
+    }
+
+    public void ClickOnPlayButton()
+    {
+
     }
 
     #endregion

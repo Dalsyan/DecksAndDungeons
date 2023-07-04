@@ -1,3 +1,6 @@
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -7,9 +10,9 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
 {
     public GameObject Card;
     private Image CardImage;
-    private GameObject currentCell;
-    public bool IsDragging = false;
     public Transform ParentAfterDrag;
+    public Vector3 OriginalSize;
+    public AgentServer AgentServer;
 
     public string Name;
     public string Class;
@@ -29,6 +32,8 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     {
         Name = Race + " " + Class;
         CardImage = transform.GetComponent<Image>();
+        OriginalSize = Vector3.one;
+        AgentServer = new AgentServer();
 
         if (Owner == "player")
         {
@@ -47,7 +52,7 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        transform.localScale = Vector3.one;
+        transform.localScale = OriginalSize;
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -59,7 +64,6 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         CardImage.raycastTarget = false;
     }
 
-
     public void OnDrag(PointerEventData eventData)
     {
         transform.position = Input.mousePosition;
@@ -68,6 +72,33 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     public void OnEndDrag(PointerEventData eventData)
     {
         transform.SetParent(ParentAfterDrag);
-        CardImage.raycastTarget = true;
+        CardImage.raycastTarget = true; 
+
+        var card = new Dictionary<string, object>()
+        {
+            ["Name"] = Name,
+            ["class"] = Class,
+            ["race"] = Race,
+            ["level"] = level,
+            ["hp"] = hp,
+            ["ac"] = ac,
+            ["str"] = str,
+            // ["con"] = con,
+            ["dex"] = dex,
+            ["magic"] = magic,
+            ["range"] = range,
+            ["prio"] = prio,
+            ["pos"] = transform.parent.name
+        };
+        if (Owner == "player")
+        {
+            AgentServer.PlayersInTable.Add(card);
+            AgentServer.PlayersTable++;
+        }
+        else
+        {
+            AgentServer.EnemiesInTable.Add(card);
+            AgentServer.EnemiesTable++;
+        }
     }
 }

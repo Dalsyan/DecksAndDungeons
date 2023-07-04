@@ -119,8 +119,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Card: {fileID: 0}
-  WithCard: 0
-  HasCard: 0
 --- !u!114 &-351181312234527750
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -156,7 +154,7 @@ MonoBehaviour:
   m_ChildAlignment: 4
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 232.7, y: 100}
+  m_CellSize: {x: 75, y: 100}
   m_Spacing: {x: 0, y: 105.98}
-  m_Constraint: 0
-  m_ConstraintCount: 2
+  m_Constraint: 2
+  m_ConstraintCount: 1
