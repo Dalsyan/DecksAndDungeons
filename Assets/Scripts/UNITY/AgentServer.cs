@@ -11,6 +11,17 @@ using System;
 
 public class AgentServer : MonoBehaviour
 {
+    private static AgentServer instance;
+    public static AgentServer Instance => instance;
+    public int NumPlayerHand { get; set; }
+    public int NumEnemyHand { get; set; }
+    public int NumPlayerCardsInTable { get; set; }
+    public int NumEnemyCardsInTable { get; set; }
+    public List<Dictionary<string, object>> PlayerDeck { get; set; }
+    public List<Dictionary<string, object>> EnemyDeck { get; set; }
+    public List<Dictionary<string, object>> PlayerCardsInTable { get; set; }
+    public List<Dictionary<string, object>> EnemyCardsInTable { get; set; }
+
     private string Address = "127.0.0.1";
     private int UnityPort = 8000;
     private int SpadePort = 8001;
@@ -22,24 +33,27 @@ public class AgentServer : MonoBehaviour
     private Thread UnityServerThread;
     private Thread UnityReceiverThread;
     private Thread ProcessThread;
-    private Queue<System.Action> ActionsQueue;
+    private Queue<Action> ActionsQueue;
 
     public bool Open;
     public int nClients = 0;
 
     public GameObject PlayerArea;
     public GameObject EnemyArea;
-    public GameObject PlayerDeck;
-    public GameObject EnemyDeck;
     public GameObject Card;
-    public int PlayerHand = 0;
-    public int EnemyHand = 0;
-    public int PlayersTable = 0;
-    public int EnemiesTable = 0;
-    public List<Dictionary<string, object>> PlayerCards = new();
-    public List<Dictionary<string, object>> EnemyCards = new();
-    public List<Dictionary<string, object>> PlayersInTable = new();
-    public List<Dictionary<string, object>> EnemiesInTable = new();
+
+    private void Awake()
+    {
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+    }
 
     void Start()
     {
@@ -47,6 +61,15 @@ public class AgentServer : MonoBehaviour
         ActionsQueue = new Queue<System.Action>();
         OpenCMDThread();
         ListenUnityThread();
+
+        NumPlayerHand = 0;
+        NumEnemyHand = 0;
+        NumPlayerCardsInTable = 0;
+        NumEnemyCardsInTable = 0;
+        PlayerDeck = new List<Dictionary<string, object>>();
+        EnemyDeck = new List<Dictionary<string, object>>();
+        PlayerCardsInTable = new List<Dictionary<string, object>>();
+        EnemyCardsInTable = new List<Dictionary<string, object>>(); 
     }
 
     public void Update()
@@ -185,7 +208,7 @@ public class AgentServer : MonoBehaviour
 
                 if (sender == "player")
                 {
-                    if (PlayerHand < 5)
+                    if (NumPlayerHand < 5)
                     {
                         var card = Instantiate(Card, new Vector3(0, 0, 0), Quaternion.identity);
                         card.GetComponent<CardScript>().Owner = sender;
@@ -201,7 +224,7 @@ public class AgentServer : MonoBehaviour
                         card.GetComponent<CardScript>().magic = magic;
                         card.GetComponent<CardScript>().range = range;
                         card.GetComponent<CardScript>().prio = prio;
-                        PlayerHand++;
+                        NumPlayerHand++;
                     }
                     else
                     {
@@ -219,12 +242,12 @@ public class AgentServer : MonoBehaviour
                             ["range"] = range,
                             ["prio"] = prio
                         };
-                        PlayerCards.Add(cardData);
+                        PlayerDeck.Add(cardData);
                     }
                 }
                 else if (sender == "enemy")
                 {
-                    if (EnemyHand < 5)
+                    if (NumEnemyHand < 5)
                     {
                         var card = Instantiate(Card, new Vector3(0, 0, 0), Quaternion.identity);
                         card.GetComponent<CardScript>().Owner = sender;
@@ -240,7 +263,7 @@ public class AgentServer : MonoBehaviour
                         card.GetComponent<CardScript>().magic = magic;
                         card.GetComponent<CardScript>().range = range;
                         card.GetComponent<CardScript>().prio = prio;
-                        EnemyHand++;
+                        NumEnemyHand++;
                     }
                     else
                     {
@@ -258,7 +281,7 @@ public class AgentServer : MonoBehaviour
                             ["range"] = range,
                             ["prio"] = prio
                         };
-                        EnemyCards.Add(cardData);
+                        EnemyDeck.Add(cardData);
                     }
                 }
                 else

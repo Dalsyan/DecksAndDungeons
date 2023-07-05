@@ -1,6 +1,8 @@
+using Newtonsoft.Json;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using Unity.Burst.CompilerServices;
 using Unity.VisualScripting;
 using UnityEditor.PackageManager.UI;
@@ -12,9 +14,12 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
 {
     public GameObject Card;
     private Image CellImage;
+    public GameObject Server;
+    private AgentServer AgentServer;
 
     private void Awake()
     {
+        AgentServer = Server.GetComponent<AgentServer>();
         CellImage = GetComponent<Image>();
     }
     
@@ -40,9 +45,46 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
         if (transform.childCount <= 0)
         {
             Card = eventData.pointerDrag;
-            var cardImage = Card.GetComponent<Image>();
-            CardScript cardScript = Card.GetComponent<CardScript>();
-            cardScript.ParentAfterDrag = transform;
+            var cardScript = Card.GetComponent<CardScript>();
+
+            var card = new Dictionary<string, object>()
+            {
+                ["Name"] = cardScript.Name,
+                ["class"] = cardScript.Class,
+                ["race"] = cardScript.Race,
+                ["level"] = cardScript.level,
+                ["hp"] = cardScript.hp,
+                ["ac"] = cardScript.ac,
+                ["str"] = cardScript.str,
+                // ["con"] = con,
+                ["dex"] = cardScript.dex,
+                ["magic"] = cardScript.magic,
+                ["range"] = cardScript.range,
+                ["prio"] = cardScript.prio,
+                //["pos"] = transform.name
+            };
+            if (cardScript.Owner == "player")
+            {
+                if (AgentServer.Instance.NumPlayerCardsInTable < 3)
+                {
+                    cardScript.ParentAfterDrag = transform;
+                    AgentServer.Instance.PlayerDeck.Remove(card);
+                    AgentServer.Instance.NumPlayerHand--;
+                    AgentServer.Instance.PlayerCardsInTable.Add(card);
+                    AgentServer.Instance.NumPlayerCardsInTable++;
+                }
+            }
+            else
+            {
+                if (AgentServer.Instance.NumEnemyCardsInTable < 3)
+                {
+                    cardScript.ParentAfterDrag = transform;
+                    AgentServer.Instance.EnemyDeck.Remove(card);
+                    AgentServer.Instance.NumEnemyHand--;
+                    AgentServer.Instance.EnemyCardsInTable.Add(card);
+                    AgentServer.Instance.NumEnemyCardsInTable++;
+                }
+            }
         }
     }
 }

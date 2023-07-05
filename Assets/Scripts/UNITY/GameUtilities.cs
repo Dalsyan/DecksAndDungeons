@@ -7,6 +7,8 @@ public class GameUtilities : MonoBehaviour
 {
     private string Address = "127.0.0.1";
     private int SpadePort = 8001;
+    public GameObject Server;
+    private AgentServer AgentServer;
 
     public GameObject Card;
     public GameObject PlayerArea;
@@ -14,21 +16,19 @@ public class GameUtilities : MonoBehaviour
     public List<Dictionary<string, object>> PlayerDeckList;
     public List<Dictionary<string, object>> EnemyDeckList;
 
-    private AgentServer AgentServer;
-
-
     private void Start()
     {
-        AgentServer = FindObjectOfType<AgentServer>();
-        PlayerDeckList = AgentServer.PlayerCards;
-        EnemyDeckList = AgentServer.EnemyCards;
+        AgentServer = Server.GetComponent<AgentServer>();
+        PlayerDeckList = AgentServer.Instance.PlayerDeck;
+        EnemyDeckList = AgentServer.Instance.EnemyDeck;
     }
 
     #region BUTTONS
     public void ClickOnPlayerDeck()
     {
-        if (PlayerDeckList.Count > 0)
+        if (PlayerDeckList.Count > 0 && AgentServer.Instance.NumPlayerHand < 5)
         {
+            UnityEngine.Debug.Log(AgentServer.Instance.NumPlayerHand < 5);
             var card = PlayerDeckList[0];
             string cclass = card["class"].ToString();
             string race = card["race"].ToString();
@@ -56,12 +56,14 @@ public class GameUtilities : MonoBehaviour
             playerCard.GetComponent<CardScript>().magic = magic;
             playerCard.GetComponent<CardScript>().range = range;
             playerCard.GetComponent<CardScript>().prio = prio;
+
+            AgentServer.Instance.NumPlayerHand++;
         }
     }
 
     public void ClickOnEnemyDeck()
     {
-        if (EnemyDeckList.Count > 0)
+        if (EnemyDeckList.Count > 0 && AgentServer.Instance.NumEnemyHand < 5)
         {
             var card = EnemyDeckList[0];
             string cclass = card["class"].ToString();
@@ -90,6 +92,8 @@ public class GameUtilities : MonoBehaviour
             enemyCard.GetComponent<CardScript>().magic = magic;
             enemyCard.GetComponent<CardScript>().range = range;
             enemyCard.GetComponent<CardScript>().prio = prio;
+
+            AgentServer.Instance.NumEnemyHand++;
         }
     }
 
