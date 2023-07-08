@@ -7,13 +7,9 @@ class OntologyActions:
     def __init__(self, onto = get_ontology("D:\TEMP\dungeons-and-dragons.owx").load()):
         self.onto = onto
 
-    def hand_to_json(self, hand):
-        hand_json = []
-        for ccard in hand:
-            card_json = self.card_to_json(ccard)
-            hand_json.append(card_json)
-
-        return hand_json
+    def search_for_card(self, name):
+        card = self.onto.search(iri = f"*{name}")[0]
+        return card
 
     def deck_to_json(self, cdeck):
         deck_json = []
@@ -27,6 +23,7 @@ class OntologyActions:
     def card_to_json(self, ccard):
         stats = {}
 
+        stats["name"] = ccard.name
         cclass = ccard.hasClass
         stats["class"] = ''.join(filter(str.isalpha, cclass.name))
         crace = ccard.hasRace
@@ -36,10 +33,11 @@ class OntologyActions:
         stats["hp"] = ccard.hp
         stats["ac"] = ccard.ac
         stats["str"] = ccard.str
+        stats["con"] = ccard.con
         stats["dex"] = ccard.dex
+        stats["damage"] = ccard.damage
         stats["magic"] = ccard.magic
         stats["range"] = ccard.range
-        stats["prio"] = ccard.prio
             
         return stats
 
@@ -79,11 +77,12 @@ class OntologyActions:
         
         my_card.level = level
         my_card.hp = (my_card.level * cclass.hp) + self.skill_mods(crace.con)
-        my_card.str = cweapon.str
-        my_card.range = cweapon.range
+        my_card.str = crace.str
+        my_card.con = crace.con
         my_card.dex = crace.dex
+        my_card.damage = cweapon.damage
         my_card.magic = crace.magic
-        my_card.prio = my_card.dex
+        my_card.range = cweapon.range
 
         if len(carmor) == 1:
             my_card.hasArmor = carmor[0]
@@ -149,6 +148,7 @@ class OntologyActions:
         race_list.pop(0)
         crace = random.choice(race_list)
         my_race = crace()
+        my_race.str = self.skill_dices()
         my_race.dex = self.skill_dices()
         my_race.con = self.skill_dices()
         my_race.magic = self.skill_dices()
@@ -159,7 +159,7 @@ class OntologyActions:
 
     def create_weapon(self):
         my_weapon = self.all_weapons()
-        my_weapon.str = random.choice([4,6,8,10,12])
+        my_weapon.damage = random.choice([4,6,8,10,12])
 
         if my_weapon in self.ranged_weapon()[2]:
             my_weapon.range = 3

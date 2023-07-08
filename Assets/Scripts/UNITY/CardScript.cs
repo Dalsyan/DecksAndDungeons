@@ -1,6 +1,3 @@
-using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -13,6 +10,7 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     public Transform ParentAfterDrag;
     public Vector3 OriginalSize;
 
+    public string PublicName;
     public string Name;
     public string Class;
     public string Race;
@@ -23,13 +21,15 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     public int str;
     public int con;
     public int dex;
+    public int damage;
     public int magic;
     public int range;
     public int prio;
+    public string pos;
 
     private void Start()
     {
-        Name = Race + " " + Class;
+        PublicName = Race + " " + Class;
         CardImage = transform.GetComponent<Image>();
         OriginalSize = Vector3.one;
 

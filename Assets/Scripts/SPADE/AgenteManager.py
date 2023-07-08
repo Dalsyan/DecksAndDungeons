@@ -1,7 +1,9 @@
+import json
 import sys
 import socket as s
 import threading as t
 import asyncio
+from owlready2 import *
 
 from spade.agent import Agent
 from spade.behaviour import *
@@ -23,7 +25,6 @@ CARD_ACTIONS = "CARD_ACTIONS"
 GAME_OVER = "GAME_OVER"
 
 class AgentManager(Agent):
-
     async def setup(self):
         self.start_game = False
         self.Agentes = []
@@ -51,6 +52,8 @@ class AgentManager(Agent):
         self.tcp_listener_thread.daemon = True
         self.tcp_listener_thread.start()
 
+        self.lock = t.Lock()
+
         behav = ManagerBehav()
 
         # ESTADOS
@@ -77,24 +80,48 @@ class AgentManager(Agent):
             try:
                 client_socket, address = self.spade_socket.accept()
                 message = client_socket.recv(1024).decode("utf-8")
-
+                
                 if message == "close":
                     print(message)
-                    self.spade_socket.close()
-                    self.unity_socket.close()
-                    self.stop()
-                    sys.exit()
+                    self.close_action(client_socket)
+
                 elif message == "start":
                     print(message)
-                    self.hola()
+                    self.start_action()
+                    client_socket.close()
+
+                else:
+                    try:
+                        message_dict = json.loads(message)
+                        action = message_dict.get("action")
+                        data = message_dict.get("data")
+                        
+                        if action == "createPlayerCard":
+                            self.create_card_action(data)
+                        else:
+                            print("Unknown action:", action)
+                    except json.JSONDecodeError:
+                        print("Invalid message format")
                 
             except Exception as e:
                 print("Error listening for messages:", str(e))
-            finally:
-                client_socket.close()
 
-    def hola(self):
-        self.start_game = True
+    def close_action(self, sock):
+        sock.close()
+        self.spade_socket.close()
+        self.unity_socket.close()
+        self.stop()
+        sys.exit()
+
+    def start_action(self):
+        print("start action")
+        with self.lock:
+            self.start_game = True
+            print(self.start_game)
+
+    def create_card_action(self, data):
+        card = self.actions.search_for_card(data)
+        print(card.name)
 
 class ManagerBehav(FSMBehaviour):        
     async def on_start(self):
@@ -128,11 +155,15 @@ class PrepareDecks(State):
 
 class GameStart(State):
     async def run(self):
-        if self.agent.start_game == False:
-            self.set_next_state(GAME_START)
-        else:
-            print("State TO: PLAY YOUR CARDS")
-            self.set_next_state(PLAYER_PLAY_CARDS)
+        #with self.agent.lock:
+        #if self.agent.start_game == False:
+        #    self.set_next_state(GAME_START)
+        #else:
+        #    print("State: GAME_START")
+        #    print("State TO: PLAY YOUR CARDS")
+        #    self.set_next_state(PLAYER_PLAY_CARDS)
+        time.sleep(30)
+        self.set_next_state(PLAYER_PLAY_CARDS)
 
 class PlayerPlayCards(State):
     async def run(self):

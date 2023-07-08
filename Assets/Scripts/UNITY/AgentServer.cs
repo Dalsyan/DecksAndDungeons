@@ -144,7 +144,7 @@ public class AgentServer : MonoBehaviour
         {
             if (Stream.DataAvailable)
             {
-                var buffer = new byte[1024 * 2];
+                var buffer = new byte[1024 * 3];
                 int bytesRead = Stream.Read(buffer, 0, buffer.Length);
                 string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
@@ -215,17 +215,18 @@ private void CreateDeck(string sender, List<Dictionary<string, object>> data)
                     return;
                 }
 
+                string name = cardDataDict["name"].ToString();
                 string cclass = cardDataDict["class"].ToString();
                 string race = cardDataDict["race"].ToString();
                 int level = Convert.ToInt32(cardDataDict["level"]);
                 int hp = Convert.ToInt32(cardDataDict["hp"]);
                 int ac = Convert.ToInt32(cardDataDict["ac"]);
                 int str = Convert.ToInt32(cardDataDict["str"]);
-                // int con = Convert.ToInt32(cardDataDict["con"]);
+                int con = Convert.ToInt32(cardDataDict["con"]);
                 int dex = Convert.ToInt32(cardDataDict["dex"]);
+                int damage = Convert.ToInt32(cardDataDict["damage"]);
                 int magic = Convert.ToInt32(cardDataDict["magic"]);
                 int range = Convert.ToInt32(cardDataDict["range"]);
-                int prio = Convert.ToInt32(cardDataDict["prio"]);
 
                 if (sender == "player")
                 {
@@ -234,34 +235,38 @@ private void CreateDeck(string sender, List<Dictionary<string, object>> data)
                         var card = Instantiate(Card, new Vector3(0, 0, 0), Quaternion.identity);
                         card.GetComponent<CardScript>().Owner = sender;
                         card.transform.SetParent(PlayerArea.transform, false);
+                        card.GetComponent<CardScript>().Name = name;
                         card.GetComponent<CardScript>().Class = cclass;
                         card.GetComponent<CardScript>().Race = race;
                         card.GetComponent<CardScript>().level = level;
                         card.GetComponent<CardScript>().hp = hp;
                         card.GetComponent<CardScript>().ac = ac;
                         card.GetComponent<CardScript>().str = str;
-                        // card.GetComponent<CardScript>().con = con;
+                        card.GetComponent<CardScript>().con = con;
                         card.GetComponent<CardScript>().dex = dex;
+                        card.GetComponent<CardScript>().damage = damage;
                         card.GetComponent<CardScript>().magic = magic;
                         card.GetComponent<CardScript>().range = range;
-                        card.GetComponent<CardScript>().prio = prio;
+                        card.GetComponent<CardScript>().prio = dex;
                         NumPlayerHand++;
                     }
                     else
                     {
                         Dictionary<string, object> cardData = new()
                         {
+                            ["name"] = name,
                             ["class"] = cclass,
                             ["race"] = race,
                             ["level"] = level,
                             ["hp"] = hp,
                             ["ac"] = ac,
                             ["str"] = str,
-                            // ["con"] = con,
+                            ["con"] = con,
                             ["dex"] = dex,
+                            ["damage"] = damage,
                             ["magic"] = magic,
                             ["range"] = range,
-                            ["prio"] = prio
+                            ["prio"] = dex,
                         };
                         PlayerDeck.Add(cardData);
                     }
@@ -273,34 +278,38 @@ private void CreateDeck(string sender, List<Dictionary<string, object>> data)
                         var card = Instantiate(Card, new Vector3(0, 0, 0), Quaternion.identity);
                         card.GetComponent<CardScript>().Owner = sender;
                         card.transform.SetParent(EnemyArea.transform, false);
+                        card.GetComponent<CardScript>().Name = name;
                         card.GetComponent<CardScript>().Class = cclass;
                         card.GetComponent<CardScript>().Race = race;
                         card.GetComponent<CardScript>().level = level;
                         card.GetComponent<CardScript>().hp = hp;
                         card.GetComponent<CardScript>().ac = ac;
                         card.GetComponent<CardScript>().str = str;
-                        // card.GetComponent<CardScript>().con = con;
+                        card.GetComponent<CardScript>().con = con;
                         card.GetComponent<CardScript>().dex = dex;
+                        card.GetComponent<CardScript>().damage = damage;
                         card.GetComponent<CardScript>().magic = magic;
                         card.GetComponent<CardScript>().range = range;
-                        card.GetComponent<CardScript>().prio = prio;
+                        card.GetComponent<CardScript>().prio = dex;
                         NumEnemyHand++;
                     }
                     else
                     {
                         Dictionary<string, object> cardData = new()
                         {
+                            ["name"] = name,
                             ["class"] = cclass,
                             ["race"] = race,
                             ["level"] = level,
                             ["hp"] = hp,
                             ["ac"] = ac,
                             ["str"] = str,
-                            // ["con"] = con,
+                            ["con"] = con,
                             ["dex"] = dex,
+                            ["damage"] = damage,
                             ["magic"] = magic,
                             ["range"] = range,
-                            ["prio"] = prio
+                            ["prio"] = dex,
                         };
                         EnemyDeck.Add(cardData);
                     }

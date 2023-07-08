@@ -56,13 +56,15 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
                 ["hp"] = cardScript.hp,
                 ["ac"] = cardScript.ac,
                 ["str"] = cardScript.str,
-                // ["con"] = con,
+                ["con"] = cardScript.con,
                 ["dex"] = cardScript.dex,
+                ["damage"] = cardScript.damage,
                 ["magic"] = cardScript.magic,
                 ["range"] = cardScript.range,
-                ["prio"] = cardScript.prio,
-                //["pos"] = transform.name
+                ["prio"] = cardScript.prio
             };
+            var newCard = card;
+            newCard.Add("pos", transform.name);
             if (cardScript.Owner == "player")
             {
                 if (AgentServer.Instance.NumPlayerCardsInTable < 3)
@@ -70,7 +72,7 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
                     cardScript.ParentAfterDrag = transform;
                     AgentServer.Instance.PlayerDeck.Remove(card);
                     AgentServer.Instance.NumPlayerHand--;
-                    AgentServer.Instance.PlayerCardsInTable.Add(card);
+                    AgentServer.Instance.PlayerCardsInTable.Add(newCard);
                     AgentServer.Instance.NumPlayerCardsInTable++;
                 }
             }
@@ -81,7 +83,7 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
                     cardScript.ParentAfterDrag = transform;
                     AgentServer.Instance.EnemyDeck.Remove(card);
                     AgentServer.Instance.NumEnemyHand--;
-                    AgentServer.Instance.EnemyCardsInTable.Add(card);
+                    AgentServer.Instance.EnemyCardsInTable.Add(newCard);
                     AgentServer.Instance.NumEnemyCardsInTable++;
                 }
             }

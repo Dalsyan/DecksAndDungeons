@@ -77,23 +77,25 @@ public class GameUtilities : MonoBehaviour
     {
         if (PlayerDeckList.Count > 0 && AgentServer.Instance.NumPlayerHand < 5)
         {
-            UnityEngine.Debug.Log(AgentServer.Instance.NumPlayerHand < 5);
             var card = PlayerDeckList[0];
+            string name = card["name"].ToString();
             string cclass = card["class"].ToString();
             string race = card["race"].ToString();
             int level = Convert.ToInt32(card["level"]);
             int hp = Convert.ToInt32(card["hp"]);
             int ac = Convert.ToInt32(card["ac"]);
             int str = Convert.ToInt32(card["str"]);
+            int con = Convert.ToInt32(card["con"]);
             int dex = Convert.ToInt32(card["dex"]);
+            int damage = Convert.ToInt32(card["damage"]);
             int magic = Convert.ToInt32(card["magic"]);
             int range = Convert.ToInt32(card["range"]);
-            int prio = Convert.ToInt32(card["prio"]);
             PlayerDeckList.RemoveAt(0);
 
             var playerCard = Instantiate(Card, new Vector3(0, 0, 0), Quaternion.identity);
             playerCard.transform.SetParent(PlayerArea.transform, false);
 
+            playerCard.GetComponent<CardScript>().Name = name;
             playerCard.GetComponent<CardScript>().Class = cclass;
             playerCard.GetComponent<CardScript>().Race = race;
             playerCard.GetComponent<CardScript>().Owner = "player";
@@ -101,10 +103,12 @@ public class GameUtilities : MonoBehaviour
             playerCard.GetComponent<CardScript>().hp = hp;
             playerCard.GetComponent<CardScript>().ac = ac;
             playerCard.GetComponent<CardScript>().str = str;
+            playerCard.GetComponent<CardScript>().con = con;
             playerCard.GetComponent<CardScript>().dex = dex;
+            playerCard.GetComponent<CardScript>().damage = damage;
             playerCard.GetComponent<CardScript>().magic = magic;
             playerCard.GetComponent<CardScript>().range = range;
-            playerCard.GetComponent<CardScript>().prio = prio;
+            playerCard.GetComponent<CardScript>().prio = dex;
 
             AgentServer.Instance.NumPlayerHand++;
         }
@@ -115,21 +119,24 @@ public class GameUtilities : MonoBehaviour
         if (EnemyDeckList.Count > 0 && AgentServer.Instance.NumEnemyHand < 5)
         {
             var card = EnemyDeckList[0];
+            string name = card["name"].ToString();
             string cclass = card["class"].ToString();
             string race = card["race"].ToString();
             int level = Convert.ToInt32(card["level"]);
             int hp = Convert.ToInt32(card["hp"]);
             int ac = Convert.ToInt32(card["ac"]);
             int str = Convert.ToInt32(card["str"]);
+            int con = Convert.ToInt32(card["con"]);
             int dex = Convert.ToInt32(card["dex"]);
+            int damage = Convert.ToInt32(card["damage"]);
             int magic = Convert.ToInt32(card["magic"]);
             int range = Convert.ToInt32(card["range"]);
-            int prio = Convert.ToInt32(card["prio"]);
             EnemyDeckList.RemoveAt(0);
 
             var enemyCard = Instantiate(Card, new Vector3(0, 0, 0), Quaternion.identity);
             enemyCard.transform.SetParent(EnemyArea.transform, false);
 
+            enemyCard.GetComponent<CardScript>().Name = name;
             enemyCard.GetComponent<CardScript>().Class = cclass;
             enemyCard.GetComponent<CardScript>().Race = race;
             enemyCard.GetComponent<CardScript>().Owner = "enemy";
@@ -137,10 +144,12 @@ public class GameUtilities : MonoBehaviour
             enemyCard.GetComponent<CardScript>().hp = hp;
             enemyCard.GetComponent<CardScript>().ac = ac;
             enemyCard.GetComponent<CardScript>().str = str;
+            enemyCard.GetComponent<CardScript>().con = con;
             enemyCard.GetComponent<CardScript>().dex = dex;
+            enemyCard.GetComponent<CardScript>().damage = damage;
             enemyCard.GetComponent<CardScript>().magic = magic;
             enemyCard.GetComponent<CardScript>().range = range;
-            enemyCard.GetComponent<CardScript>().prio = prio;
+            enemyCard.GetComponent<CardScript>().prio = dex;
 
             AgentServer.Instance.NumEnemyHand++;
         }
@@ -158,7 +167,7 @@ public class GameUtilities : MonoBehaviour
             };
             var createPlayerCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
             UnityEngine.Debug.Log(createPlayerCardActionJson);
-            //AgentServer.Instance.SendMessages(createPlayerCardActionJson);
+            AgentServer.Instance.SendMessages(createPlayerCardActionJson);
         }
         foreach (var enemyCardInTable in AgentServer.Instance.EnemyCardsInTable)
         {
@@ -169,7 +178,7 @@ public class GameUtilities : MonoBehaviour
             };
             var createEnemyCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
             UnityEngine.Debug.Log(createEnemyCardActionJson);
-            //AgentServer.Instance.SendMessages(createEnemyCardActionJson);
+            AgentServer.Instance.SendMessages(createEnemyCardActionJson);
         }
     }
     #endregion

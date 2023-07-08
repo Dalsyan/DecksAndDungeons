@@ -90,7 +90,19 @@ class Actions:
         res = cards.sort(Key = lambda x : x.prio, reverse = True)
         return res
 
-    #async def recv_from_socket(self, sock):
+    async def recv_from_socket(self):
+        try:
+            client_socket, address = self.spade_sock.accept()
+            message = client_socket.recv(1024).decode("utf-8")
+
+            if message == "start":
+                print(message)
+                return message
+
+        except Exception as e:
+            print("Error listening for messages:", str(e))
+        finally:
+            client_socket.close()
                 
     async def send_message_to_socket(self, msg : str):
         encoded_msg = (msg).encode()
@@ -110,21 +122,14 @@ class Actions:
     #                            #
     ##############################
 
-    def create_hand(self, deck):
-        hand = []
-        cards = deck.hasCards
-        deck = random.sample(cards, len(cards))
+    def search_for_card(self, name):
+        card = self.owl.search_for_card(name)
+        return card
 
-        for card in deck:
-            if len(hand) < 5:
-                hand.append(card)
+    def card_to_json_action(self, card):
+        card_json = self.owl.card_to_json(card)
 
-        return hand
-
-    def hand_to_json_action(self, sender, hand):
-        hand_json = {'action': sender, 'data': self.owl.hand_to_json(hand) }
-
-        return hand_json
+        return card_json
 
     def deck_to_json_action(self, sender, deck):
         deck_json = {'action': sender, 'data': self.owl.deck_to_json(deck) }
