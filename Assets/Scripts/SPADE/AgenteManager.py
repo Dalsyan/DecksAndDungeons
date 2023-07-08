@@ -1,17 +1,13 @@
 import sys
 import socket as s
 import threading as t
-import spade
-import json
+import asyncio
 
 from spade.agent import Agent
-from spade.message import Message
 from spade.behaviour import *
 
 import Actions
 
-import numpy as np
-from typing import Tuple, final
 
 ##############################
 #                            #
@@ -27,14 +23,12 @@ CARD_ACTIONS = "CARD_ACTIONS"
 GAME_OVER = "GAME_OVER"
 
 class AgentManager(Agent):
-    start_game = False
-    Agentes = []
-    AllyAgents = []
-    AxisAgents = []
 
     async def setup(self):
-        # self.nombre = self.name
-        # self.Table = sys.argv[1]
+        self.start_game = False
+        self.Agentes = []
+        self.AllyAgents = []
+        self.AxisAgents = []
         print("Estoy en el SETUP")
         
         # CREAR SERVER DE SPADE
@@ -53,7 +47,8 @@ class AgentManager(Agent):
         # INICIALIZAR LAS ACCIONES
         self.actions = Actions.Actions(self.spade_socket, self.unity_socket)
         
-        self.tcp_listener_thread = t.Thread(target=self.listen_for_messages)
+        self.tcp_listener_thread = t.Thread(target=asyncio.run, args=(self.listen_for_messages(),))
+        self.tcp_listener_thread.daemon = True
         self.tcp_listener_thread.start()
 
         behav = ManagerBehav()
@@ -77,7 +72,7 @@ class AgentManager(Agent):
 
         self.add_behaviour(behav)
 
-    def listen_for_messages(self):
+    async def listen_for_messages(self):
         while True:
             try:
                 client_socket, address = self.spade_socket.accept()
@@ -91,12 +86,15 @@ class AgentManager(Agent):
                     sys.exit()
                 elif message == "start":
                     print(message)
+                    self.hola()
                 
-                client_socket.close()
             except Exception as e:
                 print("Error listening for messages:", str(e))
-                break
+            finally:
+                client_socket.close()
 
+    def hola(self):
+        self.start_game = True
 
 class ManagerBehav(FSMBehaviour):        
     async def on_start(self):
@@ -125,7 +123,7 @@ class PrepareDecks(State):
         enemy_deck = self.agent.actions.deck_to_json_action("create_enemy_deck", enemy_deck)
         await self.agent.actions.send_action_to_socket(enemy_deck)
         
-        print("State: GAME_START")
+        print("State TO: GAME_START")
         self.set_next_state(GAME_START)
 
 class GameStart(State):
@@ -133,6 +131,7 @@ class GameStart(State):
         if self.agent.start_game == False:
             self.set_next_state(GAME_START)
         else:
+            print("State TO: PLAY YOUR CARDS")
             self.set_next_state(PLAYER_PLAY_CARDS)
 
 class PlayerPlayCards(State):

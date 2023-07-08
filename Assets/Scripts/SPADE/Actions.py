@@ -20,7 +20,6 @@ class Actions:
         self.spade_sock = spade_socket
         self.unity_sock = unity_socket
         self.owl = owl()
-        # self.onto = self.owl.onto
 
     ##############################
     #                            #
@@ -92,18 +91,6 @@ class Actions:
         return res
 
     #async def recv_from_socket(self, sock):
-    #    buffer_size = 1024
-    #    data = b""
-    #    while True:
-    #        try:
-    #            chunk = sock.recv(buffer_size)
-    #            if not chunk:
-    #                break
-    #            data += chunk
-    #        except Exception as e:
-    #            print("Error receiving data:", str(e))
-    #            break
-    #    return data.decode("utf-8")
                 
     async def send_message_to_socket(self, msg : str):
         encoded_msg = (msg).encode()
