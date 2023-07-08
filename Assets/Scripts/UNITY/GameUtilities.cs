@@ -2,14 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameUtilities : MonoBehaviour
 {
     private string Address = "127.0.0.1";
     private int SpadePort = 8001;
+
+    private bool GameIsPaused = false;
+    public GameObject PauseMenu;
+
     public GameObject Server;
     private AgentServer AgentServer;
-
     public GameObject Card;
     public GameObject PlayerArea;
     public GameObject EnemyArea;
@@ -22,6 +26,48 @@ public class GameUtilities : MonoBehaviour
         PlayerDeckList = AgentServer.Instance.PlayerDeck;
         EnemyDeckList = AgentServer.Instance.EnemyDeck;
     }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (GameIsPaused)
+            {
+                Resume();
+            }
+            else 
+            {
+                Pause(); 
+            }
+        }
+    }
+
+    #region PAUSE MENU
+
+    public void Resume()
+    {
+        PauseMenu.SetActive(true);
+        GameIsPaused = false;
+    }
+
+    public void Pause()
+    {
+        PauseMenu.SetActive(false);
+        GameIsPaused = true;
+    }
+
+    #region BUTTONS
+
+    public void ExitGame()
+    {
+        AgentServer.Instance.SendMessages("close");
+        Destroy(AgentServer.Instance);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
+    }
+
+    #endregion
+
+    #endregion
 
     #region BUTTONS
     public void ClickOnPlayerDeck()

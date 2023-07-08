@@ -8,6 +8,7 @@ using System.Text;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System;
+using System.Net.Http;
 
 public class AgentServer : MonoBehaviour
 {
@@ -58,7 +59,7 @@ public class AgentServer : MonoBehaviour
     void Start()
     {
         Open = true;
-        ActionsQueue = new Queue<System.Action>();
+        ActionsQueue = new Queue<Action>();
         OpenCMDThread();
         ListenUnityThread();
 
@@ -69,14 +70,14 @@ public class AgentServer : MonoBehaviour
         PlayerDeck = new List<Dictionary<string, object>>();
         EnemyDeck = new List<Dictionary<string, object>>();
         PlayerCardsInTable = new List<Dictionary<string, object>>();
-        EnemyCardsInTable = new List<Dictionary<string, object>>(); 
+        EnemyCardsInTable = new List<Dictionary<string, object>>();
     }
 
     public void Update()
     {
         while (ActionsQueue.Count > 0)
         {
-            System.Action action = ActionsQueue.Dequeue();
+            Action action = ActionsQueue.Dequeue();
             action.Invoke();
         }
     }
@@ -143,7 +144,7 @@ public class AgentServer : MonoBehaviour
         {
             if (Stream.DataAvailable)
             {
-                var buffer = new byte[1024*2];
+                var buffer = new byte[1024 * 2];
                 int bytesRead = Stream.Read(buffer, 0, buffer.Length);
                 string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
@@ -182,7 +183,27 @@ public class AgentServer : MonoBehaviour
         }
     }
 
-    private void CreateDeck(string sender, List<Dictionary<string, object>> data)
+    public void SendMessages(string message)
+    {
+        try
+        {
+            SpadeClient = new TcpClient(Address, SpadePort);
+
+            var stream = SpadeClient.GetStream();
+
+            var data = Encoding.ASCII.GetBytes(message);
+            stream.Write(data, 0, data.Length);
+
+            stream.Close();
+            SpadeClient.Close();
+        }
+        catch (Exception e)
+        {
+            UnityEngine.Debug.LogError("Error sending message: " + e.Message);
+        }
+    }
+
+private void CreateDeck(string sender, List<Dictionary<string, object>> data)
     {
         ActionsQueue.Enqueue(() =>
         {
@@ -316,3 +337,4 @@ public class AgentServer : MonoBehaviour
         Process.Start(startInfo);
     }
 }
+

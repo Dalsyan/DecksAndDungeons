@@ -52,6 +52,9 @@ class AgentManager(Agent):
         # INICIALIZAR LAS ACCIONES
         self.actions = Actions.Actions(self.spade_socket, self.unity_socket)
         
+        self.tcp_listener_thread = t.Thread(target=self.listen_for_messages)
+        self.tcp_listener_thread.start()
+
         behav = ManagerBehav()
 
         # ESTADOS
@@ -72,6 +75,22 @@ class AgentManager(Agent):
         behav.add_transition(source = CARD_ACTIONS, dest = GAME_OVER)
 
         self.add_behaviour(behav)
+
+    def listen_for_messages(self):
+        while True:
+            try:
+                client_socket, address = self.spade_socket.accept()
+                message = client_socket.recv(1024).decode("utf-8")
+                if message == "close":
+                    print(message)
+
+                client_socket.close()
+            except Exception as e:
+                print("Error listening for messages:", str(e))
+                break
+            finally:
+                self.spade_socket.close()
+
 
 class ManagerBehav(FSMBehaviour):        
     async def on_start(self):
@@ -94,16 +113,10 @@ class PrepareDecks(State):
         player_deck = self.agent.actions.create_deck()
         player_deck = self.agent.actions.deck_to_json_action("create_player_deck", player_deck)
         await self.agent.actions.send_action_to_socket(player_deck)
-        #player_hand = self.agent.actions.create_hand(player_deck)
-        #player_hand = self.agent.actions.hand_to_json_action("create_player_hand", player_hand)
-        #await self.agent.actions.send_action_to_socket(player_hand)
 
         enemy_deck = self.agent.actions.create_deck()
         enemy_deck = self.agent.actions.deck_to_json_action("create_enemy_deck", enemy_deck)
         await self.agent.actions.send_action_to_socket(enemy_deck)
-        #enemy_hand = self.agent.actions.create_hand(enemy_deck)
-        #enemy_hand = self.agent.actions.hand_to_json_action("create_enemy_hand", enemy_hand)
-        #await self.agent.actions.send_action_to_socket(enemy_hand)
 
         self.set_next_state(GAME_START)
 
