@@ -52,7 +52,6 @@ public class AgentServer : MonoBehaviour
         else
         {
             instance = this;
-            DontDestroyOnLoad(gameObject);
         }
     }
 
@@ -84,6 +83,7 @@ public class AgentServer : MonoBehaviour
 
     private void OnDestroy()
     {
+        SendMessages("close");
         UnityListener?.Stop();
     }
 

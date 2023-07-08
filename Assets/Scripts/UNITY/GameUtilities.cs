@@ -1,8 +1,10 @@
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.SocialPlatforms;
 
 public class GameUtilities : MonoBehaviour
 {
@@ -70,6 +72,7 @@ public class GameUtilities : MonoBehaviour
     #endregion
 
     #region BUTTONS
+
     public void ClickOnPlayerDeck()
     {
         if (PlayerDeckList.Count > 0 && AgentServer.Instance.NumPlayerHand < 5)
@@ -145,9 +148,30 @@ public class GameUtilities : MonoBehaviour
 
     public void ClickOnPlayButton()
     {
-
+        AgentServer.Instance.SendMessages("start");
+        foreach (var playerCardInTable in AgentServer.Instance.PlayerCardsInTable)
+        {
+            Dictionary<string, object> cardData = new()
+            {
+                ["action"] = "createPlayerCard",
+                ["data"] = playerCardInTable["Name"],
+            };
+            var createPlayerCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
+            UnityEngine.Debug.Log(createPlayerCardActionJson);
+            //AgentServer.Instance.SendMessages(createPlayerCardActionJson);
+        }
+        foreach (var enemyCardInTable in AgentServer.Instance.EnemyCardsInTable)
+        {
+            Dictionary<string, object> cardData = new()
+            {
+                ["action"] = "createEnemyCard",
+                ["data"] = enemyCardInTable["Name"],
+            };
+            var createEnemyCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
+            UnityEngine.Debug.Log(createEnemyCardActionJson);
+            //AgentServer.Instance.SendMessages(createEnemyCardActionJson);
+        }
     }
-
     #endregion
 }
 

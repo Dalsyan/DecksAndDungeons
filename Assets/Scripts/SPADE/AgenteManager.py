@@ -11,7 +11,7 @@ from spade.behaviour import *
 import Actions
 
 import numpy as np
-from typing import Tuple
+from typing import Tuple, final
 
 ##############################
 #                            #
@@ -27,6 +27,7 @@ CARD_ACTIONS = "CARD_ACTIONS"
 GAME_OVER = "GAME_OVER"
 
 class AgentManager(Agent):
+    start_game = False
     Agentes = []
     AllyAgents = []
     AxisAgents = []
@@ -40,7 +41,7 @@ class AgentManager(Agent):
         self.spade_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
         self.spade_socket.setsockopt(s.IPPROTO_TCP, s.TCP_NODELAY, True)
         self.spade_socket.bind(('localhost', 8001))
-        self.spade_socket.listen(5)
+        self.spade_socket.listen(6)
         print("Escuchando en localhost, 8001")
 
         # CONECTARME A SERVER DE UNITY
@@ -81,15 +82,20 @@ class AgentManager(Agent):
             try:
                 client_socket, address = self.spade_socket.accept()
                 message = client_socket.recv(1024).decode("utf-8")
+
                 if message == "close":
                     print(message)
-
+                    self.spade_socket.close()
+                    self.unity_socket.close()
+                    self.stop()
+                    sys.exit()
+                elif message == "start":
+                    print(message)
+                
                 client_socket.close()
             except Exception as e:
                 print("Error listening for messages:", str(e))
                 break
-            finally:
-                self.spade_socket.close()
 
 
 class ManagerBehav(FSMBehaviour):        
@@ -100,6 +106,7 @@ class ManagerBehav(FSMBehaviour):
         self.agent.spade_socket.close()
         self.agent.unity_socket.close()
         await self.agent.stop()
+        sys.exit()
 
 ##############################
 #                            #
@@ -109,7 +116,7 @@ class ManagerBehav(FSMBehaviour):
 
 class PrepareDecks(State):
     async def run(self):
-        print("State: GAME_START")
+        print("State: PREPARE_DECKS")
         player_deck = self.agent.actions.create_deck()
         player_deck = self.agent.actions.deck_to_json_action("create_player_deck", player_deck)
         await self.agent.actions.send_action_to_socket(player_deck)
@@ -117,12 +124,13 @@ class PrepareDecks(State):
         enemy_deck = self.agent.actions.create_deck()
         enemy_deck = self.agent.actions.deck_to_json_action("create_enemy_deck", enemy_deck)
         await self.agent.actions.send_action_to_socket(enemy_deck)
-
+        
+        print("State: GAME_START")
         self.set_next_state(GAME_START)
 
 class GameStart(State):
     async def run(self):
-        if await self.agent.actions.recv_message_from_socket(self.agent.spade_socket) != "Start":
+        if self.agent.start_game == False:
             self.set_next_state(GAME_START)
         else:
             self.set_next_state(PLAYER_PLAY_CARDS)
@@ -130,18 +138,18 @@ class GameStart(State):
 class PlayerPlayCards(State):
     async def run(self):
         print("Player 1 PLAY YOUR CARDS")
-        agent = await self.receive(timeout=30)
-        if agent:
-            print(f'agent: {agent.name}')
-            self.agent.Agentes.append(agent)
-            self.agent.AllyAgents.append(agent)
-            self.agent.Agentes = Actions.Actions.order_cards_by_prio(self.agent.Agentes)
-            # data = Actions.Actions.recv_message_from_socket(self.agent.spade_socket)
+        #agent = await self.receive(timeout=30)
+        #if True:
+        #    print(f'agent: {agent.name}')
+        #    self.agent.Agentes.append(agent)
+        #    self.agent.AllyAgents.append(agent)
+        #    self.agent.Agentes = Actions.Actions.order_cards_by_prio(self.agent.Agentes)
+        #    # data = Actions.Actions.recv_message_from_socket(self.agent.spade_socket)
             
-            self.next_state(ENEMY_PLAY_CARDS)
-        else:
-            print("NO HE ENTRADO EN EL IF")
-            self.set_next_state(PLAYER_PLAY_CARDS)
+        #    self.next_state(PLAYER_PLAY_CARDS)
+        #else:
+        #    print("NO HE ENTRADO EN EL IF")
+        #    self.set_next_state(PLAYER_PLAY_CARDS)
 
 class EnemyPlayCards(State):
     async def run(self):

@@ -91,24 +91,19 @@ class Actions:
         res = cards.sort(Key = lambda x : x.prio, reverse = True)
         return res
 
-    async def recv_message_from_socket(self, sock : s):
-        while True:
-            print('waiting for a connection')
-            connection, client_address = sock.accept()
-            try:
-                print('connection from', client_address)
-
-                while True:
-                    data = connection.recv(1024)
-                    if data:
-                        return data.decode()
-                    else:
-                        print('no data from', client_address)
-                        break
-
-            finally:
-                # Clean up the connection
-                connection.close()
+    #async def recv_from_socket(self, sock):
+    #    buffer_size = 1024
+    #    data = b""
+    #    while True:
+    #        try:
+    #            chunk = sock.recv(buffer_size)
+    #            if not chunk:
+    #                break
+    #            data += chunk
+    #        except Exception as e:
+    #            print("Error receiving data:", str(e))
+    #            break
+    #    return data.decode("utf-8")
                 
     async def send_message_to_socket(self, msg : str):
         encoded_msg = (msg).encode()
@@ -153,3 +148,9 @@ class Actions:
         deck = self.owl.create_deck()
 
         return deck
+
+    def create_player_card(self, name):
+        print(name)
+
+    def create_enemy_card(self, name):
+        print(name)
