@@ -1,11 +1,6 @@
 import json
-import spade
 import sys
 import socket as s
-import threading as t
-import asyncio
-from queue import Queue
-from typing import Deque
 
 from owlready2 import *
 from spade.agent import Agent
@@ -27,22 +22,18 @@ ENEMY_PLAY_CARDS = "ENEMY_PLAY_CARDS"
 CARD_ACTIONS = "CARD_ACTIONS"
 GAME_OVER = "GAME_OVER"
 
-lock = t.Lock()
-condition = t.Condition()
-actions_queue = Queue()
-
 class AgentManager(Agent):
     async def setup(self):
         self.start_game = False
         print("Estoy en el SETUP")
-
+        
         # CREAR SERVER DE SPADE
         self.spade_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
         self.spade_socket.setsockopt(s.IPPROTO_TCP, s.TCP_NODELAY, True)
         self.spade_socket.bind(('localhost', 8001))
         self.spade_socket.listen(5)
         print("Escuchando en localhost, 8001")
-
+        
         # CONECTARME A SERVER DE UNITY
         self.unity_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
         self.unity_socket.setsockopt(s.IPPROTO_TCP, s.TCP_NODELAY, True)
@@ -51,13 +42,9 @@ class AgentManager(Agent):
 
         # INICIALIZAR LAS ACCIONES
         self.actions = Actions.Actions(self.spade_socket, self.unity_socket)
-        
-        self.tcp_listener_thread = t.Thread(target=asyncio.run, args=(self.listen_for_messages(),))
-        self.tcp_listener_thread.daemon = True
-        self.tcp_listener_thread.start()
 
         behav = ManagerBehav()
-        dequeue_behav = DequeueAndExecuteBehav()
+        listen_behav = ListenerBehav()
 
         # ESTADOS
         behav.add_state(name = PREPARE_DECKS, state = PrepareDecks(), initial = True)
@@ -75,67 +62,24 @@ class AgentManager(Agent):
         behav.add_transition(source = ENEMY_PLAY_CARDS, dest = CARD_ACTIONS)
         behav.add_transition(source = CARD_ACTIONS, dest = PLAYER_PLAY_CARDS)
         behav.add_transition(source = CARD_ACTIONS, dest = GAME_OVER)
-
+        
         self.add_behaviour(behav)
-        self.add_behaviour(dequeue_behav)
+        self.add_behaviour(listen_behav)
 
-    async def listen_for_messages(self):
-        while True:
-            try:
-                client_socket, address = self.spade_socket.accept()
-                message = client_socket.recv(1024).decode("utf-8")
-                
-                if not message:
-                    break
-
-                if message == "close":
-                    print(message)
-                    actions_queue.put(self.close_action())
-
-                elif message == "start":
-                    print(message)
-                    actions_queue.put(self.start_action)
-
-                else:
-                    try:
-                        message_dict = json.loads(message)
-                        action = message_dict.get("action")
-                        data = message_dict.get("data")
-                        
-                        if action == "createPlayerCard":
-                            actions_queue.put(self.create_card_action(data))
-
-                        if action == "createEnemyCard":
-                            actions_queue.put(self.create_card_action(data))
-
-                        else:
-                            print("Unknown action:", action)
-                    except json.JSONDecodeError:
-                        print(f"Invalid message format: {message}")
-
-                client_socket.close()
-            except Exception as e:
-                print("Error listening for messages:", str(e))
-
-    def close_action(self):
+    async def close_action(self):
         print(self.spade_socket)
         self.spade_socket.close()
         print(self.spade_socket)
         print(self.unity_socket)
         self.unity_socket.close()
         print(self.unity_socket)
-        print(self.is_alive())
         self.stop()
         print("exiting")
         sys.exit()
 
-    def start_action(self):
-        print("estoy en el start_action")
-        with lock:
-            self.start_game = True
-
-        with condition:
-            condition.notify_all()
+    async def start_action(self):
+        print("start_action")
+        self.start_game = True
 
     def create_card_action(self, data):
         card = self.actions.search_for_card(data)
@@ -147,33 +91,68 @@ class AgentManager(Agent):
         self.Cards.append(card_agent)
         print(card.name)
 
-    async def execute(self):
-        while True:
-            while not actions_queue.empty():
-                action = actions_queue.get()
-                if callable(action):
-                    action()  # Ejecuta el metodo en el hilo principal
-                elif action == self.start_action:
-                    print("me ha llegado el start_action")
-                    self.start_action()
-                else: 
-                    print("Invalid action:", action)
-            await asyncio.sleep(0)  # Permitir que otros eventos se ejecuten
+##############################
+#                            #
+#         BEHAVIOURS         #
+#                            #
+##############################
 
+class ListenerBehav(CyclicBehaviour):
+    #async def on_start(self):
+    #    self.can_listen = False
 
-class DequeueAndExecuteBehav(CyclicBehaviour):
     async def run(self):
-        await self.agent.execute()  # Iniciar la ejecucion continua del metodo execute
+        await self.listen_for_messages()
+        
+    async def listen_for_messages(self):
+        #if self.can_listen:
+            while True:
+                try:
+                    client_socket, address = self.agent.spade_socket.accept()
+                    message = client_socket.recv(1024).decode("utf-8")
+                
+                    if not message:
+                        break
+
+                    if message == "close":
+                        print(message)
+                        self.agent.close_action()
+
+
+                    elif message == "start":
+                        print(message)
+                        print(f'start_action: {self.agent.start_game}')
+                        self.agent.start_game = True
+                        print(f'start_action: {self.agent.start_game}')
+
+                    else:
+                        try:
+                            message_dict = json.loads(message)
+                            action = message_dict.get("action")
+                            data = message_dict.get("data")
+                        
+                            if action == "createPlayerCard":
+                                self.agent.create_card_action(data)
+
+                            if action == "createEnemyCard":
+                                self.agent.create_card_action(data)
+
+                            else:
+                                print("Unknown action:", action)
+                        except json.JSONDecodeError:
+                            print(f"Invalid message format: {message}")
+
+                    client_socket.close()
+                    #self.can_listen = False
+                except Exception as e:
+                    print("Error listening for messages:", str(e))
 
 class ManagerBehav(FSMBehaviour):        
     async def on_start(self):
         print("El behaviour ha empezado!")
 
     async def on_end(self):
-        self.agent.spade_socket.close()
-        self.agent.unity_socket.close()
-        self.agent.stop()
-        sys.exit()
+        await self.agent.close_action()
 
 ##############################
 #                            #
@@ -198,9 +177,9 @@ class PrepareDecks(State):
 class GameStart(State):
     async def run(self):
         print("State: GAME_START")
-        with condition:
-            condition.wait()
-        print("GAME_START")
+        #self.agent.behaviours[1].can_listen = True
+        while not self.agent.start_game:
+            print(self.agent.start_game)
         self.set_next_state(PLAYER_PLAY_CARDS)
 
 class PlayerPlayCards(State):
