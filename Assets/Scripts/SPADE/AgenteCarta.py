@@ -17,36 +17,28 @@ from typing import Tuple
 #                            #
 ##############################
 
-
 CARD_WAIT = "CARD_WAIT"
 CARD_ACTION = "CARD_ACTION"
     
 class CardAgent(Agent):
-    nombre = " "
-    team = " "
-    hp = 0
-    ac = 0
-    dmg = 0
-    dex = 0
-    rango = 0
-    mov = 0
-    shield = 0
-    prio = 0
-    pos = Tuple
+    def __init__(self, jid, password, cclass, race, owner, level, hp, ac, strength, con, dex, damage, magic, rango, prio, pos):
+        self.cclass = cclass
+        self.race = race
+        self.owner = owner
+        self.level = level
+        self.hp = hp
+        self.ac = ac
+        self.str = strength
+        self.con = con
+        self.dex = dex
+        self.damage = damage
+        self.magic = magic
+        self.range = rango
+        self.prio = prio
+        self.pos = pos
     
     async def setup(self):
         print("He iniciado mi SETUP")
-        self.team = sys.argv[1]
-        self.hp = int(sys.argv[2])
-        self.ac = int(sys.argv[3])
-        self.dmg = int(sys.argv[4])
-        self.dex = int(sys.argv[5])
-        self.rango = int(sys.argv[6])
-        self.mov = int(sys.argv[7])
-        self.pos = int(sys.argv[8])
-        self.nombre = int(sys.argv[9])
-        self.shield = 0
-        self.prio = random.randint(1,20) + self.dex
 
         behav = CardBehav()
         self.add_behaviour(behav)

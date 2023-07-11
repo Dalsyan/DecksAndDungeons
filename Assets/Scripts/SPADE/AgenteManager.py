@@ -1,15 +1,18 @@
 import json
+import spade
 import sys
 import socket as s
 import threading as t
 import asyncio
-from owlready2 import *
+from queue import Queue
+from typing import Deque
 
+from owlready2 import *
 from spade.agent import Agent
 from spade.behaviour import *
 
 import Actions
-
+import AgenteCarta
 
 ##############################
 #                            #
@@ -24,19 +27,20 @@ ENEMY_PLAY_CARDS = "ENEMY_PLAY_CARDS"
 CARD_ACTIONS = "CARD_ACTIONS"
 GAME_OVER = "GAME_OVER"
 
+lock = t.Lock()
+condition = t.Condition()
+actions_queue = Queue()
+
 class AgentManager(Agent):
     async def setup(self):
         self.start_game = False
-        self.Agentes = []
-        self.AllyAgents = []
-        self.AxisAgents = []
         print("Estoy en el SETUP")
-        
+
         # CREAR SERVER DE SPADE
         self.spade_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
         self.spade_socket.setsockopt(s.IPPROTO_TCP, s.TCP_NODELAY, True)
         self.spade_socket.bind(('localhost', 8001))
-        self.spade_socket.listen(6)
+        self.spade_socket.listen(5)
         print("Escuchando en localhost, 8001")
 
         # CONECTARME A SERVER DE UNITY
@@ -52,9 +56,8 @@ class AgentManager(Agent):
         self.tcp_listener_thread.daemon = True
         self.tcp_listener_thread.start()
 
-        self.lock = t.Lock()
-
         behav = ManagerBehav()
+        dequeue_behav = DequeueAndExecuteBehav()
 
         # ESTADOS
         behav.add_state(name = PREPARE_DECKS, state = PrepareDecks(), initial = True)
@@ -74,6 +77,7 @@ class AgentManager(Agent):
         behav.add_transition(source = CARD_ACTIONS, dest = GAME_OVER)
 
         self.add_behaviour(behav)
+        self.add_behaviour(dequeue_behav)
 
     async def listen_for_messages(self):
         while True:
@@ -81,14 +85,16 @@ class AgentManager(Agent):
                 client_socket, address = self.spade_socket.accept()
                 message = client_socket.recv(1024).decode("utf-8")
                 
+                if not message:
+                    break
+
                 if message == "close":
                     print(message)
-                    self.close_action(client_socket)
+                    actions_queue.put(self.close_action())
 
                 elif message == "start":
                     print(message)
-                    self.start_action()
-                    client_socket.close()
+                    actions_queue.put(self.start_action)
 
                 else:
                     try:
@@ -97,31 +103,67 @@ class AgentManager(Agent):
                         data = message_dict.get("data")
                         
                         if action == "createPlayerCard":
-                            self.create_card_action(data)
+                            actions_queue.put(self.create_card_action(data))
+
+                        if action == "createEnemyCard":
+                            actions_queue.put(self.create_card_action(data))
+
                         else:
                             print("Unknown action:", action)
                     except json.JSONDecodeError:
-                        print("Invalid message format")
-                
+                        print(f"Invalid message format: {message}")
+
+                client_socket.close()
             except Exception as e:
                 print("Error listening for messages:", str(e))
 
-    def close_action(self, sock):
-        sock.close()
+    def close_action(self):
+        print(self.spade_socket)
         self.spade_socket.close()
+        print(self.spade_socket)
+        print(self.unity_socket)
         self.unity_socket.close()
+        print(self.unity_socket)
+        print(self.is_alive())
         self.stop()
+        print("exiting")
         sys.exit()
 
     def start_action(self):
-        print("start action")
-        with self.lock:
+        print("estoy en el start_action")
+        with lock:
             self.start_game = True
-            print(self.start_game)
+
+        with condition:
+            condition.notify_all()
 
     def create_card_action(self, data):
         card = self.actions.search_for_card(data)
+        card_agent = AgenteCarta.CardAgent(f"{card.name}_card@lightwitch.org", "Pepelxmpp11,", ''.join(filter(str.isalpha, card.hasClass.name)), ''.join(filter(str.isalpha, card.hasRace.name)), card.owner, card.level, card.hp, card.ac, card.str, card.con, card.dex, card.damage, card.magic, card.range, card.prio, card.pos)
+        if card.owner == "player":
+            self.PlayerCards.append(card_agent)
+        else:
+            self.EnemyCards.append(card_agent)
+        self.Cards.append(card_agent)
         print(card.name)
+
+    async def execute(self):
+        while True:
+            while not actions_queue.empty():
+                action = actions_queue.get()
+                if callable(action):
+                    action()  # Ejecuta el metodo en el hilo principal
+                elif action == self.start_action:
+                    print("me ha llegado el start_action")
+                    self.start_action()
+                else: 
+                    print("Invalid action:", action)
+            await asyncio.sleep(0)  # Permitir que otros eventos se ejecuten
+
+
+class DequeueAndExecuteBehav(CyclicBehaviour):
+    async def run(self):
+        await self.agent.execute()  # Iniciar la ejecucion continua del metodo execute
 
 class ManagerBehav(FSMBehaviour):        
     async def on_start(self):
@@ -130,7 +172,7 @@ class ManagerBehav(FSMBehaviour):
     async def on_end(self):
         self.agent.spade_socket.close()
         self.agent.unity_socket.close()
-        await self.agent.stop()
+        self.agent.stop()
         sys.exit()
 
 ##############################
@@ -155,54 +197,23 @@ class PrepareDecks(State):
 
 class GameStart(State):
     async def run(self):
-        #with self.agent.lock:
-        #if self.agent.start_game == False:
-        #    self.set_next_state(GAME_START)
-        #else:
-        #    print("State: GAME_START")
-        #    print("State TO: PLAY YOUR CARDS")
-        #    self.set_next_state(PLAYER_PLAY_CARDS)
-        time.sleep(30)
+        print("State: GAME_START")
+        with condition:
+            condition.wait()
+        print("GAME_START")
         self.set_next_state(PLAYER_PLAY_CARDS)
 
 class PlayerPlayCards(State):
     async def run(self):
         print("Player 1 PLAY YOUR CARDS")
-        #agent = await self.receive(timeout=30)
-        #if True:
-        #    print(f'agent: {agent.name}')
-        #    self.agent.Agentes.append(agent)
-        #    self.agent.AllyAgents.append(agent)
-        #    self.agent.Agentes = Actions.Actions.order_cards_by_prio(self.agent.Agentes)
-        #    # data = Actions.Actions.recv_message_from_socket(self.agent.spade_socket)
-            
-        #    self.next_state(PLAYER_PLAY_CARDS)
-        #else:
-        #    print("NO HE ENTRADO EN EL IF")
-        #    self.set_next_state(PLAYER_PLAY_CARDS)
 
 class EnemyPlayCards(State):
     async def run(self):
         print("Player 2 PLAY YOUR CARDS")
-        agent = await self.agent.spade_socket.recv(timeout=60)
-        if agent:
-            self.agent.Agentes.append(agent)
-            self.agent.AllyAgents.append(agent)
-            self.agent.Agentes = Actions.Actions.order_cards_by_prio(self.agent.Agentes)
-            # data = Actions.Actions.recv_message_from_socket(self.agent.spade_socket)
-            
-            self.next_state(ENEMY_PLAY_CARDS)
-        else:
-            self.set_next_state(CARD_ACTIONS)
 
 class CardActions(State):
     async def run(self):
         print("Let the cards do their things")
-        data = Actions.Actions.recv_message_from_socket(self.agent.spade_socket)
-        if data:
-            self.next_state(CARD_ACTIONS)
-        else:
-            self.set_next_state(GAME_OVER)
 
 class GameOver(State):
     async def run(self):

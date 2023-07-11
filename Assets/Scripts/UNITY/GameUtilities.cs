@@ -167,7 +167,7 @@ public class GameUtilities : MonoBehaviour
             };
             var createPlayerCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
             UnityEngine.Debug.Log(createPlayerCardActionJson);
-            AgentServer.Instance.SendMessages(createPlayerCardActionJson);
+            //AgentServer.Instance.SendMessages(createPlayerCardActionJson);
         }
         foreach (var enemyCardInTable in AgentServer.Instance.EnemyCardsInTable)
         {
@@ -178,7 +178,7 @@ public class GameUtilities : MonoBehaviour
             };
             var createEnemyCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
             UnityEngine.Debug.Log(createEnemyCardActionJson);
-            AgentServer.Instance.SendMessages(createEnemyCardActionJson);
+            //AgentServer.Instance.SendMessages(createEnemyCardActionJson);
         }
     }
     #endregion

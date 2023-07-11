@@ -8,7 +8,6 @@ using System.Text;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System;
-using System.Net.Http;
 
 public class AgentServer : MonoBehaviour
 {
@@ -187,15 +186,15 @@ public class AgentServer : MonoBehaviour
     {
         try
         {
+            UnityEngine.Debug.Log($"intento conectarme (({Address}, {SpadePort}))");
             SpadeClient = new TcpClient(Address, SpadePort);
+            UnityEngine.Debug.Log($"Me he conectado a (({Address}, {SpadePort}))");
 
             var stream = SpadeClient.GetStream();
+            UnityEngine.Debug.Log($"He establecido conexion con (({Address}, {SpadePort}))");
 
             var data = Encoding.ASCII.GetBytes(message);
             stream.Write(data, 0, data.Length);
-
-            stream.Close();
-            SpadeClient.Close();
         }
         catch (Exception e)
         {
