@@ -46,7 +46,7 @@ class OntologyActions:
         cdeck = self.onto.search(iri = "*CDeck")[0]
         my_deck = cdeck()
 
-        while len(deck_names) != 15:
+        while len(deck_names) != 5:
             card = self.create_card(random.randint(1,3))
             my_deck.hasCards.append(card)
             deck_names.append(card)

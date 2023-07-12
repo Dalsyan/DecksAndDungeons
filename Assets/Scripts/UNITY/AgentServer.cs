@@ -186,15 +186,13 @@ public class AgentServer : MonoBehaviour
     {
         try
         {
-            UnityEngine.Debug.Log($"intento conectarme (({Address}, {SpadePort}))");
             SpadeClient = new TcpClient(Address, SpadePort);
-            UnityEngine.Debug.Log($"Me he conectado a (({Address}, {SpadePort}))");
 
             var stream = SpadeClient.GetStream();
-            UnityEngine.Debug.Log($"He establecido conexion con (({Address}, {SpadePort}))");
 
             var data = Encoding.ASCII.GetBytes(message);
             stream.Write(data, 0, data.Length);
+            UnityEngine.Debug.Log($"He enviado un mensaje: {message}, con tamanyo: {data.Length}");
         }
         catch (Exception e)
         {

@@ -62,6 +62,12 @@ class AgentManager(Agent):
         
         self.add_behaviour(behav)
 
+    ##############################
+    #                            #
+    #          LISTENER          #
+    #                            #
+    ##############################
+
     async def listen_for_messages(self):
         self.listening = True
         self.spade_socket.bind(('localhost', 8001))
@@ -72,38 +78,40 @@ class AgentManager(Agent):
             try:
                 client_socket, address = self.spade_socket.accept()
                 print(f'Conectado a cliente: {client_socket}')
-                message = client_socket.recv(1024).decode("utf-8")
+                message = client_socket.recv(1024*3).decode("utf-8")
                 
                 if not message:
                     break
 
                 if message == "close":
                     print(f"message: {message}")
-                    self.close_action()
+                    await self.close_action()
                     
                 elif message == "start":
                     print(f"message: {message}")
                     print(f'start_action: {self.start_game}')
-                    self.start_action()
+                    await self.start_action()
                     print(f'start_action: {self.start_game}')
                     self.listening = False
 
                 else:
                     try:
                         message_dict = json.loads(message)
+                        print(f"message_dict: {message_dict}.")
                         action = message_dict.get("action")
+                        print(f"action: {action}.")
                         data = message_dict.get("data")
+                        print(f"data: {data}")
                         
-                        if action == "createPlayerCard":
-                            self.agent.create_card_action(data)
-                            self.listening = False
+                        if str(action) == "createPlayerCard":
+                            await self.create_card_action(data)
 
-                        if action == "createEnemyCard":
-                            self.agent.create_card_action(data)
-                            self.listening = False
+                        elif str(action) == "createEnemyCard":
+                            self.create_card_action(data)
 
                         else:
                             print("Unknown action:", action)
+                            break
                     except json.JSONDecodeError:
                         print(f"Invalid message format: {message}")
                         
@@ -126,19 +134,13 @@ class AgentManager(Agent):
         print("start_action")
         self.start_game = True
 
-    def create_card_action(self, data):
-        card = self.actions.search_for_card(data)
-        card_agent = AgenteCarta.CardAgent(f"{card.name}_card@lightwitch.org", "Pepelxmpp11,", ''.join(filter(str.isalpha, card.hasClass.name)), ''.join(filter(str.isalpha, card.hasRace.name)), card.owner, card.level, card.hp, card.ac, card.str, card.con, card.dex, card.damage, card.magic, card.range, card.prio, card.pos)
-        if card.owner == "player":
-            self.PlayerCards.append(card_agent)
-        else:
-            self.EnemyCards.append(card_agent)
-        self.Cards.append(card_agent)
+    async def create_card_action(self, name):
+        card = self.actions.search_for_card(name)
         print(card.name)
 
 ##############################
 #                            #
-#         BEHAVIOURS         #
+#          BEHAVIOUR         #
 #                            #
 ##############################
 
@@ -181,6 +183,8 @@ class GameStart(State):
 class PlayerPlayCards(State):
     async def run(self):
         print("Player 1 PLAY YOUR CARDS")
+        while True:
+            pass
 
 class EnemyPlayCards(State):
     async def run(self):
