@@ -24,27 +24,24 @@ GAME_OVER = "GAME_OVER"
 
 class AgentManager(Agent):
     async def setup(self):
+        self.listening = False
         self.start_game = False
         print("Estoy en el SETUP")
         
         # CREAR SERVER DE SPADE
         self.spade_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
         self.spade_socket.setsockopt(s.IPPROTO_TCP, s.TCP_NODELAY, True)
-        self.spade_socket.bind(('localhost', 8001))
-        self.spade_socket.listen(5)
-        print("Escuchando en localhost, 8001")
         
         # CONECTARME A SERVER DE UNITY
         self.unity_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
         self.unity_socket.setsockopt(s.IPPROTO_TCP, s.TCP_NODELAY, True)
         self.unity_socket.connect(('localhost', 8000))
-        print("Conectado a localhost, 8000")
+        print(f"Conectado a {self.unity_socket}")
 
         # INICIALIZAR LAS ACCIONES
         self.actions = Actions.Actions(self.spade_socket, self.unity_socket)
 
         behav = ManagerBehav()
-        listen_behav = ListenerBehav()
 
         # ESTADOS
         behav.add_state(name = PREPARE_DECKS, state = PrepareDecks(), initial = True)
@@ -64,16 +61,64 @@ class AgentManager(Agent):
         behav.add_transition(source = CARD_ACTIONS, dest = GAME_OVER)
         
         self.add_behaviour(behav)
-        self.add_behaviour(listen_behav)
+
+    async def listen_for_messages(self):
+        self.listening = True
+        self.spade_socket.bind(('localhost', 8001))
+        self.spade_socket.listen(5)
+        print(f"Escuchando en {self.spade_socket}")
+
+        while self.listening:
+            try:
+                client_socket, address = self.spade_socket.accept()
+                print(f'Conectado a cliente: {client_socket}')
+                message = client_socket.recv(1024).decode("utf-8")
+                
+                if not message:
+                    break
+
+                if message == "close":
+                    print(f"message: {message}")
+                    self.close_action()
+                    
+                elif message == "start":
+                    print(f"message: {message}")
+                    print(f'start_action: {self.start_game}')
+                    self.start_action()
+                    print(f'start_action: {self.start_game}')
+                    self.listening = False
+
+                else:
+                    try:
+                        message_dict = json.loads(message)
+                        action = message_dict.get("action")
+                        data = message_dict.get("data")
+                        
+                        if action == "createPlayerCard":
+                            self.agent.create_card_action(data)
+                            self.listening = False
+
+                        if action == "createEnemyCard":
+                            self.agent.create_card_action(data)
+                            self.listening = False
+
+                        else:
+                            print("Unknown action:", action)
+                    except json.JSONDecodeError:
+                        print(f"Invalid message format: {message}")
+                        
+                print(f"He cerrado conexion con: {self.spade_socket}")
+                client_socket.close()
+            except Exception as e:
+                print("Error listening for messages:", str(e))
 
     async def close_action(self):
-        print(self.spade_socket)
-        self.spade_socket.close()
-        print(self.spade_socket)
-        print(self.unity_socket)
+        if self.spade_socket:
+            self.spade_socket.close()
+        print(f"unity socket: {self.unity_socket}")
         self.unity_socket.close()
-        print(self.unity_socket)
-        self.stop()
+        print(f"unity socket: {self.unity_socket}")
+        await self.stop()
         print("exiting")
         sys.exit()
 
@@ -96,56 +141,6 @@ class AgentManager(Agent):
 #         BEHAVIOURS         #
 #                            #
 ##############################
-
-class ListenerBehav(CyclicBehaviour):
-    #async def on_start(self):
-    #    self.can_listen = False
-
-    async def run(self):
-        await self.listen_for_messages()
-        
-    async def listen_for_messages(self):
-        #if self.can_listen:
-            while True:
-                try:
-                    client_socket, address = self.agent.spade_socket.accept()
-                    message = client_socket.recv(1024).decode("utf-8")
-                
-                    if not message:
-                        break
-
-                    if message == "close":
-                        print(message)
-                        self.agent.close_action()
-
-
-                    elif message == "start":
-                        print(message)
-                        print(f'start_action: {self.agent.start_game}')
-                        self.agent.start_game = True
-                        print(f'start_action: {self.agent.start_game}')
-
-                    else:
-                        try:
-                            message_dict = json.loads(message)
-                            action = message_dict.get("action")
-                            data = message_dict.get("data")
-                        
-                            if action == "createPlayerCard":
-                                self.agent.create_card_action(data)
-
-                            if action == "createEnemyCard":
-                                self.agent.create_card_action(data)
-
-                            else:
-                                print("Unknown action:", action)
-                        except json.JSONDecodeError:
-                            print(f"Invalid message format: {message}")
-
-                    client_socket.close()
-                    #self.can_listen = False
-                except Exception as e:
-                    print("Error listening for messages:", str(e))
 
 class ManagerBehav(FSMBehaviour):        
     async def on_start(self):
@@ -177,9 +172,10 @@ class PrepareDecks(State):
 class GameStart(State):
     async def run(self):
         print("State: GAME_START")
-        #self.agent.behaviours[1].can_listen = True
+        await self.agent.listen_for_messages()
         while not self.agent.start_game:
             print(self.agent.start_game)
+        self.agent.spade_socket.close()
         self.set_next_state(PLAYER_PLAY_CARDS)
 
 class PlayerPlayCards(State):
