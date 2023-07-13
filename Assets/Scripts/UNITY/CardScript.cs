@@ -55,21 +55,50 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        transform.localScale = new Vector3(1.2f, 1.2f, 1f);
-        ParentAfterDrag = transform.parent;
-        transform.SetParent(transform.root);
-        transform.SetAsFirstSibling();
-        CardImage.raycastTarget = false;
+        if (Owner == "player" && AgentServer.Instance.PlayerPlayCards)
+        {
+            transform.localScale = new Vector3(1.2f, 1.2f, 1f);
+            ParentAfterDrag = transform.parent;
+            transform.SetParent(transform.root);
+            transform.SetAsFirstSibling();
+            CardImage.raycastTarget = false;
+        }
+
+        if (Owner == "enemy" && AgentServer.Instance.EnemyPlayCards)
+        {
+            transform.localScale = new Vector3(1.2f, 1.2f, 1f);
+            ParentAfterDrag = transform.parent;
+            transform.SetParent(transform.root);
+            transform.SetAsFirstSibling();
+            CardImage.raycastTarget = false;
+        }
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        transform.position = Input.mousePosition;
+        if (Owner == "player" && AgentServer.Instance.PlayerPlayCards)
+        {
+            transform.position = Input.mousePosition;
+        }
+
+        if (Owner == "enemy" && AgentServer.Instance.EnemyPlayCards)
+        {
+            transform.position = Input.mousePosition;
+        }
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        transform.SetParent(ParentAfterDrag);
-        CardImage.raycastTarget = true;
+        if (Owner == "player" && AgentServer.Instance.PlayerPlayCards)
+        {
+            transform.SetParent(ParentAfterDrag);
+            CardImage.raycastTarget = true;
+        }
+
+        if (Owner == "enemy" && AgentServer.Instance.EnemyPlayCards)
+        {
+            transform.SetParent(ParentAfterDrag);
+            CardImage.raycastTarget = true;
+        }
     }
 }

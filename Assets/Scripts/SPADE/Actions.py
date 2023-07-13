@@ -15,6 +15,9 @@ from typing import Tuple
 
 from owlready2 import *
 
+FREE = False
+OCCUPIED = True
+
 class Actions:
     def __init__(self, spade_socket : s, unity_socket : s, owl = OwlOntology.OntologyActions):
         self.spade_sock = spade_socket
@@ -27,49 +30,54 @@ class Actions:
     #                            #
     ##############################
     
-    async def dist(self, me : Tuple, other: Tuple) -> int:
-        x1, y1 = me[0], me[1]
-        x2, y2 = other[0], other[1]
+    async def nearest_enemy(self, player_card_agent : card.CardAgent, enemy_card_agents : list):
+        nearest = None
+
+        for agent in enemy_card_agents:
+            if nearest == None:
+                nearest = agent
+
+            if self.dist(player_card_agent.pos, agent.pos) < self.dist(player_card_agent.pos, nearest.pos):
+                nearest = agent
+
+        return nearest
+
+    async def dist(self, card_agent : card.CardAgent, other_card_agent : card.CardAgent):
+        x1, y1 = card_agent.pos[0], card_agent.pos[1]
+        x2, y2 = other_card_agent.pos[0], other_card_agent.pos[1]
         return sqrt((x2-x1)**2+(y2-y1)**2)
 
-    async def can_move(self, table : np.array, pos : Tuple) -> bool:
-        if table[pos]:
+    async def can_move(self, table : dict, pos : Tuple):
+        if table[pos] == OCCUPIED:
             return False
         else: 
             return True
 
-    async def move(self, card : card, table : np.array, old_pos : Tuple, new_pos : Tuple):
+    async def move(self, player_card_agent : card.CardAgent, table : dict, old_pos : Tuple, new_pos : Tuple):
         if self.can_move(table, new_pos):
-            table[old_pos] = False
-            card.pos = new_pos
-            table[new_pos] = True
+            table[old_pos] = FREE
+            player_card_agent.pos = new_pos
+            table[new_pos] = OCCUPIED
 
-    async def attack(self, me : card, enemy : card, damage : int):
-        if self.dist(me.pos, enemy.pos) == 1:
-            msg = Message(to=f'{enemy.name}@lightwitch.org')
-            msg.set_metadata("Action", "Attack")
-            msg.body = damage
+    async def attack(self, player_card_agent : card.CardAgent, enemy_card_agent : card.CardAgent, damage : int, special : bool):
+        if self.dist(player_card_agent.pos, enemy_card_agent.pos) <= player_card_agent.range:
+            if special:
+                damage = damage + player_card_agent.level
 
-            await self.send(msg)
-            print("Message sent!")
+            if not enemy_card_agent.shielded:
+                enemy_card_agent.current_hp = enemy_card_agent.current_hp - damage
+            else:
+                enemy_card_agent.shielded = False
 
-    async def shield(self, me : card, ally : card, shield : int):
-        if self.Dist(me.pos, ally.pos) <= 2:
-            msg = Message(to=f'{ally.name}@lightwitch.org')
-            msg.set_metadata("Action", "Shield")
-            msg.body = shield
+    async def shield(self, player_card_agent : card.CardAgent, ally_card_agent : card.CardAgent):
+        if self.Dist(player_card_agent.pos, ally_card_agent.pos) <= player_card_agent.range:
+            ally_card_agent.shielded = True
 
-            await self.send(msg)
-            print("Message sent!")
-
-    async def heal(self, me : card, ally : card, heal : int):
-        if self.dist(me.pos, ally.pos) <= 3:
-            msg = Message(to=f'{ally.name}@lightwitch.org')
-            msg.set_metadata("Action", "Heal")
-            msg.body = heal
-
-            await self.send(msg)
-            print("Message sent!")
+    async def heal(self, player_card_agent : card.CardAgent, ally_card_agent : card.CardAgent, heal : int):
+        if self.dist(player_card_agent.pos, ally_card_agent.pos) <= player_card_agent.range and ally_card_agent.current_hp < ally_card_agent.hp:
+            healed_hp = 0
+            while healed_hp < heal:
+                ally_card_agent.current_hp += 1
 
     ##############################
     #                            #

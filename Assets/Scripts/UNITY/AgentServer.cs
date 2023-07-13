@@ -11,8 +11,11 @@ using System;
 
 public class AgentServer : MonoBehaviour
 {
+    // Instancia de AgentServer
     private static AgentServer instance;
     public static AgentServer Instance => instance;
+
+    // Gestion de mazos
     public int NumPlayerHand { get; set; }
     public int NumEnemyHand { get; set; }
     public int NumPlayerCardsInTable { get; set; }
@@ -22,25 +25,37 @@ public class AgentServer : MonoBehaviour
     public List<Dictionary<string, object>> PlayerCardsInTable { get; set; }
     public List<Dictionary<string, object>> EnemyCardsInTable { get; set; }
 
-    private string Address = "127.0.0.1";
-    private int UnityPort = 8000;
-    private int SpadePort = 8001;
+    // Address y Ports de sockets
+    private readonly string Address = "127.0.0.1";
+    private readonly int UnityPort = 8000;
+    private readonly int SpadePort = 8001;
 
+    // Gestion de sockets
     private TcpListener UnityListener;
     public TcpClient SpadeClient;
     private NetworkStream Stream;
 
+    // sub-threads
     private Thread UnityServerThread;
     private Thread UnityReceiverThread;
     private Thread ProcessThread;
+
+    // Queue de acciones
     private Queue<Action> ActionsQueue;
 
+    // Gestion de clientes
     public bool Open;
     public int nClients = 0;
 
+    // Prefabs
     public GameObject PlayerArea;
     public GameObject EnemyArea;
     public GameObject Card;
+
+    // Flags
+    public bool GameStart = false;
+    public bool PlayerPlayCards = false;
+    public bool EnemyPlayCards = false;
 
     private void Awake()
     {
@@ -155,30 +170,101 @@ public class AgentServer : MonoBehaviour
     private void ProcessMessage(string message)
     {
         UnityEngine.Debug.Log($"Received message: {message}");
-        Dictionary<string, object> messageDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(message);
 
-        if (messageDict.TryGetValue("action", out object actionObj) && messageDict.TryGetValue("data", out object dataObj))
+        if (message == "select_decks")
         {
-            string action = actionObj.ToString();
-            string dataJson = JsonConvert.SerializeObject(dataObj);
+            // elegir entre los mazos
 
-            var dataList = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(dataJson);
-            switch (action)
-            {
-                case "create_player_deck":
-                    CreateDeck("player", dataList);
-                    break;
-                case "create_enemy_deck":
-                    CreateDeck("enemy", dataList);
-                    break;
-                default:
-                    UnityEngine.Debug.LogWarning("Unknown action.");
-                    break;
-            }
+            return;
         }
+
+        else if (message == "start_game")
+        {
+            GameStart = true;
+        }
+
         else
         {
-            UnityEngine.Debug.LogWarning("Invalid message format.");
+            Dictionary<string, object> messageDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(message);
+
+            if (messageDict.TryGetValue("action", out object actionObj) && messageDict.TryGetValue("data", out object dataObj))
+            {
+                string action = actionObj.ToString();
+
+                if (dataObj is bool dataBool)
+                {
+                    switch (action)
+                    {
+                        case "player_play_cards":
+                            PlayerPlayCards = dataBool;
+                            break;
+                            
+                        case "enemy_play_cards":
+                            EnemyPlayCards = dataBool;
+                            break;
+
+                        default:
+                            UnityEngine.Debug.LogWarning("Unknown action.");
+                            break;
+                    }
+                }
+                
+                if (dataObj is bool dataString)
+                {
+                    switch (action)
+                    {
+                        case "":
+                            var x = dataString;
+                            break;
+                        default:
+                            UnityEngine.Debug.LogWarning("Unknown action.");
+                            break;
+                    }
+                }
+                
+                if (dataObj is bool dataInt)
+                {
+                    switch (action)
+                    {
+                        case "":
+                            var x = dataInt;
+                            break;
+                        default:
+                            UnityEngine.Debug.LogWarning("Unknown action.");
+                            break;
+                    }
+                }
+
+                else
+                {
+                    string dataJson = JsonConvert.SerializeObject(dataObj);
+                    var dataList = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(dataJson);
+
+                    switch (action)
+                    {
+                        case "first_turn":
+                            // procesar los roles 'player' y 'enemy' de los jugadores
+                            break;
+
+                        case "create_player_deck":
+                            CreateDeck("player", dataList);
+                            break;
+
+                        case "create_enemy_deck":
+                            CreateDeck("enemy", dataList);
+                            break;
+
+                        default:
+                            UnityEngine.Debug.LogWarning("Unknown action.");
+                            break;
+                    }
+
+                }
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning("Invalid message format.");
+            }
         }
     }
 
@@ -200,7 +286,7 @@ public class AgentServer : MonoBehaviour
         }
     }
 
-private void CreateDeck(string sender, List<Dictionary<string, object>> data)
+    private void CreateDeck(string sender, List<Dictionary<string, object>> data)
     {
         ActionsQueue.Enqueue(() =>
         {

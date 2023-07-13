@@ -29,7 +29,7 @@ class OntologyActions:
         deck_json = []
 
         for ccard in cdeck.hasCards:
-            card_json = self.card_to_json(ccard)
+            card_json = self.card_to_dict(ccard)
             deck_json.append(card_json)
             
         return deck_json

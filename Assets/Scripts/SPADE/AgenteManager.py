@@ -1,4 +1,5 @@
 import json
+import random
 import sys
 import socket as s
 
@@ -11,10 +12,14 @@ import AgenteCarta
 
 ##############################
 #                            #
-#          MANAGER           #
+#          CONSTANTS         #
 #                            #
 ##############################
 
+OFFLINE = "OFFLINE"
+ONLINE = "ONLINE"
+
+SELECT_DECKS = "SELECT_DECKS"
 PREPARE_DECKS = "PREPARE_DECKS"
 GAME_START = "GAME_START"
 PLAYER_PLAY_CARDS = "PLAYER_PLAY_CARDS"
@@ -22,15 +27,47 @@ ENEMY_PLAY_CARDS = "ENEMY_PLAY_CARDS"
 CARD_ACTIONS = "CARD_ACTIONS"
 GAME_OVER = "GAME_OVER"
 
+FREE = False
+OCCUPIED = True
+
+##############################
+#                            #
+#          MANAGER           #
+#                            #
+##############################
+
 class AgentManager(Agent):
     async def setup(self):
+        print("Estoy en el SETUP")
+
+        # TIPO DE PARTIDA
+        self.game_type = OFFLINE
+
+        # LISTAS CON AGENTES
         self.card_agents = []
         self.player_card_agents = []
         self.enemy_card_agents = []
+
+        # MAZOS Y TABLERO
+        self.player_deck = None
+        self.enemy_deck = None
+        self.table = {}
+
+        # WIN CONDITIONS
+        self.player_score = 0
+        self.enemy_score = 0
+        self.winner = None
+
+        # FLAGS
         self.listening = False
-        self.start_game = False
-        print("Estoy en el SETUP")
+        self.player_ready = False
+        self.enemy_ready = False
         
+        # INICIALIZACION TABLERO
+        for i in range(6):
+            for j in range(6):
+                self.table[f"({i}, {j})"] = FREE
+
         # CREAR SERVER DE SPADE
         self.spade_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
         self.spade_socket.setsockopt(s.IPPROTO_TCP, s.TCP_NODELAY, True)
@@ -47,6 +84,7 @@ class AgentManager(Agent):
         behav = ManagerBehav()
 
         # ESTADOS
+        #behav.add_state(name = SELECT_DECKS, state = SelectDecks(), initial = True)
         behav.add_state(name = PREPARE_DECKS, state = PrepareDecks(), initial = True)
         behav.add_state(name = GAME_START, state = GameStart())
         behav.add_state(name = PLAYER_PLAY_CARDS, state = PlayerPlayCards())
@@ -55,8 +93,8 @@ class AgentManager(Agent):
         behav.add_state(name = GAME_OVER, state = GameOver())
 
         # TRANSICIONES
+        #behav.add_transition(source = SELECT_DECKS, dest = GAME_START)
         behav.add_transition(source = PREPARE_DECKS, dest = GAME_START)
-        behav.add_transition(source = GAME_START, dest = GAME_START)
         behav.add_transition(source = GAME_START, dest = PLAYER_PLAY_CARDS)
         behav.add_transition(source = PLAYER_PLAY_CARDS, dest = ENEMY_PLAY_CARDS)
         behav.add_transition(source = ENEMY_PLAY_CARDS, dest = CARD_ACTIONS)
@@ -81,40 +119,52 @@ class AgentManager(Agent):
             try:
                 client_socket, address = self.spade_socket.accept()
                 print(f'Conectado a cliente: {client_socket}')
+
                 message = client_socket.recv(1024*3).decode("utf-8")
+                print(f"message: {message}")
                 
                 if not message:
                     break
 
                 if message == "close":
-                    print(f"message: {message}")
                     await self.close_action()
-                    
-                elif message == "start":
-                    print(f"message: {message}")
-                    print(f'start_action: {self.start_game}')
-                    await self.start_action()
-                    print(f'start_action: {self.start_game}')
-                    self.listening = False
 
                 else:
                     try:
                         message_dict = json.loads(message)
                         print(f"message_dict: {message_dict}.")
-                        action = message_dict.get("action")
-                        print(f"action: {action}.")
-                        data = message_dict.get("data")
-                        print(f"data: {data}")
-                        
-                        if str(action) == "createPlayerCard":
-                            await self.create_card_action("player", data)
 
-                        elif str(action) == "createEnemyCard":
-                            self.create_card_action("enemy", data)
+                        action = message_dict.get("action")
+                        data = message_dict.get("data")
+                        
+                        if action == "selectPlayerDeck":
+                            await self.select_deck_action("player", data)
+
+                            if self.player_deck is not None and self.enemy_deck is not None:
+                                self.listening = False
+
+                        elif action == "selectEnemyDeck":
+                            await self.select_deck_action("enemy", data)
+
+                            if self.player_deck is not None and self.enemy_deck is not None:
+                                self.listening = False
+
+                        elif action == "createPlayerCard":
+                            await self.play_card_action("player", data)
+
+                        elif action == "createEnemyCard":
+                            await self.play_card_action("enemy", data)
+
+                        elif action == "playerReady":
+                            await self.ready_action("player")
+                            
+                        elif action == "enemyReady":
+                            await self.ready_action("enemy")
 
                         else:
                             print("Unknown action:", action)
                             break
+
                     except json.JSONDecodeError:
                         print(f"Invalid message format: {message}")
                         
@@ -123,33 +173,60 @@ class AgentManager(Agent):
             except Exception as e:
                 print("Error listening for messages:", str(e))
 
+    ##############################
+    #                            #
+    #      LISTENER_ACTIONS      #
+    #                            #
+    ##############################
+
+    async def select_deck_action(self, owner, name):
+        deck = self.actions.search_for_deck(name)
+
+        if owner == "player":
+            self.player_deck = deck
+            print(f"player_deck: {deck.name}")
+
+        elif owner == "enemy":
+            self.enemy_deck = deck
+            print(f"enemy_deck: {deck.name}")
+            
+        print(self.actions.deck_to_json_action(deck))
+
+    async def play_card_action(self, owner, name):
+        card = self.actions.search_for_card(name)
+        card_agent = AgenteCarta.CardAgent(f"{card.name}@lightwitch.org", "Pepelxmpp11,", card, self.player_card_agents, self.enemy_card_agents)
+        self.card_agents.append(card_agent)
+
+        if owner == "player":
+            self.player_card_agents.append(card_agent)
+
+        elif owner == "enemy":
+            self.enemy_card_agents.append(card_agent)
+            
+        print(self.actions.card_to_json_action(card_agent))
+
+    async def ready_action(self, owner):
+        if owner == "player":
+            self.player_ready = True
+
+        elif owner == "enemy":
+            self.enemy_ready = True
+
     async def close_action(self):
         if self.spade_socket:
             self.spade_socket.close()
-        print(f"unity socket: {self.unity_socket}")
+            print(f"unity socket: {self.unity_socket}")
+
         self.unity_socket.close()
         print(f"unity socket: {self.unity_socket}")
+
+        for agent in self.card_agents:
+            await agent.stop()
+
         await self.stop()
         print("exiting")
+
         sys.exit()
-
-    async def start_action(self):
-        print("start_action")
-        self.start_game = True
-
-    async def create_card_action(self, owner, name):
-        card = self.actions.search_for_card(name)
-        print(self.actions.card_to_json_action(card))
-
-        card_agent = AgenteCarta.CardAgent(f'{card.name}@lightwitch.org', "Pepelxmpp11,",
-                                          card.cclass, card.race, owner, 
-                                          card.level, card.hp, card.ac, card.strength, card.con, card.dex, card.damage, card.magic, card.rango, card.prio, card.pos)
-
-        self.card_agents.append(card_agent)
-        if owner == "player":
-            self.player_card_agents.append(card_agent)
-        elif owner == "enemy":
-            self.enemy_card_agents.append(card_agent)
 
 ##############################
 #                            #
@@ -166,20 +243,34 @@ class ManagerBehav(FSMBehaviour):
 
 ##############################
 #                            #
-#          ESTADOS           #
+#           STATES           #
 #                            #
 ##############################
+
+class SelectDecks(State):
+    async def run(self):
+        print("State: SELECT_DECKS")
+
+        await self.agent.actions.send_message_to_socket("select_decks")
+        await self.agent.listen_for_messages()
+
+        print("State TO: PREPARE_DECKS")
+        self.set_next_state(PREPARE_DECKS)
 
 class PrepareDecks(State):
     async def run(self):
         print("State: PREPARE_DECKS")
-        player_deck = self.agent.actions.create_deck()
-        player_deck = self.agent.actions.deck_to_json_action("create_player_deck", player_deck)
-        await self.agent.actions.send_action_to_socket(player_deck)
 
+        player_deck = self.agent.actions.create_deck()
         enemy_deck = self.agent.actions.create_deck()
-        enemy_deck = self.agent.actions.deck_to_json_action("create_enemy_deck", enemy_deck)
-        await self.agent.actions.send_action_to_socket(enemy_deck)
+        
+        player_deck_json = self.agent.actions.deck_to_json_action("create_player_deck", player_deck)
+        enemy_deck_json = self.agent.actions.deck_to_json_action("create_enemy_deck", enemy_deck)
+
+        await self.agent.actions.send_action_to_socket(player_deck_json)
+        time.sleep(1)
+        await self.agent.actions.send_action_to_socket(enemy_deck_json)
+        time.sleep(1)
         
         print("State TO: GAME_START")
         self.set_next_state(GAME_START)
@@ -187,29 +278,113 @@ class PrepareDecks(State):
 class GameStart(State):
     async def run(self):
         print("State: GAME_START")
-        await self.agent.listen_for_messages()
-        while not self.agent.start_game:
-            print(self.agent.start_game)
-        self.agent.spade_socket.close()
+
+        if self.agent.game_type == ONLINE:
+            player_initiative = random.randint(1,20)
+            enemy_initiative = random.randint(1,20)
+
+            initiative_action = {} 
+            initiative_action["action"] = "first_turn"
+
+            if player_initiative >= enemy_initiative:
+                initiative_action["data"] = "player"
+                await self.agent.actions.send_action_to_socket(initiative_action)
+            else:
+                initiative_action["data"] = "enemy"
+                await self.agent.actions.send_action_to_socket(initiative_action)
+
+        await self.agent.actions.send_message_to_socket("start_game")
+
+        print("State TO: PLAYER_PLAY_CARDS")
         self.set_next_state(PLAYER_PLAY_CARDS)
 
 class PlayerPlayCards(State):
     async def run(self):
-        print("Player 1 PLAY YOUR CARDS")
-        while True:
+        print("State: PLAYER_PLAY_CARDS")
+
+        play_cards = {}
+        play_cards["action"] = "player_play_cards"
+
+        if self.agent.winner == "player":
+            print("State TO: GAME_OVER")
+            self.set_next_state(GAME_OVER)
+            
+        play_cards["data"] = True
+        await self.agent.actions.send_message_to_socket(json.dumps(play_cards))
+
+        await self.agent.listen_for_messages()
+
+        while not self.agent.player_ready:
             pass
+        
+        self.agent.spade_socket.close()
+
+        self.agent.player_ready = False
+        play_cards["data"] = False
+        await self.agent.actions.send_message_to_socket(json.dumps(play_cards))
+
+        print("State TO: ENEMY_PLAY_CARDS")
+        self.set_next_state(ENEMY_PLAY_CARDS)
 
 class EnemyPlayCards(State):
     async def run(self):
-        print("Player 2 PLAY YOUR CARDS")
+        print("State: ENEMY_PLAY_CARDS")
+
+        if self.agent.winner == "enemy":
+            print("State TO: GAME_OVER")
+            self.set_next_state(GAME_OVER)
+        
+        await self.agent.listen_for_messages()
+         
+        while not self.agent.enemy_ready:
+            pass
+        
+        self.agent.spade_socket.close()
+        self.enemy_ready = False
+
+        print("State TO: CARD_ACTIONS")
+        self.set_next_state(CARD_ACTIONS)
 
 class CardActions(State):
     async def run(self):
-        print("Let the cards do their things")
+        print("State: CARD_ACTIONS")
+        
+        for agent in self.agent.card_agents:
+            agent.start()
+
+        for agent in self.agent.card_agents:
+            if agent.is_alive():
+                msg = Message(to=agent)
+                msg.body = f"{self.agent.card.name}_done"
+                
+                await self.send(msg)
+
+                message = await self.agent.receive()
+
+                while not message:
+                    pass
+
+        if len(self.agent.player_card_agents) == 0 or len(self.agent.player_card_agents) < len(self.agent.enemy_card_agents):
+            self.agent.enemy_score += 1
+
+        elif len(self.agent.enemy_card_agents) == 0 or len(self.agent.player_card_agents) > len(self.agent.enemy_card_agents):
+            self.agent.player_score += 1
+
+        for agent in self.agent.card_agents:
+            if agent.is_alive(): 
+                await agent.stop()
+
+        if self.agent.player_score >= 2:
+            self.agent.winner = "player"
+        elif self.agent.enemy_score >= 2:
+            self.agent.winner = "enemy"
+        
+        print("State TO: PLAYER_PLAY_CARDS")
+        self.set_next_state(PLAYER_PLAY_CARDS)
 
 class GameOver(State):
     async def run(self):
-        print("THE GAME IS OVER")
+        print("State: GAME_OVER")
         
 ##############################
 #                            #
