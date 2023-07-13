@@ -24,6 +24,9 @@ GAME_OVER = "GAME_OVER"
 
 class AgentManager(Agent):
     async def setup(self):
+        self.card_agents = []
+        self.player_card_agents = []
+        self.enemy_card_agents = []
         self.listening = False
         self.start_game = False
         print("Estoy en el SETUP")
@@ -104,10 +107,10 @@ class AgentManager(Agent):
                         print(f"data: {data}")
                         
                         if str(action) == "createPlayerCard":
-                            await self.create_card_action(data)
+                            await self.create_card_action("player", data)
 
                         elif str(action) == "createEnemyCard":
-                            self.create_card_action(data)
+                            self.create_card_action("enemy", data)
 
                         else:
                             print("Unknown action:", action)
@@ -134,9 +137,19 @@ class AgentManager(Agent):
         print("start_action")
         self.start_game = True
 
-    async def create_card_action(self, name):
+    async def create_card_action(self, owner, name):
         card = self.actions.search_for_card(name)
-        print(card.name)
+        print(self.actions.card_to_json_action(card))
+
+        card_agent = AgenteCarta.CardAgent(f'{card.name}@lightwitch.org', "Pepelxmpp11,",
+                                          card.cclass, card.race, owner, 
+                                          card.level, card.hp, card.ac, card.strength, card.con, card.dex, card.damage, card.magic, card.rango, card.prio, card.pos)
+
+        self.card_agents.append(card_agent)
+        if owner == "player":
+            self.player_card_agents.append(card_agent)
+        elif owner == "enemy":
+            self.enemy_card_agents.append(card_agent)
 
 ##############################
 #                            #

@@ -1,107 +1,176 @@
 import random
 import sys
 
+from owlready2 import *
 from spade.agent import Agent
 from spade.message import Message
+from spade.template import Template
 from spade.behaviour import *
 
-import AgenteManager as manager
-import Actions 
+import AgenteManager
+import Actions
 
 import numpy as np
 from typing import Tuple
 
 ##############################
 #                            #
-#           CARTAS           #
+#          CONSTANTS         #
 #                            #
 ##############################
 
 CARD_WAIT = "CARD_WAIT"
 CARD_ACTION = "CARD_ACTION"
-    
+CARD_STOP = "CARD_STOP"
+
+##############################
+#                            #
+#            CARD            #
+#                            #
+##############################
+
 class CardAgent(Agent):
-    def __init__(self, jid, password, cclass, race, owner, level, hp, ac, strength, con, dex, damage, magic, rango, prio, pos):
-        self.cclass = cclass
-        self.race = race
-        self.owner = owner
-        self.level = level
-        self.hp = hp
-        self.ac = ac
-        self.str = strength
-        self.con = con
-        self.dex = dex
-        self.damage = damage
-        self.magic = magic
-        self.range = rango
-        self.prio = prio
-        self.pos = pos
+    def __init__(self, jid, password, card):
+        (super).__init__(jid, password)
+        self.cclass = card.cclass
+        self.race = card.race
+        self.owner = card.owner
+        self.level = card.level
+        self.hp = card.hp
+        self.ac = card.ac
+        self.str = card.strength
+        self.con = card.con
+        self.dex = card.dex
+        self.damage = card.damage
+        self.magic = card.magic
+        self.range = card.rango
+        self.prio = card.prio
+        self.pos = card.pos
     
     async def setup(self):
-        print("He iniciado mi SETUP")
+        print(f"Soy {self.agent.name} y he iniciado mi SETUP")
+
+        # UTILES
+        self.mov = 3
+        self.attacks = 0
+        self.minions = 0
+
+        # INICIALIZAR LAS ACCIONES
+        self.actions = Actions.Actions(self.spade_socket, self.unity_socket)
 
         behav = CardBehav()
-        self.add_behaviour(behav)
-
-        msg = Message(to="pvidal_manager@lightwitch.org")
-        msg.set_metadata("Action", "Create")
-        msg.body = self
-        
-        await self.send(msg)
 
         # ESTADOS
         behav.add_state(name=CARD_WAIT, state=CardWait(), initial=True)
         behav.add_state(name=CARD_ACTION, state=CardAction())
+        behav.add_state(name=CARD_STOP, state=CardStop())
 
-        # TRANSITIONS
+        # TRANSICIONES
         behav.add_transition(source=CARD_WAIT, dest=CARD_ACTION)
-        behav.add_transition(source=CARD_ACTION, dest=CARD_ACTION)
-        behav.add_transition(source=CARD_ACTION, dest=CARD_WAIT)
+        behav.add_transition(source=CARD_ACTION, dest=CARD_STOP)
+        behav.add_transition(source=CARD_STOP, dest=CARD_WAIT)
+        #behav.add_transition(source=CARD_WAIT, dest=CARD_STOP)
+        #behav.add_transition(source=CARD_ACTION, dest=CARD_WAIT)
+        #behav.add_transition(source=CARD_ACTION, dest=CARD_ACTION)
+        
+        self.add_behaviour(behav)
+
+##############################
+#                            #
+#          BEHAVIOUR         #
+#                            #
+##############################
 
 class CardBehav(FSMBehaviour):
     async def on_start(self):
-        print(f'{self.agent.name} created in pos: {self.agent.pos}\n')
-        print(f'{self.agent.nombre}, {self.agent.team}, {self.agent.prio}, {self.agent.pos}')
+        print(f"Soy {self.agent.name} y mi behaviour ha empezado!")
 
     async def on_end(self):
         await self.agent.stop()
+
+##############################
+#                            #
+#           STATES           #
+#                            #
+##############################
         
 class CardWait(State):
     async def run(self):
-        print("CARDINIT")
-        self.agent.Allies = manager.AgenteManager.AllyAgents
-        self.agent.Enemies = manager.AgenteManager.AxisAgents
+        print("State: CARD_WAIT")
 
-        self.set_next_state(CARD_ACTION)
+        message = await self.agent.receive()
+
+        while not message:
+            pass
+
+        if message == "start_actions":
+            print("State TO: CARD_ACTION")
+            self.next_transition(CARD_ACTION)
 
 class CardAction(State):
     async def run(self):
-        # enemy_names = list(AgentManager.AxisAgents.keys)
-        # enemy_values = list(AgentManager.AxisAgents.values)
-        # enemy_dist = []
-        # min_dist = 0
+        print("State: CARD_ACTION")
 
-        # for n in enemy_values:
-            # enemy_dist.append(self.Dist(self.agent.pos, n))
-            
-        # min_dist = enemy_dist.index(min(enemy_dist))
-        # enemy = enemy_names[min_dist]
-         
-        await self.Attack(3, self.agent)
-        print(f'{self.agent.name} on {self.agent.pos}')
+        if self.agent.actions.get_card_role(self.agent.card) == "cdps":
+            if self.agent.attacks == 3:
+                await self.agent.actions.attack(self.agent.card, enemy_card_agent, self.card.damage, special = True)
+                self.agent.attacks = 0
 
-        self.set_next_state(CARD_WAIT)
+            else: 
+                await self.agent.actions.attack(self.agent.card, enemy_card_agent, self.card.damage)
+                self.agent.attacks += 1
 
-if __name__ == "__main__":
-    carta = CardAgent(f'{CardAgent.name}@lightwitch.org', 'Pepelxmpp11,')
-    future = carta.start()
-    future.result()
+        elif self.agent.actions.get_card_role(self.agent.card) == "ctank":
+            if self.agent.card.cclass == "paladin":
+                player_card_agents_low = [card for card in self.agents.card_agents if ((card.current_hp * 100) / card.hp) < 34]
+                lowest_player_card = player_card_agents_low.sort(Key = lamda x : x.current_hp)[0]
 
-    while carta.is_alive():
-        try:
-            time.sleep(1)
-        except KeyboardInterrupt:
-            break
-    carta.stop()
-    
-    
+                if lowest_player_card:
+                    await self.agent.actions.shield(self.agent.card, lowest_player_card)
+
+                else: 
+                    await self.agent.actions.attack(self.agent.card, enemy_card_agent, self.card.damage)
+
+            elif self.agent.card.cclass == "barbarian": 
+                if ((self.agent.card.current_hp * 100) / self.agent.card.current_hp) <= 50:
+                    await self.agent.actions.attack(self.agent.card, enemy_card_agent, self.card.damage, special = True)
+
+                else: 
+                    await self.agent.actions.attack(self.agent.card, enemy_card_agent, self.card.damage)
+
+        elif self.agent.actions.get_card_role(self.agent.card) == "cmage":
+
+            if self.agent.card.cclass == "cleric":
+                player_card_agents_low = [card for card in self.agents.card_agents if ((card.current_hp * 100) / card.hp) < 34]
+                lowest_player_card = player_card_agents_low.sort(Key = lamda x : x.current_hp)[0]
+
+                if lowest_player_card:
+                    await self.agent.actions.heal(self.agent.card, lowest_player_card)
+
+                else: 
+                    await self.agent.actions.attack(self.agent.card, enemy_card_agent, self.card.magic)
+
+            if self.agent.card.cclass == "druid":
+                if self.agens.minions < self.agent.card.level:
+                    # invoke minion
+                    self.minions += 1
+
+                else: 
+                    await self.agent.actions.attack(self.agent.card, enemy_card_agent, self.card.magic)
+
+            else:
+                await self.agent.actions.attack(self.agent.card, enemy_card_agent, self.card.magic)
+        
+        print("State TO: CARD_STOP")
+        self.next_transition(CARD_STOP)
+
+class CardStop(State):
+    async def run(self):
+        print("State: CARD_STOP")
+
+        msg = Message(to="pvidal_manager@lightwitch.org")
+        msg.body = f"{self.agent.card.name}_done"
+
+        await self.send(msg)
+
+        self.next_transition(CARD_WAIT)
