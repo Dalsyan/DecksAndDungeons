@@ -7,11 +7,25 @@ class OntologyActions:
     def __init__(self, onto = get_ontology("D:\TEMP\dungeons-and-dragons.owx").load()):
         self.onto = onto
 
+    ##############################
+    #                            #
+    #           ACTIONS          #
+    #                            #
+    ##############################
+
+    def get_card_role(self, card):
+        role = card.cclass.ancestors()[-1]
+        return role
+
     def search_for_card(self, name):
         card = self.onto.search(iri = f"*{name}")[0]
         return card
 
-    def deck_to_json(self, cdeck):
+    def search_for_deck(self, name):
+        deck = self.onto.search(iri = f"*{name}")[0]
+        return deck
+
+    def deck_to_list(self, cdeck):
         deck_json = []
 
         for ccard in cdeck.hasCards:
@@ -20,7 +34,7 @@ class OntologyActions:
             
         return deck_json
 
-    def card_to_json(self, ccard):
+    def card_to_dict(self, ccard):
         stats = {}
 
         stats["name"] = ccard.name
@@ -42,24 +56,25 @@ class OntologyActions:
         return stats
 
     def create_deck(self):
-        deck_names = []
+        num_cards = 0
         cdeck = self.onto.search(iri = "*CDeck")[0]
         my_deck = cdeck()
 
-        while len(deck_names) != 5:
+        while num_cards != 5:
             card = self.create_card(random.randint(1,3))
             my_deck.hasCards.append(card)
-            deck_names.append(card)
+            num_cards += 1
             
         self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
         return my_deck
 
     def remove_deck(self, cdeck):
-        for ccard in cdeck.hasCards:
-            self.remove_card(ccard)
+        #for ccard in cdeck.hasCards:
+        #    self.remove_card(ccard)
             
         print(f'I have removed the deck {cdeck.name}')
         destroy_entity(cdeck)
+
         self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
 
     def create_card(self, level):
@@ -104,32 +119,32 @@ class OntologyActions:
                 
         self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
 
-        # print(f'Card: {my_card.name}\n > class: {my_card.hasClass.name}\n > race: {my_card.hasRace.name}\n > weapon: {my_card.hasWeapon.name}')
-        # print(f' > level: {my_card.level}\n > hp: {my_card.hp}\n > ac: {my_card.ac}\n > str: {my_card.str}\n > dex: {my_card.dex}\n > range: {my_card.range}')
-        #if my_card.hasShield:
-        #    print(f' > armor: {my_card.hasArmor.name}\n > shield: {my_card.hasShield.name}\n')
-        #else:
-        #    print(f' > armor: {my_card.hasArmor.name}\n')
         return my_card
     
     def remove_card(self, ccard):
-        cclass = ccard.hasClass
-        destroy_entity(cclass)
-        crace = ccard.hasRace
-        destroy_entity(crace)
-        cweapon = ccard.hasWeapon
-        destroy_entity(cweapon)
-        carmor = ccard.hasArmor
-        destroy_entity(carmor)
+        #cclass = ccard.hasClass
+        #destroy_entity(cclass)
+        #crace = ccard.hasRace
+        #destroy_entity(crace)
+        #cweapon = ccard.hasWeapon
+        #destroy_entity(cweapon)
+        #carmor = ccard.hasArmor
+        #destroy_entity(carmor)
 
-        if ccard.hasShield:
-            cshield = ccard.hasShield
-            destroy_entity(cshield)
+        #if ccard.hasShield:
+        #    cshield = ccard.hasShield
+        #    destroy_entity(cshield)
 
         print(f'I have removed the card {ccard.name}')
         destroy_entity(ccard)
 
         self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
+
+    ##############################
+    #                            #
+    #        ATTR_CREATION       #
+    #                            #
+    ##############################
 
     def create_class(self):
         class_list = self.onto.search(subclass_of = self.onto.CClass)
@@ -245,6 +260,12 @@ class OntologyActions:
         cweapon = random.choice(weapons)
         my_weapon = cweapon()
         return my_weapon
+
+    ##############################
+    #                            #
+    #            DICES           #
+    #                            #
+    ##############################
 
     def skill_dices(self):
         dices = []
