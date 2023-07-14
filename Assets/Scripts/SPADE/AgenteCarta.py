@@ -1,17 +1,10 @@
-import random
-import sys
-
 from owlready2 import *
 from spade.agent import Agent
 from spade.message import Message
-from spade.template import Template
 from spade.behaviour import *
 
-import AgenteManager
 import Actions
 
-import numpy as np
-from typing import Tuple
 
 ##############################
 #                            #
@@ -30,33 +23,28 @@ CARD_STOP = "CARD_STOP"
 ##############################
 
 class CardAgent(Agent):
-    def __init__(self, jid, password, card, player_card_agents, enemy_card_agents):
+    def __init__(self, jid, password, card):
         super().__init__(jid, password)
-        self.cclass = card.cclass
-        self.race = card.race
-        self.owner = card.owner
+
+        self.cclass = card.hasClass
+        self.race = card.hasRace
+        #self.owner = card.owner
         self.level = card.level
         self.hp = card.hp
         self.ac = card.ac
-        self.str = card.strength
+        self.str = card.str
         self.con = card.con
         self.dex = card.dex
         self.damage = card.damage
         self.magic = card.magic
-        self.range = card.rango
-        self.prio = card.prio
-        self.pos = card.pos
+        self.range = card.range
+        #self.prio = card.prio
+        #self.pos = card.pos
         self.shielded = False
         self.current_hp = self.hp
-
-        if self.owner == "player":
-            self.player_card_agents = player_card_agents
-            self.enemy_card_agents = enemy_card_agents
-        else:
-            self.player_card_agents = enemy_card_agents
-            self.enemy_card_agents = player_card_agents
-
-        self.card_agents = self.player_card_agents + self.enemy_card_agents
+        
+        self.player_card_agents = []
+        self.enemy_card_agents = []
 
     async def setup(self):
         print(f"Soy {self.agent.name} y he iniciado mi SETUP")
@@ -68,16 +56,6 @@ class CardAgent(Agent):
 
         # INICIALIZAR LAS ACCIONES
         self.actions = Actions.Actions(self.spade_socket, self.unity_socket)
-
-        # LO CARGAMOS EN TODOS LOS AGENTES ACTIVOS
-        for agent in self.card_agents:
-            if self.owner == "player":
-                agent.player_card_agents.append(self)
-
-            elif self.owner == "enemy":
-                agent.enemy_card_agents.append(self)
-
-            agent.card_agents.append(self)
 
         behav = CardBehav()
 

@@ -71,6 +71,7 @@ class AgentManager(Agent):
         # CREAR SERVER DE SPADE
         self.spade_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
         self.spade_socket.setsockopt(s.IPPROTO_TCP, s.TCP_NODELAY, True)
+        self.spade_socket.bind(('localhost', 8001))
         
         # CONECTARME A SERVER DE UNITY
         self.unity_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
@@ -111,7 +112,6 @@ class AgentManager(Agent):
 
     async def listen_for_messages(self):
         self.listening = True
-        self.spade_socket.bind(('localhost', 8001))
         self.spade_socket.listen(5)
         print(f"Escuchando en {self.spade_socket}")
 
@@ -128,6 +128,14 @@ class AgentManager(Agent):
 
                 if message == "close":
                     await self.close_action()
+
+                elif message == "playerReady":
+                    await self.ready_action("player")
+                    self.listening = False
+                            
+                elif message == "enemyReady":
+                    await self.ready_action("enemy")
+                    self.listening = False
 
                 else:
                     try:
@@ -155,12 +163,6 @@ class AgentManager(Agent):
                         elif action == "createEnemyCard":
                             await self.play_card_action("enemy", data)
 
-                        elif action == "playerReady":
-                            await self.ready_action("player")
-                            
-                        elif action == "enemyReady":
-                            await self.ready_action("enemy")
-
                         else:
                             print("Unknown action:", action)
                             break
@@ -170,8 +172,9 @@ class AgentManager(Agent):
                         
                 print(f"He cerrado conexion con: {self.spade_socket}")
                 client_socket.close()
+
             except Exception as e:
-                print("Error listening for messages:", str(e))
+                print("Error listening for message:", str(e))
 
     ##############################
     #                            #
@@ -194,7 +197,9 @@ class AgentManager(Agent):
 
     async def play_card_action(self, owner, name):
         card = self.actions.search_for_card(name)
-        card_agent = AgenteCarta.CardAgent(f"{card.name}@lightwitch.org", "Pepelxmpp11,", card, self.player_card_agents, self.enemy_card_agents)
+        print(self.actions.card_to_json_action(card))
+
+        card_agent = AgenteCarta.CardAgent(f"{card.name}@lightwitch.org", "Pepelxmpp11,", card)
         self.card_agents.append(card_agent)
 
         if owner == "player":
@@ -202,8 +207,6 @@ class AgentManager(Agent):
 
         elif owner == "enemy":
             self.enemy_card_agents.append(card_agent)
-            
-        print(self.actions.card_to_json_action(card_agent))
 
     async def ready_action(self, owner):
         if owner == "player":
@@ -308,20 +311,18 @@ class PlayerPlayCards(State):
         if self.agent.winner == "player":
             print("State TO: GAME_OVER")
             self.set_next_state(GAME_OVER)
-            
+        
         play_cards["data"] = True
-        await self.agent.actions.send_message_to_socket(json.dumps(play_cards))
+        await self.agent.actions.send_action_to_socket(play_cards)
 
         await self.agent.listen_for_messages()
 
         while not self.agent.player_ready:
             pass
-        
-        self.agent.spade_socket.close()
 
         self.agent.player_ready = False
         play_cards["data"] = False
-        await self.agent.actions.send_message_to_socket(json.dumps(play_cards))
+        await self.agent.actions.send_action_to_socket(play_cards)
 
         print("State TO: ENEMY_PLAY_CARDS")
         self.set_next_state(ENEMY_PLAY_CARDS)
@@ -330,17 +331,24 @@ class EnemyPlayCards(State):
     async def run(self):
         print("State: ENEMY_PLAY_CARDS")
 
+        play_cards = {}
+        play_cards["action"] = "enemy_play_cards"
+
         if self.agent.winner == "enemy":
             print("State TO: GAME_OVER")
             self.set_next_state(GAME_OVER)
         
+        play_cards["data"] = True
+        await self.agent.actions.send_action_to_socket(play_cards)
+
         await self.agent.listen_for_messages()
-         
+
         while not self.agent.enemy_ready:
             pass
-        
-        self.agent.spade_socket.close()
-        self.enemy_ready = False
+
+        self.agent.enemy_ready = False
+        play_cards["data"] = False
+        await self.agent.actions.send_action_to_socket(play_cards)
 
         print("State TO: CARD_ACTIONS")
         self.set_next_state(CARD_ACTIONS)
@@ -350,12 +358,14 @@ class CardActions(State):
         print("State: CARD_ACTIONS")
         
         for agent in self.agent.card_agents:
-            agent.start()
+            agent.player_card_agents = self.agent.player_card_agents
+            agent.enemy_card_agents = self.agent.enemy_card_agents
+            await agent.start()
 
         for agent in self.agent.card_agents:
             if agent.is_alive():
                 msg = Message(to=agent)
-                msg.body = f"{self.agent.card.name}_done"
+                msg.body = f"{agent.card.name}_start"
                 
                 await self.send(msg)
 

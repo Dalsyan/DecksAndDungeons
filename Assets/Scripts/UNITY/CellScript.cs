@@ -42,49 +42,52 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
 
     public void OnDrop(PointerEventData eventData)
     {
-        if (transform.childCount <= 0)
+        if (AgentServer.Instance.PlayerPlayCards || AgentServer.Instance.EnemyPlayCards)
         {
-            Card = eventData.pointerDrag;
-            var cardScript = Card.GetComponent<CardScript>();
+            if (transform.childCount <= 0)
+            {
+                Card = eventData.pointerDrag;
+                var cardScript = Card.GetComponent<CardScript>();
 
-            var card = new Dictionary<string, object>()
-            {
-                ["Name"] = cardScript.Name,
-                ["class"] = cardScript.Class,
-                ["race"] = cardScript.Race,
-                ["level"] = cardScript.level,
-                ["hp"] = cardScript.hp,
-                ["ac"] = cardScript.ac,
-                ["str"] = cardScript.str,
-                ["con"] = cardScript.con,
-                ["dex"] = cardScript.dex,
-                ["damage"] = cardScript.damage,
-                ["magic"] = cardScript.magic,
-                ["range"] = cardScript.range,
-                ["prio"] = cardScript.prio
-            };
-            var newCard = card;
-            newCard.Add("pos", transform.name);
-            if (cardScript.Owner == "player")
-            {
-                if (AgentServer.Instance.NumPlayerCardsInTable < 3)
+                var card = new Dictionary<string, object>()
                 {
-                    cardScript.ParentAfterDrag = transform;
-                    AgentServer.Instance.PlayerDeck.Remove(card);
-                    AgentServer.Instance.NumPlayerHand--;
-                    AgentServer.Instance.PlayerCardsInTable.Add(newCard);
-                    AgentServer.Instance.NumPlayerCardsInTable++;
+                    ["Name"] = cardScript.Name,
+                    ["class"] = cardScript.Class,
+                    ["race"] = cardScript.Race,
+                    ["level"] = cardScript.level,
+                    ["hp"] = cardScript.hp,
+                    ["ac"] = cardScript.ac,
+                    ["str"] = cardScript.str,
+                    ["con"] = cardScript.con,
+                    ["dex"] = cardScript.dex,
+                    ["damage"] = cardScript.damage,
+                    ["magic"] = cardScript.magic,
+                    ["range"] = cardScript.range,
+                    ["prio"] = cardScript.prio
+                };
+                var newCard = card;
+                newCard.Add("pos", transform.name);
+                if (cardScript.Owner == "player")
+                {
+                    if (AgentServer.Instance.NumPlayerCardsInTable < 3)
+                    {
+                        cardScript.ParentAfterDrag = transform;
+                        AgentServer.Instance.PlayerDeck.Remove(card);
+                        AgentServer.Instance.NumPlayerHand--;
+                        AgentServer.Instance.PlayerCardsInTable.Add(newCard);
+                        AgentServer.Instance.NumPlayerCardsInTable++;
+                    }
                 }
-            }
-            else
-            {
-                if (AgentServer.Instance.NumEnemyCardsInTable < 3)
+                else
                 {
-                    cardScript.ParentAfterDrag = transform;
-                    AgentServer.Instance.EnemyDeck.Remove(card);
-                    AgentServer.Instance.NumEnemyHand--;
-                    AgentServer.Instance.EnemyCardsInTable.Add(newCard);
-                    AgentServer.Instance.NumEnemyCardsInTable++;
+                    if (AgentServer.Instance.NumEnemyCardsInTable < 3)
+                    {
+                        cardScript.ParentAfterDrag = transform;
+                        AgentServer.Instance.EnemyDeck.Remove(card);
+                        AgentServer.Instance.NumEnemyHand--;
+                        AgentServer.Instance.EnemyCardsInTable.Add(newCard);
+                        AgentServer.Instance.NumEnemyCardsInTable++;
+                    }
                 }
             }
         }

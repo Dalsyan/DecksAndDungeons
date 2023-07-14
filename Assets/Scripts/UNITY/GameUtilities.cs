@@ -157,30 +157,38 @@ public class GameUtilities : MonoBehaviour
 
     public void ClickOnPlayButton()
     {
-        UnityEngine.Debug.Log(AgentServer.Instance.PlayerCardsInTable.Count);
-        foreach (var playerCardInTable in AgentServer.Instance.PlayerCardsInTable)
+        if (AgentServer.Instance.PlayerPlayCards)
         {
-            Dictionary<string, object> cardData = new()
+            UnityEngine.Debug.Log(AgentServer.Instance.PlayerCardsInTable.Count);
+            foreach (var playerCardInTable in AgentServer.Instance.PlayerCardsInTable)
             {
-                ["action"] = "createPlayerCard",
-                ["data"] = playerCardInTable["Name"],
-            };
-            var createPlayerCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
-            UnityEngine.Debug.Log(createPlayerCardActionJson);
-            AgentServer.Instance.SendMessages(createPlayerCardActionJson);
+                Dictionary<string, object> cardData = new()
+                {
+                    ["action"] = "createPlayerCard",
+                    ["data"] = playerCardInTable["Name"],
+                };
+                var createPlayerCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
+                UnityEngine.Debug.Log(createPlayerCardActionJson);
+                AgentServer.Instance.SendMessages(createPlayerCardActionJson);
+            }
+            AgentServer.Instance.SendMessages("playerReady");
         }
-        foreach (var enemyCardInTable in AgentServer.Instance.EnemyCardsInTable)
+
+        if (AgentServer.Instance.EnemyPlayCards)
         {
-            Dictionary<string, object> cardData = new()
+            foreach (var enemyCardInTable in AgentServer.Instance.EnemyCardsInTable)
             {
-                ["action"] = "createEnemyCard",
-                ["data"] = enemyCardInTable["Name"],
-            };
-            var createEnemyCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
-            UnityEngine.Debug.Log(createEnemyCardActionJson);
-            AgentServer.Instance.SendMessages(createEnemyCardActionJson);
+                Dictionary<string, object> cardData = new()
+                {
+                    ["action"] = "createEnemyCard",
+                    ["data"] = enemyCardInTable["Name"],
+                };
+                var createEnemyCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
+                UnityEngine.Debug.Log(createEnemyCardActionJson);
+                AgentServer.Instance.SendMessages(createEnemyCardActionJson);
+            }
+            AgentServer.Instance.SendMessages("enemyReady");
         }
-        AgentServer.Instance.SendMessages("start");
     }
     #endregion
 }

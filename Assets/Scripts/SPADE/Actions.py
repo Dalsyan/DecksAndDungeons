@@ -1,15 +1,11 @@
 import json
-import random
 from socket import socket as s
 
-from spade.message import Message
 from spade.behaviour import *
 
 import AgenteCarta as card
-import AgenteManager as manager
 import OwlOntology
 
-import numpy as np
 from cmath import sqrt
 from typing import Tuple
 
@@ -84,7 +80,7 @@ class Actions:
     #          SOCKETS           #
     #                            #
     ##############################
-
+    
     async def send_message_to_socket(self, msg : str):
         encoded_msg = (msg).encode()
         self.unity_sock.sendall(bytearray(encoded_msg))
