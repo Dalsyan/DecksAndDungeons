@@ -200,6 +200,7 @@ class AgentManager(Agent):
     async def play_card_action(self, owner, pos, name):
         card = self.actions.search_for_card(name)
         card.pos = pos
+        card.owner = owner
         print(self.actions.card_to_json_action(card))
     
         self.table[card.pos] = OCCUPIED
