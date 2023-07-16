@@ -295,6 +295,7 @@ class GameStart(State):
             else:
                 initiative_action["data"] = "enemy"
                 await self.agent.actions.send_action_to_socket(initiative_action)
+            time.sleep(1)
 
         await self.agent.actions.send_message_to_socket("start_game")
 
@@ -314,6 +315,7 @@ class PlayerPlayCards(State):
         
         play_cards["data"] = True
         await self.agent.actions.send_action_to_socket(play_cards)
+        time.sleep(1)
 
         await self.agent.listen_for_messages()
 
@@ -323,6 +325,7 @@ class PlayerPlayCards(State):
         self.agent.player_ready = False
         play_cards["data"] = False
         await self.agent.actions.send_action_to_socket(play_cards)
+        time.sleep(1)
 
         print("State TO: ENEMY_PLAY_CARDS")
         self.set_next_state(ENEMY_PLAY_CARDS)
@@ -340,6 +343,7 @@ class EnemyPlayCards(State):
         
         play_cards["data"] = True
         await self.agent.actions.send_action_to_socket(play_cards)
+        time.sleep(1)
 
         await self.agent.listen_for_messages()
 
@@ -349,6 +353,7 @@ class EnemyPlayCards(State):
         self.agent.enemy_ready = False
         play_cards["data"] = False
         await self.agent.actions.send_action_to_socket(play_cards)
+        time.sleep(1)
 
         print("State TO: CARD_ACTIONS")
         self.set_next_state(CARD_ACTIONS)
@@ -362,33 +367,34 @@ class CardActions(State):
             agent.enemy_card_agents = self.agent.enemy_card_agents
             await agent.start()
 
-        for agent in self.agent.card_agents:
-            if agent.is_alive():
-                msg = Message(to=agent)
-                msg.body = f"{agent.card.name}_start"
-                
-                await self.send(msg)
+            sent_msg = Message(to = f'{agent.name}@lightwitch.org')
+            sent_msg.body = "start"
+            await self.send(sent_msg)
 
-                message = await self.agent.receive()
+            recv_msg = await self.receive(10)
+            if recv_msg:
+                if recv_msg.body == "stop":
+                    await agent.stop()
 
-                while not message:
-                    pass
+                else: 
+                    print("no he recibido nada")
+                    await agent.stop()
 
-        if len(self.agent.player_card_agents) == 0 or len(self.agent.player_card_agents) < len(self.agent.enemy_card_agents):
-            self.agent.enemy_score += 1
+            while agent.is_alive():
+                pass
 
-        elif len(self.agent.enemy_card_agents) == 0 or len(self.agent.player_card_agents) > len(self.agent.enemy_card_agents):
-            self.agent.player_score += 1
 
-        for agent in self.agent.card_agents:
-            if agent.is_alive(): 
-                await agent.stop()
+        #if len(self.agent.player_card_agents) == 0 or len(self.agent.player_card_agents) < len(self.agent.enemy_card_agents):
+        #    self.agent.enemy_score += 1
 
-        if self.agent.player_score >= 2:
-            self.agent.winner = "player"
-        elif self.agent.enemy_score >= 2:
-            self.agent.winner = "enemy"
-        
+        #elif len(self.agent.enemy_card_agents) == 0 or len(self.agent.player_card_agents) > len(self.agent.enemy_card_agents):
+        #    self.agent.player_score += 1
+
+        #if self.agent.player_score >= 2:
+        #    self.agent.winner = "player"
+        #elif self.agent.enemy_score >= 2:
+        #    self.agent.winner = "enemy"
+
         print("State TO: PLAYER_PLAY_CARDS")
         self.set_next_state(PLAYER_PLAY_CARDS)
 

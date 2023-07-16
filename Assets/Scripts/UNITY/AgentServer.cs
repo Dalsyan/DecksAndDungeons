@@ -209,7 +209,7 @@ public class AgentServer : MonoBehaviour
                     }
                 }
                 
-                if (dataObj is bool dataString)
+                else if (dataObj is string dataString)
                 {
                     switch (action)
                     {
@@ -222,7 +222,7 @@ public class AgentServer : MonoBehaviour
                     }
                 }
                 
-                if (dataObj is bool dataInt)
+                else if (dataObj is int dataInt)
                 {
                     switch (action)
                     {

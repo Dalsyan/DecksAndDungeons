@@ -1,3 +1,4 @@
+import json
 import random
 
 from owlready2 import *
@@ -13,8 +14,7 @@ class OntologyActions:
     ##############################
 
     def get_card_role(self, card):
-        role = card.cclass.ancestors()[-1]
-        return role
+        return card.hasClass.role
 
     def search_for_card(self, name):
         card = self.onto.search(iri = f"*{name}")[0]
@@ -42,6 +42,7 @@ class OntologyActions:
         crace = ccard.hasRace
         stats["race"] = ''.join(filter(str.isalpha, crace.name))
         
+        stats["role"] = ccard.role
         stats["level"] = ccard.level
         stats["hp"] = ccard.hp
         stats["ac"] = ccard.ac
@@ -68,8 +69,8 @@ class OntologyActions:
         return my_deck
 
     def remove_deck(self, cdeck):
-        #for ccard in cdeck.hasCards:
-        #    self.remove_card(ccard)
+        for ccard in cdeck.hasCards:
+            self.remove_card(ccard)
             
         print(f'I have removed the deck {cdeck.name}')
         destroy_entity(cdeck)
@@ -121,18 +122,18 @@ class OntologyActions:
         return my_card
     
     def remove_card(self, ccard):
-        #cclass = ccard.hasClass
-        #destroy_entity(cclass)
-        #crace = ccard.hasRace
-        #destroy_entity(crace)
-        #cweapon = ccard.hasWeapon
-        #destroy_entity(cweapon)
-        #carmor = ccard.hasArmor
-        #destroy_entity(carmor)
+        cclass = ccard.hasClass
+        destroy_entity(cclass)
+        crace = ccard.hasRace
+        destroy_entity(crace)
+        cweapon = ccard.hasWeapon
+        destroy_entity(cweapon)
+        carmor = ccard.hasArmor
+        destroy_entity(carmor)
 
-        #if ccard.hasShield:
-        #    cshield = ccard.hasShield
-        #    destroy_entity(cshield)
+        if ccard.hasShield:
+            cshield = ccard.hasShield
+            destroy_entity(cshield)
 
         print(f'I have removed the card {ccard.name}')
         destroy_entity(ccard)
@@ -147,10 +148,31 @@ class OntologyActions:
 
     def create_class(self):
         class_list = self.onto.search(subclass_of = self.onto.CClass)
-        class_list.pop(0)
+        class_list = class_list[4:]
+
         cclass = random.choice(class_list)
         my_class = cclass()
         my_class.hp = random.choice([6,8,10,12])
+
+        dps_list = self.onto.search(subclass_of = self.onto.CDps)
+        dps_list.pop(0)
+
+        tank_list = self.onto.search(subclass_of = self.onto.CTank)
+        tank_list.pop(0)
+
+        mage_list = self.onto.search(subclass_of = self.onto.CMage)
+        mage_list.pop(0)
+
+        if cclass in dps_list:
+            role = "dps"
+
+        elif cclass in tank_list:
+            role = "tank"
+
+        elif cclass in mage_list:
+            role = "mage"
+
+        my_class.role = role
 
         self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
         
@@ -296,3 +318,16 @@ class OntologyActions:
             return 4
         elif skill == 20:
             return 5
+
+#if __name__ == "__main__":
+#    ontology_actions = OntologyActions()
+#    ontology = ontology_actions.onto
+
+#    deck1 = ontology_actions.create_deck()
+#    print(ontology_actions.deck_to_list(deck1))
+    
+#    decks = ontology.search(iri = "*cdeck*")
+
+#    for deck in decks:
+#        ontology_actions.remove_deck(deck)
+

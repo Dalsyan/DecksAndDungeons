@@ -15,7 +15,7 @@ FREE = False
 OCCUPIED = True
 
 class Actions:
-    def __init__(self, spade_socket : s, unity_socket : s, owl = OwlOntology.OntologyActions):
+    def __init__(self, spade_socket  = None, unity_socket = None , owl = OwlOntology.OntologyActions):
         self.spade_sock = spade_socket
         self.unity_sock = unity_socket
         self.owl = owl()
@@ -83,10 +83,12 @@ class Actions:
     
     async def send_message_to_socket(self, msg : str):
         encoded_msg = (msg).encode()
+        print(f"he enviado: {msg}")
         self.unity_sock.sendall(bytearray(encoded_msg))
 
     async def send_action_to_socket(self, msg : dict):
         encoded_msg = json.dumps(msg).encode()
+        print(f"he enviado: {msg}")
         self.unity_sock.sendall(bytearray(encoded_msg))
 
     ##############################

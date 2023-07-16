@@ -26,6 +26,7 @@ class CardAgent(Agent):
     def __init__(self, jid, password, card):
         super().__init__(jid, password)
 
+        self.card = card
         self.cclass = card.hasClass
         self.race = card.hasRace
         #self.owner = card.owner
@@ -47,7 +48,7 @@ class CardAgent(Agent):
         self.enemy_card_agents = []
 
     async def setup(self):
-        print(f"Soy {self.agent.name} y he iniciado mi SETUP")
+        print(f"Soy {self.card.name} y he iniciado mi SETUP")
 
         # UTILES
         self.mov = 3
@@ -55,7 +56,7 @@ class CardAgent(Agent):
         self.minions = 0
 
         # INICIALIZAR LAS ACCIONES
-        self.actions = Actions.Actions(self.spade_socket, self.unity_socket)
+        self.actions = Actions.Actions()
 
         behav = CardBehav()
 
@@ -67,7 +68,7 @@ class CardAgent(Agent):
         # TRANSICIONES
         behav.add_transition(source=CARD_WAIT, dest=CARD_ACTION)
         behav.add_transition(source=CARD_ACTION, dest=CARD_STOP)
-        behav.add_transition(source=CARD_STOP, dest=CARD_WAIT)
+        #behav.add_transition(source=CARD_STOP, dest=CARD_WAIT)
         
         self.add_behaviour(behav)
 
@@ -82,6 +83,7 @@ class CardBehav(FSMBehaviour):
         print(f"Soy {self.agent.name} y mi behaviour ha empezado!")
 
     async def on_end(self):
+        print(f"Soy {self.agent.name} y mi behaviour ha acabado!")
         await self.agent.stop()
 
 ##############################
@@ -94,80 +96,84 @@ class CardWait(State):
     async def run(self):
         print("State: CARD_WAIT")
 
-        message = await self.agent.receive()
+        msg = await self.receive(10)
 
-        while not message:
-            pass
+        if msg:
+            if msg.body == "start":
+                print("State TO: CARD_ACTION")
+                self.set_next_state(CARD_ACTION)
 
-        if message == "start_actions":
-            print("State TO: CARD_ACTION")
-            self.next_transition(CARD_ACTION)
+        else: 
+            print("no he recibido nada")
+            await self.agent.stop()
 
 class CardAction(State):
     async def run(self):
         print("State: CARD_ACTION")
-        nearest_enemy = self.agent.actions.nearest_enemy(self.agent, self.agent.enemy_card_agents)
+        #nearest_enemy = self.agent.actions.nearest_enemy(self.agent, self.agent.enemy_card_agents)
+        #print(f"{self.agent.card.name} nearest_enemy: {nearest_enemy.name}")
         
-        if self.agent.actions.get_card_role(self.agent.card) == "cdps":
-            if self.agent.attacks == 3:
-                await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.damage, special = True)
-                self.agent.attacks = 0
+        #if self.agent.actions.get_card_role(self.agent.card) == "dps":
+        #    if self.agent.attacks == 3:
+        #        await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.damage, special = True)
+        #        self.agent.attacks = 0
 
-            else: 
-                await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.damage)
-                self.agent.attacks += 1
+        #    else: 
+        #        await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.damage)
+        #        self.agent.attacks += 1
 
-        elif self.agent.actions.get_card_role(self.agent.card) == "ctank":
-            if self.agent.card.cclass == "paladin":
-                player_card_agents_low = [card for card in self.agents.card_agents if ((card.current_hp * 100) / card.hp) < 34]
-                lowest_player_card = player_card_agents_low.sort(Key = lambda x : x.current_hp)[0]
+        #elif self.agent.actions.get_card_role(self.agent.card) == "tank":
+        #    if self.agent.card.cclass == "paladin":
+        #        player_card_agents_low = [card for card in self.agents.card_agents if ((card.current_hp * 100) / card.hp) < 34]
+        #        lowest_player_card = player_card_agents_low.sort(Key = lambda x : x.current_hp)[0]
 
-                if lowest_player_card:
-                    await self.agent.actions.shield(self.agent.card, lowest_player_card)
+        #        if lowest_player_card:
+        #            await self.agent.actions.shield(self.agent.card, lowest_player_card)
 
-                else: 
-                    await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.damage)
+        #        else: 
+        #            await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.damage)
 
-            elif self.agent.card.cclass == "barbarian": 
-                if ((self.agent.card.current_hp * 100) / self.agent.card.current_hp) <= 50:
-                    await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.damage, special = True)
+        #    elif self.agent.card.cclass == "barbarian": 
+        #        if ((self.agent.card.current_hp * 100) / self.agent.card.current_hp) <= 50:
+        #            await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.damage, special = True)
 
-                else: 
-                    await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.damage)
+        #        else: 
+        #            await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.damage)
 
-        elif self.agent.actions.get_card_role(self.agent.card) == "cmage":
+        #elif self.agent.actions.get_card_role(self.agent.card) == "mage":
 
-            if self.agent.card.cclass == "cleric":
-                player_card_agents_low = [card for card in self.agents.card_agents if ((card.current_hp * 100) / card.hp) < 34]
-                lowest_player_card = player_card_agents_low.sort(Key = lambda x : x.current_hp)[0]
+        #    if self.agent.card.cclass == "cleric":
+        #        player_card_agents_low = [card for card in self.agents.card_agents if ((card.current_hp * 100) / card.hp) < 34]
+        #        lowest_player_card = player_card_agents_low.sort(Key = lambda x : x.current_hp)[0]
 
-                if lowest_player_card:
-                    await self.agent.actions.heal(self.agent.card, lowest_player_card)
+        #        if lowest_player_card:
+        #            await self.agent.actions.heal(self.agent.card, lowest_player_card)
 
-                else: 
-                    await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.magic)
+        #        else: 
+        #            await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.magic)
 
-            if self.agent.card.cclass == "druid":
-                if self.agens.minions < self.agent.card.level:
-                    # invoke minion
-                    self.minions += 1
+        #    if self.agent.card.cclass == "druid":
+        #        if self.agens.minions < self.agent.card.level:
+        #            # invoke minion
+        #            self.minions += 1
 
-                else: 
-                    await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.magic)
+        #        else: 
+        #            await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.magic)
 
-            else:
-                await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.magic)
+        #    else:
+        #        await self.agent.actions.attack(self.agent.card, nearest_enemy, self.card.magic)
         
         print("State TO: CARD_STOP")
-        self.next_transition(CARD_STOP)
+        self.set_next_state(CARD_STOP)
 
 class CardStop(State):
     async def run(self):
         print("State: CARD_STOP")
 
-        msg = Message(to="pvidal_manager@lightwitch.org")
-        msg.body = f"{self.agent.card.name}_done"
+        sent_msg = Message(to = f'pvidal_manager@lightwitch.org')
+        sent_msg.body = "stop"
+        await self.send(sent_msg)
 
-        await self.send(msg)
+        time.sleep(1)
 
-        self.next_transition(CARD_WAIT)
+        await self.agent.stop()
