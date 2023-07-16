@@ -158,10 +158,12 @@ class AgentManager(Agent):
                                 self.listening = False
 
                         elif action == "createPlayerCard":
-                            await self.play_card_action("player", data)
+                            pos = message_dict.get("pos")
+                            await self.play_card_action("player", pos, data)
 
                         elif action == "createEnemyCard":
-                            await self.play_card_action("enemy", data)
+                            pos = message_dict.get("pos")
+                            await self.play_card_action("enemy", pos, data)
 
                         else:
                             print("Unknown action:", action)
@@ -195,9 +197,12 @@ class AgentManager(Agent):
             
         print(self.actions.deck_to_json_action(deck))
 
-    async def play_card_action(self, owner, name):
+    async def play_card_action(self, owner, pos, name):
         card = self.actions.search_for_card(name)
+        card.pos = pos
         print(self.actions.card_to_json_action(card))
+    
+        self.table[card.pos] = OCCUPIED
 
         card_agent = AgenteCarta.CardAgent(f"{card.name}@lightwitch.org", "Pepelxmpp11,", card)
         self.card_agents.append(card_agent)
@@ -365,6 +370,7 @@ class CardActions(State):
         for agent in self.agent.card_agents:
             agent.player_card_agents = self.agent.player_card_agents
             agent.enemy_card_agents = self.agent.enemy_card_agents
+            agent.table = self.agent.table
             await agent.start()
 
             sent_msg = Message(to = f'{agent.name}@lightwitch.org')
@@ -372,17 +378,14 @@ class CardActions(State):
             await self.send(sent_msg)
 
             recv_msg = await self.receive(10)
+
             if recv_msg:
                 if recv_msg.body == "stop":
-                    await agent.stop()
-
-                else: 
-                    print("no he recibido nada")
-                    await agent.stop()
+                    if agent.is_alive():
+                        await agent.stop()
 
             while agent.is_alive():
                 pass
-
 
         #if len(self.agent.player_card_agents) == 0 or len(self.agent.player_card_agents) < len(self.agent.enemy_card_agents):
         #    self.agent.enemy_score += 1

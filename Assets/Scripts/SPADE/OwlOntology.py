@@ -1,4 +1,3 @@
-import json
 import random
 
 from owlready2 import *
@@ -91,6 +90,7 @@ class OntologyActions:
         my_card.hasWeapon = cweapon
         
         my_card.level = level
+        my_card.role = my_card.hasClass.role
         my_card.hp = (my_card.level * cclass.hp) + self.skill_mods(crace.con)
         my_card.str = crace.str
         my_card.con = crace.con
@@ -162,7 +162,7 @@ class OntologyActions:
 
         mage_list = self.onto.search(subclass_of = self.onto.CMage)
         mage_list.pop(0)
-
+        
         if cclass in dps_list:
             role = "dps"
 
@@ -171,6 +171,7 @@ class OntologyActions:
 
         elif cclass in mage_list:
             role = "mage"
+
 
         my_class.role = role
 
@@ -318,16 +319,3 @@ class OntologyActions:
             return 4
         elif skill == 20:
             return 5
-
-#if __name__ == "__main__":
-#    ontology_actions = OntologyActions()
-#    ontology = ontology_actions.onto
-
-#    deck1 = ontology_actions.create_deck()
-#    print(ontology_actions.deck_to_list(deck1))
-    
-#    decks = ontology.search(iri = "*cdeck*")
-
-#    for deck in decks:
-#        ontology_actions.remove_deck(deck)
-

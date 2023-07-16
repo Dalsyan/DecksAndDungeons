@@ -33,30 +33,43 @@ class Actions:
             if nearest == None:
                 nearest = agent
 
-            if self.dist(player_card_agent.pos, agent.pos) < self.dist(player_card_agent.pos, nearest.pos):
+            if self.dist(player_card_agent, agent) < self.dist(player_card_agent, nearest):
                 nearest = agent
-
+                
+        print(f"{player_card_agent.name} nearest_enemy: {nearest.name}")
         return nearest
 
-    async def dist(self, card_agent : card.CardAgent, other_card_agent : card.CardAgent):
-        x1, y1 = card_agent.pos[0], card_agent.pos[1]
-        x2, y2 = other_card_agent.pos[0], other_card_agent.pos[1]
-        return sqrt((x2-x1)**2+(y2-y1)**2)
+    async def process_pos(self, pos_str):
+        pos_tuple = eval(pos_str)
 
-    async def can_move(self, table : dict, pos : Tuple):
+        return pos_tuple
+
+    async def dist(self, card_agent : card.CardAgent, other_card_agent : card.CardAgent):
+        agent_pos = self.process_pos(card_agent.pos)
+        other_pos = self.process_pos(other_card_agent.pos)
+
+        x1, y1 = agent_pos[0], agent_pos[1]
+        x2, y2 = other_pos[0], other_pos[1]
+        
+        dist = sqrt((x2-x1)**2+(y2-y1)**2)
+
+        print(f"{card_agent.name} distance with {other_card_agent.name}: {dist}")
+        return dist
+
+    async def can_move(self, table : dict, pos : str):
         if table[pos] == OCCUPIED:
             return False
         else: 
             return True
 
-    async def move(self, player_card_agent : card.CardAgent, table : dict, old_pos : Tuple, new_pos : Tuple):
+    async def move(self, player_card_agent : card.CardAgent, table : dict, new_pos : str):
         if self.can_move(table, new_pos):
-            table[old_pos] = FREE
+            table[player_card_agent.pos] = FREE
             player_card_agent.pos = new_pos
             table[new_pos] = OCCUPIED
 
     async def attack(self, player_card_agent : card.CardAgent, enemy_card_agent : card.CardAgent, damage : int, special : bool):
-        if self.dist(player_card_agent.pos, enemy_card_agent.pos) <= player_card_agent.range:
+        if self.dist(player_card_agent, enemy_card_agent) <= player_card_agent.range:
             if special:
                 damage = damage + player_card_agent.level
 
@@ -66,11 +79,11 @@ class Actions:
                 enemy_card_agent.shielded = False
 
     async def shield(self, player_card_agent : card.CardAgent, ally_card_agent : card.CardAgent):
-        if self.Dist(player_card_agent.pos, ally_card_agent.pos) <= player_card_agent.range:
+        if self.Dist(player_card_agent, ally_card_agent) <= player_card_agent.range:
             ally_card_agent.shielded = True
 
     async def heal(self, player_card_agent : card.CardAgent, ally_card_agent : card.CardAgent, heal : int):
-        if self.dist(player_card_agent.pos, ally_card_agent.pos) <= player_card_agent.range and ally_card_agent.current_hp < ally_card_agent.hp:
+        if self.dist(player_card_agent, ally_card_agent) <= player_card_agent.range and ally_card_agent.current_hp < ally_card_agent.hp:
             healed_hp = 0
             while healed_hp < heal:
                 ally_card_agent.current_hp += 1
@@ -83,12 +96,10 @@ class Actions:
     
     async def send_message_to_socket(self, msg : str):
         encoded_msg = (msg).encode()
-        print(f"he enviado: {msg}")
         self.unity_sock.sendall(bytearray(encoded_msg))
 
     async def send_action_to_socket(self, msg : dict):
         encoded_msg = json.dumps(msg).encode()
-        print(f"he enviado: {msg}")
         self.unity_sock.sendall(bytearray(encoded_msg))
 
     ##############################

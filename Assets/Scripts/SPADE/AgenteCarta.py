@@ -47,6 +47,8 @@ class CardAgent(Agent):
         self.player_card_agents = []
         self.enemy_card_agents = []
 
+        self.table = {}
+
     async def setup(self):
         print(f"Soy {self.card.name} y he iniciado mi SETUP")
 
@@ -110,8 +112,9 @@ class CardWait(State):
 class CardAction(State):
     async def run(self):
         print("State: CARD_ACTION")
+
+        #self.agent.actions.move(self.agent, self.agent.table, "(0, 0)")
         #nearest_enemy = self.agent.actions.nearest_enemy(self.agent, self.agent.enemy_card_agents)
-        #print(f"{self.agent.card.name} nearest_enemy: {nearest_enemy.name}")
         
         #if self.agent.actions.get_card_role(self.agent.card) == "dps":
         #    if self.agent.attacks == 3:

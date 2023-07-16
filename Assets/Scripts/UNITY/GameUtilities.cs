@@ -166,6 +166,7 @@ public class GameUtilities : MonoBehaviour
                 {
                     ["action"] = "createPlayerCard",
                     ["data"] = playerCardInTable["Name"],
+                    ["pos"] = playerCardInTable["pos"]
                 };
                 var createPlayerCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
                 UnityEngine.Debug.Log(createPlayerCardActionJson);
@@ -182,6 +183,7 @@ public class GameUtilities : MonoBehaviour
                 {
                     ["action"] = "createEnemyCard",
                     ["data"] = enemyCardInTable["Name"],
+                    ["pos"] = enemyCardInTable["pos"]
                 };
                 var createEnemyCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
                 UnityEngine.Debug.Log(createEnemyCardActionJson);
