@@ -205,7 +205,8 @@ class AgentManager(Agent):
     
         self.table[card.pos] = OCCUPIED
 
-        card_agent = AgenteCarta.CardAgent(f"{card.name}@lightwitch.org", "Pepelxmpp11,", card)
+        card_agent = AgenteCarta.CardAgent(f"{card.name}@lightwitch.org", "Pepelxmpp11,", card, self.unity_socket)
+        
         self.card_agents.append(card_agent)
 
         if owner == "player":
@@ -369,24 +370,47 @@ class CardActions(State):
         print("State: CARD_ACTIONS")
         
         for agent in self.agent.card_agents:
-            agent.player_card_agents = self.agent.player_card_agents
-            agent.enemy_card_agents = self.agent.enemy_card_agents
+            if agent.owner == "player":
+                agent.ally_card_agents = self.agent.player_card_agents
+                agent.enemy_card_agents = self.agent.enemy_card_agents
+
+            elif agent.owner == "enemy":
+                agent.ally_card_agents = self.agent.enemy_card_agents
+                agent.enemy_card_agents = self.agent.player_card_agents
+
             agent.table = self.agent.table
             await agent.start()
 
-            sent_msg = Message(to = f'{agent.name}@lightwitch.org')
-            sent_msg.body = "start"
-            await self.send(sent_msg)
+            sent_start = Message(to = f'{agent.name}@lightwitch.org')
+            sent_start.body = "start"
+            await self.send(sent_start)
 
-            recv_msg = await self.receive(10)
+            print(self.agent.table)
 
-            if recv_msg:
-                if recv_msg.body == "stop":
+            recv_pos = await self.receive(10)
+            if recv_pos:
+                print(f"received: {recv_pos.body}")
+                if recv_pos.body == "move_to":
+                    card = recv_pos.get_metadata("card")
+                    card = self.agent.actions.search_for_card(card)
+                    self.agent.table[card.pos] = FREE
+                    pos = recv_pos.get_metadata("pos")
+                    self.agent.table[pos] = OCCUPIED
+
+            print(self.agent.table)
+
+            recv_stop = await self.receive(10)
+
+            if recv_stop:
+                print(f"received: {recv_stop.body}")
+                if recv_stop.body == "stop":
                     if agent.is_alive():
                         await agent.stop()
 
             while agent.is_alive():
                 pass
+
+            time.sleep(1)
 
         #if len(self.agent.player_card_agents) == 0 or len(self.agent.player_card_agents) < len(self.agent.enemy_card_agents):
         #    self.agent.enemy_score += 1

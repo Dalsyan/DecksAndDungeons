@@ -51,6 +51,7 @@ class OntologyActions:
         stats["damage"] = ccard.damage
         stats["magic"] = ccard.magic
         stats["range"] = ccard.range
+        stats["mov"] = ccard.mov
             
         return stats
 
@@ -98,6 +99,7 @@ class OntologyActions:
         my_card.damage = cweapon.damage
         my_card.magic = crace.magic
         my_card.range = cweapon.range
+        my_card.mov = 3
 
         if len(carmor) == 1:
             my_card.hasArmor = carmor[0]

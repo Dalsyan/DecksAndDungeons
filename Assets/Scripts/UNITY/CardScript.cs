@@ -29,6 +29,7 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
 
     private void Start()
     {
+        Card.name = Name;
         PublicName = Race + " " + Class;
         CardImage = transform.GetComponent<Image>();
         OriginalSize = Vector3.one;

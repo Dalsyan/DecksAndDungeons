@@ -24,6 +24,7 @@ public class AgentServer : MonoBehaviour
     public List<Dictionary<string, object>> EnemyDeck { get; set; }
     public List<Dictionary<string, object>> PlayerCardsInTable { get; set; }
     public List<Dictionary<string, object>> EnemyCardsInTable { get; set; }
+    public List<Dictionary<string, object>> CardsInTable { get; set; }
 
     // Address y Ports de sockets
     private readonly string Address = "127.0.0.1";
@@ -80,10 +81,13 @@ public class AgentServer : MonoBehaviour
         NumEnemyHand = 0;
         NumPlayerCardsInTable = 0;
         NumEnemyCardsInTable = 0;
+
         PlayerDeck = new List<Dictionary<string, object>>();
         EnemyDeck = new List<Dictionary<string, object>>();
+
         PlayerCardsInTable = new List<Dictionary<string, object>>();
         EnemyCardsInTable = new List<Dictionary<string, object>>();
+        CardsInTable = new List<Dictionary<string, object>>();
     }
 
     public void Update()
@@ -213,8 +217,16 @@ public class AgentServer : MonoBehaviour
                 {
                     switch (action)
                     {
-                        case "":
-                            var x = dataString;
+                        case "move_card":
+                            ActionsQueue.Enqueue(() => {
+                                var card = GameObject.Find(dataString.ToString());
+
+                                messageDict.TryGetValue("pos", out object pos);
+                                var cell = GameObject.Find(pos.ToString());
+
+                                card.transform.SetParent(cell.transform);
+                            });
+                            
                             break;
                         default:
                             UnityEngine.Debug.LogWarning("Unknown action.");
