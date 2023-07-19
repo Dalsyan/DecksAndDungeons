@@ -23,7 +23,7 @@ CARD_STOP = "CARD_STOP"
 ##############################
 
 class CardAgent(Agent):
-    def __init__(self, jid, password, card, unity_socket):
+    def __init__(self, jid, password, card, unity_socket, table, player_card_agents, enemy_card_agents):
         super().__init__(jid, password)
 
         self.card = card
@@ -48,10 +48,15 @@ class CardAgent(Agent):
         self.shielded = False
         self.current_hp = self.hp
         
-        self.ally_card_agents = []
-        self.enemy_card_agents = []
+        if self.owner == "player":
+            self.ally_card_agents = player_card_agents
+            self.enemy_card_agents = enemy_card_agents
 
-        self.table = {}
+        elif self.owner == "enemy":
+            self.ally_card_agents = enemy_card_agents
+            self.enemy_card_agents = player_card_agents
+
+        self.table = table
 
         self.unity_socket = unity_socket
 
@@ -122,24 +127,26 @@ class CardAction(State):
         nearest_enemy = self.agent.actions.nearest_enemy(self.agent, self.agent.enemy_card_agents)
         nearest_ally = self.agent.actions.nearest_ally(self.agent, self.agent.ally_card_agents)
 
-        new_pos = self.agent.actions.move_to_card(self.agent, nearest_enemy, self.agent.table)
-        if new_pos is not None:
-            self.agent.pos = new_pos
-            await self.agent.actions.send_action_to_socket({"action" : "move_card", "data": self.agent.card.name, "pos": new_pos})
+        await self.agent.actions.attack(self.agent, nearest_enemy)
 
-            move_msg = Message(to="pvidal_manager@lightwitch.org", body = "move_to")
-            move_msg.set_metadata("card", self.agent.card.name)
-            move_msg.set_metadata("pos", self.agent.pos)
-            await self.send(move_msg)
+        #new_pos = self.agent.actions.move_to_card(self.agent, nearest_enemy, self.agent.table)
+        #if new_pos is not None:
+        #    self.agent.pos = new_pos
+        #    await self.agent.actions.send_action_to_socket({"action" : "move_card", "data": self.agent.card.name, "pos": new_pos})
 
-        else:
-            sent_msg = Message(to = f'pvidal_manager@lightwitch.org')
-            sent_msg.body = "stop"
-            await self.send(sent_msg)
+        #    move_msg = Message(to="pvidal_manager@lightwitch.org", body = "move_to")
+        #    move_msg.set_metadata("card", self.agent.card.name)
+        #    move_msg.set_metadata("pos", self.agent.pos)
+        #    await self.send(move_msg)
 
-            time.sleep(1)
+        #else:
+        #    sent_msg = Message(to = f'pvidal_manager@lightwitch.org')
+        #    sent_msg.body = "stop"
+        #    await self.send(sent_msg)
 
-            await self.agent.stop()
+        #    time.sleep(1)
+
+        #    await self.agent.stop()
 
 
 

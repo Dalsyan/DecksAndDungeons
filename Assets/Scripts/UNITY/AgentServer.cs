@@ -228,6 +228,16 @@ public class AgentServer : MonoBehaviour
                             });
                             
                             break;
+
+                        case "kill_card":
+                            ActionsQueue.Enqueue(() => {
+                                var card = GameObject.Find(dataString.ToString());
+
+                                Destroy(card);
+                            });
+
+                            break;
+
                         default:
                             UnityEngine.Debug.LogWarning("Unknown action.");
                             break;

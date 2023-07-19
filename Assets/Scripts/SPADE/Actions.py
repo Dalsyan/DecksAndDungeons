@@ -83,7 +83,7 @@ class Actions:
             print("pos out of table limits")
             return False
         
-    def move_to_card(self, player_card_agent: card.CardAgent, other_card_agent: card.CardAgent, table: dict):
+    async def move_to_card(self, player_card_agent: card.CardAgent, other_card_agent: card.CardAgent, table: dict):
         agent_pos = self.process_pos(player_card_agent.pos)
         print(f"{player_card_agent.card.name} en pos: {agent_pos}")
         other_pos = self.process_pos(other_card_agent.pos)
@@ -96,52 +96,56 @@ class Actions:
 
         if player_card_agent.owner == "player":
             if self.dist(player_card_agent, other_card_agent) > player_card_agent.range and self.can_move(table, str((x2 + rango, y2))):
-                return str((x2 + rango, y2))
+                self.move(player_card_agent, table, str((x2 + rango, y2)))
             
             elif self.dist(player_card_agent, other_card_agent) > player_card_agent.range and self.can_move(table, str((x2, y2 - rango))):
-                return str((x2, y2 - rango))
+                self.move(player_card_agent, table, str((x2, y2 - rango)))
 
             elif self.dist(player_card_agent, other_card_agent) > player_card_agent.range and self.can_move(table, str((x2, y2 + rango))): 
-                return str((x2, y2 + rango))
+                self.move(player_card_agent, table, str((x2, y2 + rango)))
         
         elif player_card_agent.owner == "enemy":
             if self.dist(player_card_agent, other_card_agent) > player_card_agent.range and self.can_move(table, str((x2 - rango, y2))):
-                return str((x2 - rango, y2))
+                self.move(player_card_agent, table, str((x2 - rango, y2)))
             
             elif self.dist(player_card_agent, other_card_agent) > player_card_agent.range and self.can_move(table, str((x2, y2 - rango))):
-                return str((x2, y2 - rango))
+                self.move(player_card_agent, table, str((x2, y2 - rango)))
 
             elif self.dist(player_card_agent, other_card_agent) > player_card_agent.range and self.can_move(table, str((x2, y2 + rango))):
-                return str((x2, y2 + rango))
-        
-        return None
+                self.move(player_card_agent, table, str((x2, y2 + rango)))
+
+        await self.send_action_to_socket({"action" : "move_card", "data": player_card_agent.card.name, "pos": player_card_agent.pos})
             
     def is_inside_table(self, new_pos: str):
         new_pos = self.process_pos(new_pos)
         return 0 <= new_pos[0] < 6 and 0 <= new_pos[1] < 6
 
     def move(self, player_card_agent : card.CardAgent, table : dict, new_pos : str):
-        print(f"{player_card_agent.card.name} me quiero mover a {new_pos}")
-        print(f"puedo? {self.can_move(table, new_pos)}")
-        if self.can_move(table, new_pos):
-            table[player_card_agent.pos] = FREE
-            player_card_agent.pos = new_pos
-            table[new_pos] = OCCUPIED
-            return True, player_card_agent.pos
-
-        else: 
-            print(f"{player_card_agent.card.name} no me puedo mover a {new_pos}")
-            return False
+        print(f"Soy {player_card_agent.card.name}, estoy en: {player_card_agent.pos}, y me muevo a: {new_pos}")
+        table[player_card_agent.pos] = FREE
+        player_card_agent.pos = new_pos
+        table[new_pos] = OCCUPIED
         
-    async def attack(self, player_card_agent : card.CardAgent, enemy_card_agent : card.CardAgent, damage : int, special : bool):
-        if self.dist(player_card_agent, enemy_card_agent) <= player_card_agent.range:
-            if special:
-                damage = damage + player_card_agent.level
+    async def attack(self, player_card_agent: card.CardAgent, enemy_card_agent: card.CardAgent, special = False):
+        print(f"Soy {player_card_agent.card.name}, y tengo {player_card_agent.current_hp} de vida")
+        damage = player_card_agent.damage
 
-            if not enemy_card_agent.shielded:
-                enemy_card_agent.current_hp = enemy_card_agent.current_hp - damage
-            else:
-                enemy_card_agent.shielded = False
+        if self.dist(player_card_agent, enemy_card_agent) > player_card_agent.range:
+            await self.move_to_card(player_card_agent, enemy_card_agent, player_card_agent.table)
+
+        if special:
+            damage = damage + player_card_agent.level
+
+        if not enemy_card_agent.shielded:
+            print(f"Soy {player_card_agent.card.name}, y hago {damage} de danyo")
+            enemy_card_agent.current_hp = enemy_card_agent.current_hp - damage
+            if enemy_card_agent.current_hp <= 0:
+                print(f"Soy {player_card_agent.card.name}, y he matado a {enemy_card_agent}")
+                player_card_agent.enemy_card_agents.remove(enemy_card_agent)
+                await enemy_card_agent.stop()
+                await self.send_action_to_socket({"action" : "kill_card", "data": enemy_card_agent.card.name})
+        else:
+            enemy_card_agent.shielded = False
 
     async def shield(self, player_card_agent : card.CardAgent, ally_card_agent : card.CardAgent):
         if self.Dist(player_card_agent, ally_card_agent) <= player_card_agent.range:

@@ -205,7 +205,12 @@ class AgentManager(Agent):
     
         self.table[card.pos] = OCCUPIED
 
-        card_agent = AgenteCarta.CardAgent(f"{card.name}@lightwitch.org", "Pepelxmpp11,", card, self.unity_socket)
+        for agent in self.card_agents:
+            if agent.name == card.name:
+                print(f"agent {agent.name} already exists!")
+                return
+
+        card_agent = AgenteCarta.CardAgent(f"{card.name}@lightwitch.org", "Pepelxmpp11,", card, self.unity_socket, self.table, self.player_card_agents, self.enemy_card_agents)
         
         self.card_agents.append(card_agent)
 
@@ -214,7 +219,7 @@ class AgentManager(Agent):
 
         elif owner == "enemy":
             self.enemy_card_agents.append(card_agent)
-
+            
     async def ready_action(self, owner):
         if owner == "player":
             self.player_ready = True
@@ -370,47 +375,28 @@ class CardActions(State):
         print("State: CARD_ACTIONS")
         
         for agent in self.agent.card_agents:
-            if agent.owner == "player":
-                agent.ally_card_agents = self.agent.player_card_agents
-                agent.enemy_card_agents = self.agent.enemy_card_agents
-
-            elif agent.owner == "enemy":
-                agent.ally_card_agents = self.agent.enemy_card_agents
-                agent.enemy_card_agents = self.agent.player_card_agents
-
-            agent.table = self.agent.table
             await agent.start()
 
-            sent_start = Message(to = f'{agent.name}@lightwitch.org')
-            sent_start.body = "start"
-            await self.send(sent_start)
+            if agent.is_alive():
 
-            print(self.agent.table)
+                sent_start = Message(to = f'{agent.name}@lightwitch.org')
+                sent_start.body = "start"
+                await self.send(sent_start)
 
-            recv_pos = await self.receive(10)
-            if recv_pos:
-                print(f"received: {recv_pos.body}")
-                if recv_pos.body == "move_to":
-                    card = recv_pos.get_metadata("card")
-                    card = self.agent.actions.search_for_card(card)
-                    self.agent.table[card.pos] = FREE
-                    pos = recv_pos.get_metadata("pos")
-                    self.agent.table[pos] = OCCUPIED
+                print(self.agent.table)
+                
+                recv_stop = await self.receive(10)
 
-            print(self.agent.table)
+                if recv_stop:
+                    print(f"received: {recv_stop.body}")
+                    if recv_stop.body == "stop":
+                        if agent.is_alive():
+                            await agent.stop()
 
-            recv_stop = await self.receive(10)
-
-            if recv_stop:
-                print(f"received: {recv_stop.body}")
-                if recv_stop.body == "stop":
-                    if agent.is_alive():
-                        await agent.stop()
-
-            while agent.is_alive():
-                pass
-
-            time.sleep(1)
+                while agent.is_alive():
+                    pass
+                
+                print(self.agent.table)
 
         #if len(self.agent.player_card_agents) == 0 or len(self.agent.player_card_agents) < len(self.agent.enemy_card_agents):
         #    self.agent.enemy_score += 1
