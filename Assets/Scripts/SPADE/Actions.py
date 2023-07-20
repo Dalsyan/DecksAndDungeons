@@ -1,4 +1,5 @@
 import json
+import random
 from shutil import which
 from socket import socket as s
 
@@ -128,7 +129,7 @@ class Actions:
         
     async def attack(self, player_card_agent: card.CardAgent, enemy_card_agent: card.CardAgent, special = False):
         print(f"Soy {player_card_agent.card.name}, y tengo {player_card_agent.current_hp} de vida")
-        damage = player_card_agent.damage
+        damage = random.randint(1, player_card_agent.damage)
 
         if self.dist(player_card_agent, enemy_card_agent) > player_card_agent.range:
             await self.move_to_card(player_card_agent, enemy_card_agent, player_card_agent.table)
@@ -137,10 +138,11 @@ class Actions:
             damage = damage + player_card_agent.level
 
         if not enemy_card_agent.shielded:
-            print(f"Soy {player_card_agent.card.name}, y hago {damage} de danyo")
+            print(f"Soy {player_card_agent.card.name}, ataco a {enemy_card_agent.card.name} haciendole {damage} de danyo")
             enemy_card_agent.current_hp = enemy_card_agent.current_hp - damage
             if enemy_card_agent.current_hp <= 0:
                 print(f"Soy {player_card_agent.card.name}, y he matado a {enemy_card_agent}")
+                player_card_agent.card_agents.remove(enemy_card_agent)
                 player_card_agent.enemy_card_agents.remove(enemy_card_agent)
                 await enemy_card_agent.stop()
                 await self.send_action_to_socket({"action" : "kill_card", "data": enemy_card_agent.card.name})

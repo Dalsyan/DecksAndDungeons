@@ -23,7 +23,7 @@ CARD_STOP = "CARD_STOP"
 ##############################
 
 class CardAgent(Agent):
-    def __init__(self, jid, password, card, unity_socket, table, player_card_agents, enemy_card_agents):
+    def __init__(self, jid, password, card, unity_socket, table, card_agents, player_card_agents, enemy_card_agents):
         super().__init__(jid, password)
 
         self.card = card
@@ -48,6 +48,8 @@ class CardAgent(Agent):
         self.shielded = False
         self.current_hp = self.hp
         
+        self.card_agents = card_agents
+
         if self.owner == "player":
             self.ally_card_agents = player_card_agents
             self.enemy_card_agents = enemy_card_agents

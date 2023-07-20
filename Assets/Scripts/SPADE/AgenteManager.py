@@ -415,6 +415,8 @@ class CardActions(State):
 class GameOver(State):
     async def run(self):
         print("State: GAME_OVER")
+        print(f"I am {self.agent.winner} and i am the winner !!")
+        self.agent.close_action()
         
 ##############################
 #                            #
