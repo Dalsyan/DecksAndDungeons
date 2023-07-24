@@ -159,7 +159,6 @@ public class GameUtilities : MonoBehaviour
     {
         if (AgentServer.Instance.PlayerPlayCards)
         {
-            UnityEngine.Debug.Log(AgentServer.Instance.PlayerCardsInTable.Count);
             foreach (var playerCardInTable in AgentServer.Instance.PlayerCardsInTable)
             {
                 Dictionary<string, object> cardData = new()
@@ -173,6 +172,13 @@ public class GameUtilities : MonoBehaviour
                 AgentServer.Instance.SendMessages(createPlayerCardActionJson);
             }
             AgentServer.Instance.SendMessages("playerReady");
+
+            UnityEngine.Debug.Log($"mana {AgentServer.Instance.PlayerManaPool}");
+            UnityEngine.Debug.Log($"current mana {AgentServer.Instance.CurrentPlayerManaPool}");
+            AgentServer.Instance.PlayerManaPool++;
+            AgentServer.Instance.CurrentPlayerManaPool = AgentServer.Instance.PlayerManaPool;
+            UnityEngine.Debug.Log($"mana {AgentServer.Instance.CurrentPlayerManaPool}");
+            UnityEngine.Debug.Log($"current mana {AgentServer.Instance.CurrentPlayerManaPool}");
         }
 
         if (AgentServer.Instance.EnemyPlayCards)
@@ -190,6 +196,13 @@ public class GameUtilities : MonoBehaviour
                 AgentServer.Instance.SendMessages(createEnemyCardActionJson);
             }
             AgentServer.Instance.SendMessages("enemyReady");
+
+            UnityEngine.Debug.Log($"mana {AgentServer.Instance.EnemyManaPool}");
+            UnityEngine.Debug.Log($"current mana {AgentServer.Instance.CurrentEnemyManaPool}");
+            AgentServer.Instance.EnemyManaPool++;
+            AgentServer.Instance.CurrentEnemyManaPool = AgentServer.Instance.EnemyManaPool;
+            UnityEngine.Debug.Log($"mana {AgentServer.Instance.EnemyManaPool}");
+            UnityEngine.Debug.Log($"current mana {AgentServer.Instance.CurrentEnemyManaPool}");
         }
     }
     #endregion

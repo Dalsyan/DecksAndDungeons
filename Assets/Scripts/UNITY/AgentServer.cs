@@ -8,6 +8,8 @@ using System.Text;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System;
+using UnityEngine.UI;
+using TMPro;
 
 public class AgentServer : MonoBehaviour
 {
@@ -25,6 +27,12 @@ public class AgentServer : MonoBehaviour
     public List<Dictionary<string, object>> PlayerCardsInTable { get; set; }
     public List<Dictionary<string, object>> EnemyCardsInTable { get; set; }
     public List<Dictionary<string, object>> CardsInTable { get; set; }
+
+    // Gestion de mana
+    public int PlayerManaPool { get; set; } = 3;
+    public int EnemyManaPool { get; set; } = 3;
+    public int CurrentPlayerManaPool { get; set; }
+    public int CurrentEnemyManaPool { get; set; }
 
     // Address y Ports de sockets
     private readonly string Address = "127.0.0.1";
@@ -88,6 +96,9 @@ public class AgentServer : MonoBehaviour
         PlayerCardsInTable = new List<Dictionary<string, object>>();
         EnemyCardsInTable = new List<Dictionary<string, object>>();
         CardsInTable = new List<Dictionary<string, object>>();
+
+        CurrentPlayerManaPool = PlayerManaPool;
+        CurrentEnemyManaPool = EnemyManaPool;
     }
 
     public void Update()
@@ -229,11 +240,77 @@ public class AgentServer : MonoBehaviour
                             
                             break;
 
-                        case "kill_card":
+                        case "damage_card":
                             ActionsQueue.Enqueue(() => {
                                 var card = GameObject.Find(dataString.ToString());
 
+                                messageDict.TryGetValue("current_hp", out object current_hp);
+                                
+                                var hp_text = card.GetComponent<CardScript>().HpText.text = current_hp.ToString();
+                            });
+
+                            break;
+
+                        case "kill_card":
+                            ActionsQueue.Enqueue(() => {
+                                var card = GameObject.Find(dataString.ToString());
+                                var cardScript = card.GetComponent<CardScript>();
+
+                                int indexToRemove = -1;
+                                for (int i = 0; i < CardsInTable.Count; i++)
+                                {
+                                if (CardsInTable[i].ContainsKey("Name") && CardsInTable[i]["Name"].ToString() == cardScript.Name)
+                                    {
+                                        indexToRemove = i;
+                                        break;
+                                    }
+                                }
+                                if (indexToRemove != -1)
+                                {
+                                    CardsInTable.RemoveAt(indexToRemove);
+                                }
+
+                                int indexToRemove2 = -1;
+                                if (card.GetComponent<CardScript>().Owner == "player")
+                                {
+                                    for (int i = 0; i < PlayerCardsInTable.Count; i++)
+                                    {
+                                        if (PlayerCardsInTable[i].ContainsKey("Name") && PlayerCardsInTable[i]["Name"].ToString() == cardScript.Name)
+                                        {
+                                            indexToRemove2 = i;
+                                            break;
+                                        }
+                                    }
+                                    if (indexToRemove2 != -1)
+                                    {
+                                        PlayerCardsInTable.RemoveAt(indexToRemove2);
+                                    }
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < EnemyCardsInTable.Count; i++)
+                                    {
+                                        if (EnemyCardsInTable[i].ContainsKey("Name") && EnemyCardsInTable[i]["Name"].ToString() == cardScript.Name)
+                                        {
+                                            indexToRemove2 = i;
+                                            break;
+                                        }
+                                    }
+                                    if (indexToRemove2 != -1)
+                                    {
+                                        EnemyCardsInTable.RemoveAt(indexToRemove2);
+                                    }
+                                }
+                                    
+
                                 Destroy(card);
+
+                                var playerCardsJson = JsonConvert.SerializeObject(PlayerCardsInTable, Formatting.Indented);
+                                UnityEngine.Debug.Log($"player cards: {playerCardsJson}");
+                                var enemyCardsJson = JsonConvert.SerializeObject(EnemyCardsInTable, Formatting.Indented);
+                                UnityEngine.Debug.Log($"enemy cards: {enemyCardsJson}");
+                                var CardsJson = JsonConvert.SerializeObject(CardsInTable, Formatting.Indented);
+                                UnityEngine.Debug.Log($"cards: {CardsJson}");
                             });
 
                             break;

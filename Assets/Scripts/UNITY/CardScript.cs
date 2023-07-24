@@ -12,7 +12,8 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     private Image Imagen;
     private TextMeshProUGUI NameText;
     private TextMeshProUGUI DescText;
-    private TextMeshProUGUI HpText;
+    private TextMeshProUGUI ManaText;
+    public TextMeshProUGUI HpText;
     private TextMeshProUGUI AcText;
     private TextMeshProUGUI StrText;
     private TextMeshProUGUI ConText;
@@ -62,6 +63,8 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
 
         NameText = Border.transform.Find("Name").GetComponent<Image>().transform.Find("NameText").GetComponent<TextMeshProUGUI>();
         NameText.text = Name;
+        ManaText = Border.transform.Find("mana").GetComponent<Image>().transform.Find("manaText").GetComponent<TextMeshProUGUI>();
+        ManaText.text = level.ToString();
         HpText = Border.transform.Find("hp").GetComponent<Image>().transform.Find("hpText").GetComponent<TextMeshProUGUI>();
         HpText.text = hp.ToString();
         AcText = Border.transform.Find("ac").GetComponent<Image>().transform.Find("acText").GetComponent<TextMeshProUGUI>();

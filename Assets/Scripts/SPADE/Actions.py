@@ -1,3 +1,4 @@
+from asyncio import Lock
 import json
 import random
 from shutil import which
@@ -70,15 +71,15 @@ class Actions:
 
         dist = abs(x2 - x1) + abs(y2 - y1)
 
-        print(f"{card_agent.name} distance with {other_card_agent.name}: {dist}")
+        #print(f"{card_agent.name} distance with {other_card_agent.name}: {dist}")
         return dist
     
     def can_move(self, table : dict, pos : str):
         if self.is_inside_table(pos):
-            if table[pos] == FREE:
-                print("table pos is FREE")
-            else: 
-                print("table pos is OCCUPIED")
+            #if table[pos] == FREE:
+            #    print("table pos is FREE")
+            #else: 
+            #    print("table pos is OCCUPIED")
             return table[pos] == FREE
         else:
             print("pos out of table limits")
@@ -86,9 +87,9 @@ class Actions:
         
     async def move_to_card(self, player_card_agent: card.CardAgent, other_card_agent: card.CardAgent, table: dict):
         agent_pos = self.process_pos(player_card_agent.pos)
-        print(f"{player_card_agent.card.name} en pos: {agent_pos}")
+        #print(f"{player_card_agent.card.name} en pos: {agent_pos}")
         other_pos = self.process_pos(other_card_agent.pos)
-        print(f"{player_card_agent.card.name} en pos: {other_pos}")
+        #print(f"{player_card_agent.card.name} en pos: {other_pos}")
         
         x1, y1 = agent_pos[0], agent_pos[1]
         x2, y2 = other_pos[0], other_pos[1]
@@ -140,10 +141,12 @@ class Actions:
         if not enemy_card_agent.shielded:
             print(f"Soy {player_card_agent.card.name}, ataco a {enemy_card_agent.card.name} haciendole {damage} de danyo")
             enemy_card_agent.current_hp = enemy_card_agent.current_hp - damage
+            await self.send_action_to_socket({"action" : "damage_card", "data": enemy_card_agent.card.name, "current_hp": enemy_card_agent.current_hp})
             if enemy_card_agent.current_hp <= 0:
                 print(f"Soy {player_card_agent.card.name}, y he matado a {enemy_card_agent}")
                 player_card_agent.card_agents.remove(enemy_card_agent)
                 player_card_agent.enemy_card_agents.remove(enemy_card_agent)
+
                 await enemy_card_agent.stop()
                 await self.send_action_to_socket({"action" : "kill_card", "data": enemy_card_agent.card.name})
         else:

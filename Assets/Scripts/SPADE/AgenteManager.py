@@ -5,6 +5,7 @@ import socket as s
 
 from owlready2 import *
 from spade.agent import Agent
+from spade.message import Message
 from spade.behaviour import *
 
 import Actions
@@ -99,6 +100,7 @@ class AgentManager(Agent):
         behav.add_transition(source = GAME_START, dest = PLAYER_PLAY_CARDS)
         behav.add_transition(source = PLAYER_PLAY_CARDS, dest = ENEMY_PLAY_CARDS)
         behav.add_transition(source = ENEMY_PLAY_CARDS, dest = CARD_ACTIONS)
+        behav.add_transition(source = CARD_ACTIONS, dest = CARD_ACTIONS)
         behav.add_transition(source = CARD_ACTIONS, dest = PLAYER_PLAY_CARDS)
         behav.add_transition(source = CARD_ACTIONS, dest = GAME_OVER)
         
@@ -201,7 +203,7 @@ class AgentManager(Agent):
         card = self.actions.search_for_card(name)
         card.pos = pos
         card.owner = owner
-        print(self.actions.card_to_json_action(card))
+        #print(self.actions.card_to_json_action(card))
     
         self.table[card.pos] = OCCUPIED
 
@@ -210,7 +212,7 @@ class AgentManager(Agent):
                 print(f"agent {agent.name} already exists!")
                 return
 
-        card_agent = AgenteCarta.CardAgent(f"{card.name}@lightwitch.org", "Pepelxmpp11,", card, self.unity_socket, self.table, self.player_card_agents, self.enemy_card_agents)
+        card_agent = AgenteCarta.CardAgent(f"{card.name}@lightwitch.org", "Pepelxmpp11,", card, self.unity_socket)
         
         self.card_agents.append(card_agent)
 
@@ -230,10 +232,10 @@ class AgentManager(Agent):
     async def close_action(self):
         if self.spade_socket:
             self.spade_socket.close()
-            print(f"unity socket: {self.unity_socket}")
+            #print(f"unity socket: {self.unity_socket}")
 
         self.unity_socket.close()
-        print(f"unity socket: {self.unity_socket}")
+        #print(f"unity socket: {self.unity_socket}")
 
         for agent in self.card_agents:
             await agent.stop()
@@ -269,7 +271,7 @@ class SelectDecks(State):
         await self.agent.actions.send_message_to_socket("select_decks")
         await self.agent.listen_for_messages()
 
-        print("State TO: PREPARE_DECKS")
+        #print("State TO: PREPARE_DECKS")
         self.set_next_state(PREPARE_DECKS)
 
 class PrepareDecks(State):
@@ -287,7 +289,7 @@ class PrepareDecks(State):
         await self.agent.actions.send_action_to_socket(enemy_deck_json)
         time.sleep(1)
         
-        print("State TO: GAME_START")
+        #print("State TO: GAME_START")
         self.set_next_state(GAME_START)
 
 class GameStart(State):
@@ -311,7 +313,7 @@ class GameStart(State):
 
         await self.agent.actions.send_message_to_socket("start_game")
 
-        print("State TO: PLAYER_PLAY_CARDS")
+        #print("State TO: PLAYER_PLAY_CARDS")
         self.set_next_state(PLAYER_PLAY_CARDS)
 
 class PlayerPlayCards(State):
@@ -320,12 +322,8 @@ class PlayerPlayCards(State):
 
         play_cards = {}
         play_cards["action"] = "player_play_cards"
-
-        if self.agent.winner == "player":
-            print("State TO: GAME_OVER")
-            self.set_next_state(GAME_OVER)
-        
         play_cards["data"] = True
+
         await self.agent.actions.send_action_to_socket(play_cards)
         time.sleep(1)
 
@@ -339,7 +337,7 @@ class PlayerPlayCards(State):
         await self.agent.actions.send_action_to_socket(play_cards)
         time.sleep(1)
 
-        print("State TO: ENEMY_PLAY_CARDS")
+        #print("State TO: ENEMY_PLAY_CARDS")
         self.set_next_state(ENEMY_PLAY_CARDS)
 
 class EnemyPlayCards(State):
@@ -348,12 +346,8 @@ class EnemyPlayCards(State):
 
         play_cards = {}
         play_cards["action"] = "enemy_play_cards"
-
-        if self.agent.winner == "enemy":
-            print("State TO: GAME_OVER")
-            self.set_next_state(GAME_OVER)
-        
         play_cards["data"] = True
+
         await self.agent.actions.send_action_to_socket(play_cards)
         time.sleep(1)
 
@@ -367,7 +361,7 @@ class EnemyPlayCards(State):
         await self.agent.actions.send_action_to_socket(play_cards)
         time.sleep(1)
 
-        print("State TO: CARD_ACTIONS")
+        #print("State TO: CARD_ACTIONS")
         self.set_next_state(CARD_ACTIONS)
 
 class CardActions(State):
@@ -375,42 +369,67 @@ class CardActions(State):
         print("State: CARD_ACTIONS")
         
         for agent in self.agent.card_agents:
+            # Enviar tablero y listas de agentes
+            agent.card_agents = self.agent.card_agents
+
+            if agent.owner == "player":
+                agent.ally_card_agents = self.agent.player_card_agents
+                agent.enemy_card_agents = self.agent.enemy_card_agents
+
+            elif agent.owner == "enemy":
+                agent.ally_card_agents = self.agent.enemy_card_agents
+                agent.enemy_card_agents = self.agent.player_card_agents
+
+            agent.table = self.agent.table
+
             await agent.start()
 
-            if agent.is_alive():
-
-                sent_start = Message(to = f'{agent.name}@lightwitch.org')
-                sent_start.body = "start"
-                await self.send(sent_start)
-
-                print(self.agent.table)
+            sent_start = Message(to = f'{agent.name}@lightwitch.org')
+            sent_start.body = "start"
+            await self.send(sent_start)
                 
-                recv_stop = await self.receive(10)
+            recv_stop = await self.receive(10)
 
-                if recv_stop:
-                    print(f"received: {recv_stop.body}")
-                    if recv_stop.body == "stop":
-                        if agent.is_alive():
-                            await agent.stop()
+            if recv_stop:
+                if recv_stop.body == "stop":
+                    if agent.is_alive():
+                        await agent.stop()
 
-                while agent.is_alive():
-                    pass
-                
-                print(self.agent.table)
+            # Actualizar tablero y listas de agentes
+            self.agent.card_agents = agent.card_agents
 
-        #if len(self.agent.player_card_agents) == 0 or len(self.agent.player_card_agents) < len(self.agent.enemy_card_agents):
-        #    self.agent.enemy_score += 1
+            if agent.owner == "player":
+                self.agent.ally_card_agents = agent.ally_card_agents
+                self.agent.enemy_card_agents = agent.enemy_card_agents
 
-        #elif len(self.agent.enemy_card_agents) == 0 or len(self.agent.player_card_agents) > len(self.agent.enemy_card_agents):
-        #    self.agent.player_score += 1
+            elif agent.owner == "enemy":
+                self.agent.ally_card_agents = agent.enemy_card_agents
+                self.agent.enemy_card_agents = agent.ally_card_agents
 
-        #if self.agent.player_score >= 2:
-        #    self.agent.winner = "player"
-        #elif self.agent.enemy_score >= 2:
-        #    self.agent.winner = "enemy"
+            self.agent.table = agent.table
 
-        print("State TO: PLAYER_PLAY_CARDS")
-        self.set_next_state(PLAYER_PLAY_CARDS)
+        if len(self.agent.player_card_agents) != 0 and len(self.agent.enemy_card_agents) != 0:
+            self.set_next_state(CARD_ACTIONS)
+
+        else: 
+            if len(self.agent.player_card_agents) == 0:
+                print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
+                self.agent.enemy_score += 1
+
+            elif len(self.agent.enemy_card_agents) == 0:
+                print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
+                self.agent.player_score += 1
+
+            if self.agent.player_score >= 2:
+                self.agent.winner = "player"
+            elif self.agent.enemy_score >= 2:
+                self.agent.winner = "enemy"
+
+            if self.agent.winner is None:
+                self.set_next_state(PLAYER_PLAY_CARDS)
+
+            else:
+                self.set_next_state(GAME_OVER)
 
 class GameOver(State):
     async def run(self):
