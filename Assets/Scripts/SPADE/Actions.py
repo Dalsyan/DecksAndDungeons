@@ -39,7 +39,8 @@ class Actions:
             elif self.dist(player_card_agent, agent) < self.dist(player_card_agent, nearest):
                 nearest = agent
                 
-        print(f"{player_card_agent.name} nearest_enemy: {nearest.name}")
+        if nearest is not None:
+            print(f"{player_card_agent.name} nearest_enemy: {nearest.name}")
         return nearest
     
     def nearest_ally(self, player_card_agent : card.CardAgent, ally_card_agents : list):
@@ -128,9 +129,12 @@ class Actions:
         player_card_agent.pos = new_pos
         table[new_pos] = OCCUPIED
         
-    async def attack(self, player_card_agent: card.CardAgent, enemy_card_agent: card.CardAgent, special = False):
+    async def attack(self, player_card_agent: card.CardAgent, enemy_card_agent: card.CardAgent, damage_type, special = False):
         print(f"Soy {player_card_agent.card.name}, y tengo {player_card_agent.current_hp} de vida")
-        damage = random.randint(1, player_card_agent.damage)
+        if damage_type == "ad":
+            damage = random.randint(1, player_card_agent.damage)
+        elif damage_type == "ap":
+            damage = random.randint(1, player_card_agent.magic)
 
         if self.dist(player_card_agent, enemy_card_agent) > player_card_agent.range:
             await self.move_to_card(player_card_agent, enemy_card_agent, player_card_agent.table)

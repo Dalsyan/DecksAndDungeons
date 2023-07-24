@@ -413,12 +413,12 @@ class CardActions(State):
 
         else: 
             if len(self.agent.player_card_agents) == 0:
-                print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
                 self.agent.enemy_score += 1
+                print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
 
             elif len(self.agent.enemy_card_agents) == 0:
-                print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
                 self.agent.player_score += 1
+                print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
 
             if self.agent.player_score >= 2:
                 self.agent.winner = "player"
@@ -435,7 +435,7 @@ class GameOver(State):
     async def run(self):
         print("State: GAME_OVER")
         print(f"I am {self.agent.winner} and i am the winner !!")
-        self.agent.close_action()
+        await self.agent.close_action()
         
 ##############################
 #                            #
