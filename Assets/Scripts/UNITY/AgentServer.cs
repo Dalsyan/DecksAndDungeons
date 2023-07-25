@@ -55,7 +55,7 @@ public class AgentServer : MonoBehaviour
     // Gestion de clientes
     public bool Open;
     public int nClients = 0;
-
+        
     // Prefabs
     public GameObject PlayerArea;
     public GameObject EnemyArea;

@@ -12,6 +12,30 @@ class OntologyActions:
     #                            #
     ##############################
 
+    def create_user(self, name, password):
+        cuser = self.onto.search(iri = "*CUser")[0]
+        user = cuser()
+
+        user.name = name
+        user.password = password
+
+        return user
+
+    def search_for_user(self, name):
+        user = self.onto.search(iri = f"{name}")[0]
+        return user
+
+    def verify_user_login(self, user_name, password):
+        user = self.onto.search(iri = f"{user_name}")[0]
+
+        if user.password == password:
+            return True
+        else:
+            return False
+
+    def add_deck_to_user(self, user, deck):
+        user.hasDecks.append(deck)
+
     def get_card_role(self, card):
         return card.hasClass.role
 
@@ -22,6 +46,16 @@ class OntologyActions:
     def search_for_deck(self, name):
         deck = self.onto.search(iri = f"*{name}")[0]
         return deck
+    
+    def search_for_decks(self, player, name):
+        decks = []
+
+        player = self.onto.search(iri = f"*{player}")[0]
+
+        for deck in player.hasDecks:
+            decks.append(deck)
+
+        return decks
 
     def deck_to_list(self, cdeck):
         deck_json = []
@@ -173,8 +207,7 @@ class OntologyActions:
 
         elif cclass in mage_list:
             role = "mage"
-
-
+            
         my_class.role = role
 
         self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
