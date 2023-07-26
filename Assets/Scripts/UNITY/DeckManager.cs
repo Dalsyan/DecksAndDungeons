@@ -3,12 +3,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using UnityEditor.VersionControl;
 using UnityEngine;
 
 public class DeckManager : MonoBehaviour
@@ -19,7 +19,7 @@ public class DeckManager : MonoBehaviour
 
     // Address y Ports de sockets
     private readonly string Address = "127.0.0.1";
-    private readonly int OwlPort = 8001;
+    private readonly int OwlPort = 8002;
 
     // Gestion de sockets
     public TcpClient OwlClient;
@@ -29,6 +29,18 @@ public class DeckManager : MonoBehaviour
 
     // Prefabs
     public GameObject Card;
+
+    private void Awake()
+    {
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            instance = this;
+        }
+    }
 
     private void Start()
     {
@@ -41,10 +53,16 @@ public class DeckManager : MonoBehaviour
         {
             OwlClient = new TcpClient(Address, OwlPort);
 
+            UnityEngine.Debug.Log($"He establecido conexion");
+
             var stream = OwlClient.GetStream();
+
+            UnityEngine.Debug.Log($"He encontrado el stream");
 
             var data = Encoding.ASCII.GetBytes(message);
             stream.Write(data, 0, data.Length);
+
+            UnityEngine.Debug.Log($"data: {data}");
 
             var buffer = new byte[1024 * 3];
             int bytesRead = stream.Read(buffer, 0, buffer.Length);
@@ -64,59 +82,67 @@ public class DeckManager : MonoBehaviour
     {
         UnityEngine.Debug.Log($"Received message: {message}");
 
-        Dictionary<string, object> messageDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(message);
-
-        if (messageDict.TryGetValue("action", out object actionObj) && messageDict.TryGetValue("data", out object dataObj))
+        if (message == "ok")
         {
-            string action = actionObj.ToString();
+            UnityEngine.Debug.Log("You created you account correctly!");
+        }
 
-            if (dataObj is List<object> dataList)
+        else
+        {
+            Dictionary<string, object> messageDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(message);
+
+            if (messageDict.TryGetValue("action", out object actionObj) && messageDict.TryGetValue("data", out object dataObj))
             {
-                var isListOfDictionaries = dataList.All(item => item is Dictionary<string, object>);
-                var isListOfStrings = dataList.All(item => item is string);
+                string action = actionObj.ToString();
 
-                if (isListOfDictionaries)
+                if (dataObj is List<object> dataList)
                 {
-                    string dataJson = JsonConvert.SerializeObject(dataObj);
-                    var dataDict = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(dataJson);
+                    var isListOfDictionaries = dataList.All(item => item is Dictionary<string, object>);
+                    var isListOfStrings = dataList.All(item => item is string);
 
-                    switch (action)
+                    if (isListOfDictionaries)
                     {
-                        case "show_cards":
-                            ShowCards(dataDict);
-                            break;
+                        string dataJson = JsonConvert.SerializeObject(dataObj);
+                        var dataDict = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(dataJson);
 
-                        default:
-                            UnityEngine.Debug.LogWarning("Unknown action.");
-                            break;
+                        switch (action)
+                        {
+                            case "show_cards":
+                                ShowCards(dataDict);
+                                break;
+
+                            default:
+                                UnityEngine.Debug.LogWarning("Unknown action.");
+                                break;
+                        }
+                    }
+
+                    if (isListOfStrings)
+                    {
+                        string dataJson = JsonConvert.SerializeObject(dataObj);
+                        var dataString = JsonConvert.DeserializeObject<List<string>>(dataJson);
+
+                        switch (action)
+                        {
+                            case "show_decks":
+                                ShowDecks(dataString);
+                                break;
+
+                            default:
+                                UnityEngine.Debug.LogWarning("Unknown action.");
+                                break;
+                        }
                     }
                 }
-                
-                if (isListOfStrings)
+                else
                 {
-                    string dataJson = JsonConvert.SerializeObject(dataObj);
-                    var dataString = JsonConvert.DeserializeObject<List<string>>(dataJson);
-
-                    switch (action)
-                    {
-                        case "show_decks":
-                            ShowDecks(dataString);
-                            break;
-
-                        default:
-                            UnityEngine.Debug.LogWarning("Unknown action.");
-                            break;
-                    }
+                    UnityEngine.Debug.LogWarning("dataObj is not a list.");
                 }
             }
             else
             {
-                UnityEngine.Debug.LogWarning("dataObj is not a list.");
+                UnityEngine.Debug.LogWarning("Invalid message format.");
             }
-        }
-        else
-        {
-            UnityEngine.Debug.LogWarning("Invalid message format.");
         }
     }
 
@@ -129,8 +155,6 @@ public class DeckManager : MonoBehaviour
                 UnityEngine.Debug.LogWarning("Invalid deck data format.");
                 return;
             }
-
-
         }
     }
 

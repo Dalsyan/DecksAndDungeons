@@ -194,6 +194,10 @@ class Actions:
         res = cards.sort(Key = lambda x : x.prio, reverse = True)
         return res
 
+    def create_user(self, name, password):
+        user = self.owl.create_user(name, password)
+        return user
+
     def search_for_card(self, name):
         card = self.owl.search_for_card(name)
         return card

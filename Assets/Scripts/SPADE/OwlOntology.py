@@ -13,12 +13,20 @@ class OntologyActions:
     ##############################
 
     def create_user(self, name, password):
+        users = self.onto.search(type = self.onto.CUser)
+
+        for user in users:
+            if name == user.name:
+                print("este usuario ya existe")
+                return
+
         cuser = self.onto.search(iri = "*CUser")[0]
         user = cuser()
 
         user.name = name
         user.password = password
 
+        self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
         return user
 
     def search_for_user(self, name):
