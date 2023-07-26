@@ -8,9 +8,6 @@ using UnityEngine.SocialPlatforms;
 
 public class GameUtilities : MonoBehaviour
 {
-    private string Address = "127.0.0.1";
-    private int SpadePort = 8001;
-
     private bool GameIsPaused = false;
     public GameObject PauseMenu;
 

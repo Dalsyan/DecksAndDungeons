@@ -198,6 +198,10 @@ class Actions:
         user = self.owl.create_user(name, password)
         return user
 
+    def login_user(self, name, password):
+        user = self.owl.verify_user_login(name, password)
+        return user
+
     def search_for_card(self, name):
         card = self.owl.search_for_card(name)
         return card

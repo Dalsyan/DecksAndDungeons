@@ -30,6 +30,9 @@ public class DeckManager : MonoBehaviour
     // Prefabs
     public GameObject Card;
 
+    // Login
+    public bool Logged { get; set; } = false;
+
     private void Awake()
     {
         if (instance != null && instance != this)
@@ -53,22 +56,31 @@ public class DeckManager : MonoBehaviour
         {
             OwlClient = new TcpClient(Address, OwlPort);
 
-            UnityEngine.Debug.Log($"He establecido conexion");
-
             var stream = OwlClient.GetStream();
-
-            UnityEngine.Debug.Log($"He encontrado el stream");
 
             var data = Encoding.ASCII.GetBytes(message);
             stream.Write(data, 0, data.Length);
 
-            UnityEngine.Debug.Log($"data: {data}");
-
             var buffer = new byte[1024 * 3];
-            int bytesRead = stream.Read(buffer, 0, buffer.Length);
-            var respone = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            int totalBytesRead = 0;
 
-            ProcessMessage(message);
+            while (true)
+            {
+                int bytesRead = stream.Read(buffer, totalBytesRead, buffer.Length - totalBytesRead);
+                totalBytesRead += bytesRead;
+
+                if (bytesRead == 0)
+                {
+                    break;
+                }
+            }
+
+            var response = Encoding.ASCII.GetString(buffer, 0, totalBytesRead);
+
+            if (response != null)
+            {
+                ProcessMessage(message);
+            }
 
             UnityEngine.Debug.Log($"He enviado un mensaje: {message}, con tamanyo: {data.Length}");
         }
@@ -82,9 +94,15 @@ public class DeckManager : MonoBehaviour
     {
         UnityEngine.Debug.Log($"Received message: {message}");
 
-        if (message == "ok")
+        if (message == "registered")
         {
             UnityEngine.Debug.Log("You created you account correctly!");
+        }
+        
+        else if (message == "logged")
+        {
+            UnityEngine.Debug.Log("You logged correctly!");
+            Logged = true;
         }
 
         else

@@ -24,7 +24,7 @@ public class MainMenu : MonoBehaviour
 
     // Gestion de cuentas
     public string LoginText;
-    public string LoginPasswordTexe;
+    public string LoginPasswordText;
     public string RegisterText;
     public string RegisterPasswordText;
     public string RegisterVerifyPasswordText;
@@ -32,13 +32,11 @@ public class MainMenu : MonoBehaviour
     public GameObject DeckServer;
     private DeckManager DeckManager;
 
-    public bool Logged {  get; set; }
     public Dictionary<string, string> User { get; set; }
 
     private void Start()
     {
         DeckManager = DeckServer.GetComponent<DeckManager>();
-        Logged = false;
         User = new Dictionary<string, string>();
     }
 
@@ -47,7 +45,7 @@ public class MainMenu : MonoBehaviour
         DeckManager.Instance.SendMessages("close");
         Destroy(DeckManager.Instance);
 
-        if (Logged)
+        if (DeckManager.Instance.Logged)
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
         }
@@ -79,8 +77,27 @@ public class MainMenu : MonoBehaviour
     
     public void LoginButton()
     {
-        LoginMenu.SetActive(false);
-        Logged = true;
+        LoginText = LoginInput.text;
+        LoginPasswordText = LoginPasswordInput.text;
+
+        Dictionary<string, object> userData = new()
+        {
+            ["action"] = "loginUser",
+            ["data"] = LoginText,
+            ["password"] = LoginPasswordText
+        };
+
+        var loginJson = JsonConvert.SerializeObject(userData, Formatting.Indented);
+        DeckManager.Instance.SendMessages(loginJson);
+
+        if (DeckManager.Instance.Logged)
+        {
+            LoginMenu.SetActive(false);
+        }
+        else
+        {
+            Debug.Log("Incorrect user data");
+        }
     }
     
     public void RegisterMenuButton()

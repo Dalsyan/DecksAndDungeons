@@ -29,18 +29,14 @@ class OntologyActions:
         self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
         return user
 
-    def search_for_user(self, name):
-        user = self.onto.search(iri = f"{name}")[0]
-        return user
-
     def verify_user_login(self, user_name, password):
-        user = self.onto.search(iri = f"{user_name}")[0]
+        user = self.onto.search(iri=f"*{user_name}").first()
 
-        if user.password == password:
-            return True
-        else:
-            return False
+        if user and user.password == password:
+            return user
 
+        return None
+    
     def add_deck_to_user(self, user, deck):
         user.hasDecks.append(deck)
 

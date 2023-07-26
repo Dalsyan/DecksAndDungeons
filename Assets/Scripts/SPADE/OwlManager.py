@@ -51,8 +51,19 @@ class OwlManager:
                             if user is not None:
                                 print(f"user created: {user.name}")
 
-                                message = ("ok").encode()
-                                client_socket.sendall(bytearray(message))
+                                response = "registered"
+                                byte_response = (response).encode()
+                                client_socket.sendall(bytearray(byte_response))
+
+                        elif action == "loginUser":
+                            user = self.login_user(data, password)
+
+                            if user:
+                                print(f"user: {user.name} logged")
+
+                                response = "logged"
+                                byte_response = (response).encode()
+                                client_socket.sendall(bytearray(byte_response))
 
                         elif action == "showDeck":
                             self.show_deck(data)
@@ -78,6 +89,10 @@ class OwlManager:
 
     def create_user(self, name, password):
         user = self.actions.create_user(name, password)
+        return user
+
+    def login_user(self, name, password):
+        user = self.actions.login_user(name, password)
         return user
 
     def show_deck(self, name):
