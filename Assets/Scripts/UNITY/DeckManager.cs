@@ -61,28 +61,19 @@ public class DeckManager : MonoBehaviour
             var data = Encoding.ASCII.GetBytes(message);
             stream.Write(data, 0, data.Length);
 
+            UnityEngine.Debug.Log($"He enviado un mensaje: {message}, con tamanyo: {data.Length}");
+
             var buffer = new byte[1024 * 3];
-            int totalBytesRead = 0;
+            int bytesRead = stream.Read(buffer, 0, buffer.Length);
+            var response = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
-            while (true)
-            {
-                int bytesRead = stream.Read(buffer, totalBytesRead, buffer.Length - totalBytesRead);
-                totalBytesRead += bytesRead;
-
-                if (bytesRead == 0)
-                {
-                    break;
-                }
-            }
-
-            var response = Encoding.ASCII.GetString(buffer, 0, totalBytesRead);
+            UnityEngine.Debug.Log($"{"response".Length}");
+            UnityEngine.Debug.Log($"{response.Length}");
 
             if (response != null)
             {
-                ProcessMessage(message);
+                ProcessMessage(response);
             }
-
-            UnityEngine.Debug.Log($"He enviado un mensaje: {message}, con tamanyo: {data.Length}");
         }
         catch (Exception e)
         {
