@@ -186,14 +186,12 @@ class Actions:
     #                            #
     ##############################
 
-    def get_card_role(self, card):
-        role = self.owl.get_card_role(card)
-        return role
-
+    # ORDERING
     def order_cards_by_prio(self, cards : list[card.CardAgent]):
         res = cards.sort(Key = lambda x : x.prio, reverse = True)
         return res
 
+    # USER MANAGEMENT
     def create_user(self, name, password):
         user = self.owl.create_user(name, password)
         return user
@@ -202,18 +200,28 @@ class Actions:
         user = self.owl.verify_user_login(name, password)
         return user
 
-    def search_for_card(self, name):
-        card = self.owl.search_for_card(name)
-        return card
-        
-    def search_for_decks(self, player, name):
-        decks = self.owl.search_for_decks(player, name)
+    # SEARCH IN ONTOLOGY    
+    def search_for_decks(self, player):
+        decks = self.owl.search_for_decks(player)
         return decks
 
     def search_for_deck(self, name):
         deck = self.owl.search_for_deck(name)
         return deck
 
+    def search_for_deck_cards(self, deck):
+        cards = self.owl.search_for_deck_cards(deck)
+        return cards
+
+    def search_for_cards(self, name):
+        cards = self.owl.search_for_cards(name)
+        return cards
+    
+    def search_for_card(self, name):
+        card = self.owl.search_for_card(name)
+        return card
+
+    # JSON PARSER
     def card_to_json_action(self, card):
         card_json = self.owl.card_to_dict(card)
 
@@ -224,6 +232,7 @@ class Actions:
 
         return deck_json
 
+    # CREATION
     def create_deck(self):
         deck = self.owl.create_deck()
 

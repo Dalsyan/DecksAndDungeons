@@ -19,10 +19,11 @@ class OwlManager:
     print(f"conectado a ({ADDRESS}, {PORT})")
 
     async def listen_for_messages(self):
+        listening = True
         self.owl_socket.listen(5)
         print("escuchando mensajes!")
         
-        while True:
+        while listening:
             try:
                 client_socket, address = self.owl_socket.accept()
                 print(f'Conectado a cliente: {client_socket}')
@@ -34,7 +35,8 @@ class OwlManager:
                     break
 
                 if message == "close":
-                    await self.close_action()
+                    listening = False
+                    self.close_action()
 
                 else:
                     try:
@@ -67,11 +69,23 @@ class OwlManager:
                                 client_socket.sendall(bytearray(byte_response))
                                 print(f"enviado: {response}")
 
-                        elif action == "showDeck":
-                            self.show_deck(data)
+                        elif action == "showDecks":
+                            decks = self.show_decks("dalso")
+                            
+                            if decks is not None:
+                                deck_json = {"action" : "show_decks", "data" : decks}
+                                byte_deck_json = (json.dumps(deck_json)).encode()
+
+                                client_socket.sendall(bytearray(byte_deck_json))
 
                         elif action == "showCards":
-                            self.show_cards(data)
+                            cards = self.show_cards("dalso")
+
+                            if cards is not None:
+                                card_json = {'action': 'show_cards', 'data': cards}
+                                byte_card_json = json.dumps(card_json).encode()
+
+                                client_socket.sendall(bytearray(byte_card_json))
                             
                         elif action == "showDeckCards":
                             self.show_deck_cards(data)
@@ -97,11 +111,14 @@ class OwlManager:
         user = self.actions.login_user(name, password)
         return user
 
-    def show_deck(self, name):
-        deck = self.actions.search_for_decks(name)
+    def show_decks(self, name):
+        decks = self.actions.search_for_decks(name)
+        print(decks)
+        return decks
     
-    def show_cards(self):
-        pass
+    def show_cards(self, name):
+        cards = self.actions.search_for_cards(name)
+        return cards
     
     def show_deck_cards(self):
         pass

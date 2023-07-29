@@ -30,8 +30,9 @@ public class DeckManager : MonoBehaviour
     // Prefabs
     public GameObject Card;
 
-    // Login
+    // Gestion de MainMenu 
     public bool Logged { get; set; } = false;
+
 
     private void Awake()
     {
@@ -50,6 +51,11 @@ public class DeckManager : MonoBehaviour
         OpenCMDThread();
     }
 
+    private void OnDestroy()
+    {
+        SendMessages("close");
+    }
+
     public void SendMessages(string message)
     {
         try
@@ -66,9 +72,6 @@ public class DeckManager : MonoBehaviour
             var buffer = new byte[1024 * 3];
             int bytesRead = stream.Read(buffer, 0, buffer.Length);
             var response = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-
-            UnityEngine.Debug.Log($"{"response".Length}");
-            UnityEngine.Debug.Log($"{response.Length}");
 
             if (response != null)
             {

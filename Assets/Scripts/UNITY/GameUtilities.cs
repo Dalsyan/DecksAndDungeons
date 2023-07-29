@@ -165,17 +165,12 @@ public class GameUtilities : MonoBehaviour
                     ["pos"] = playerCardInTable["pos"]
                 };
                 var createPlayerCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
-                UnityEngine.Debug.Log(createPlayerCardActionJson);
                 AgentServer.Instance.SendMessages(createPlayerCardActionJson);
             }
             AgentServer.Instance.SendMessages("playerReady");
 
-            UnityEngine.Debug.Log($"mana {AgentServer.Instance.PlayerManaPool}");
-            UnityEngine.Debug.Log($"current mana {AgentServer.Instance.CurrentPlayerManaPool}");
             AgentServer.Instance.PlayerManaPool++;
             AgentServer.Instance.CurrentPlayerManaPool = AgentServer.Instance.PlayerManaPool;
-            UnityEngine.Debug.Log($"mana {AgentServer.Instance.CurrentPlayerManaPool}");
-            UnityEngine.Debug.Log($"current mana {AgentServer.Instance.CurrentPlayerManaPool}");
         }
 
         if (AgentServer.Instance.EnemyPlayCards)
@@ -189,17 +184,12 @@ public class GameUtilities : MonoBehaviour
                     ["pos"] = enemyCardInTable["pos"]
                 };
                 var createEnemyCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
-                UnityEngine.Debug.Log(createEnemyCardActionJson);
                 AgentServer.Instance.SendMessages(createEnemyCardActionJson);
             }
             AgentServer.Instance.SendMessages("enemyReady");
 
-            UnityEngine.Debug.Log($"mana {AgentServer.Instance.EnemyManaPool}");
-            UnityEngine.Debug.Log($"current mana {AgentServer.Instance.CurrentEnemyManaPool}");
             AgentServer.Instance.EnemyManaPool++;
             AgentServer.Instance.CurrentEnemyManaPool = AgentServer.Instance.EnemyManaPool;
-            UnityEngine.Debug.Log($"mana {AgentServer.Instance.EnemyManaPool}");
-            UnityEngine.Debug.Log($"current mana {AgentServer.Instance.CurrentEnemyManaPool}");
         }
     }
     #endregion

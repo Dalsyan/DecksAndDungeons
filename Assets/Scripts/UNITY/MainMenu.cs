@@ -1,11 +1,8 @@
 using Newtonsoft.Json;
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
-using UnityEditor.Build.Content;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviour
 {
@@ -15,6 +12,12 @@ public class MainMenu : MonoBehaviour
     public GameObject LoginMenu;
     public GameObject RegisterMenu;
 
+    // Backgrounds
+    public GameObject CollectionBackground;
+    public GameObject DeckBackground;
+    public GameObject CardBackground;
+    public GameObject CardFromDeckBackground;
+
     // Inputs
     public TMP_InputField LoginInput;
     public TMP_InputField LoginPasswordInput;
@@ -23,11 +26,11 @@ public class MainMenu : MonoBehaviour
     public TMP_InputField RegisterVerifyPasswordInput;
 
     // Gestion de cuentas
-    public string LoginText;
-    public string LoginPasswordText;
-    public string RegisterText;
-    public string RegisterPasswordText;
-    public string RegisterVerifyPasswordText;
+    private string LoginText;
+    private string LoginPasswordText;
+    private string RegisterText;
+    private string RegisterPasswordText;
+    private string RegisterVerifyPasswordText;
 
     public GameObject DeckServer;
     private DeckManager DeckManager;
@@ -42,11 +45,11 @@ public class MainMenu : MonoBehaviour
 
     public void PlayGame()
     {
-        DeckManager.Instance.SendMessages("close");
-        Destroy(DeckManager.Instance);
-
         if (DeckManager.Instance.Logged)
         {
+            DeckManager.Instance.SendMessages("close");
+            Destroy(DeckManager.Instance);
+
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
         }
         else
@@ -55,10 +58,20 @@ public class MainMenu : MonoBehaviour
         }
     }
 
+    #region FORMS
+
     public void CollectionButton()
     {
-        CollectionMenu.SetActive(true);
-        LoginMenu.SetActive(false);
+        if (DeckManager.Instance.Logged)
+        {
+            CollectionMenu.SetActive(true);
+            CollectionBackground.SetActive(true);
+            LoginMenu.SetActive(false);
+        }
+        else
+        {
+            Debug.Log("No estas loggeado");
+        }
     }
 
     public void OptionsButton()
@@ -67,14 +80,10 @@ public class MainMenu : MonoBehaviour
         LoginMenu.SetActive(false);
     }
 
-    public void BackButton()
-    {
-        OptionsMenu.SetActive(false);
-        CollectionMenu.SetActive(false);
-        RegisterMenu.SetActive(false);
-        LoginMenu.SetActive(true);
-    }
-    
+    #endregion
+
+    #region USER
+
     public void LoginButton()
     {
         LoginText = LoginInput.text;
@@ -130,9 +139,68 @@ public class MainMenu : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region COLLECTION MANAGMENT
+
+    public void ShowDecksButton()
+    {
+        CardBackground.SetActive(false);
+        DeckBackground.SetActive(true);
+
+        var deckDict = new Dictionary<string, string>()
+        {
+            ["action"] = "showDecks",
+            ["data"] = LoginText
+        };
+
+        var deckDictJson = JsonConvert.SerializeObject(deckDict, Formatting.Indented);
+        DeckManager.Instance.SendMessages(deckDictJson);
+    }
+    
+    public void ShowCardsButton()
+    {
+        DeckBackground.SetActive(false);
+        CardBackground.SetActive(true);
+
+        var cardDict = new Dictionary<string, string>()
+        {
+            ["action"] = "showCards",
+            ["data"] = LoginText
+        };
+
+        var cardDictJson = JsonConvert.SerializeObject(cardDict, Formatting.Indented);
+        DeckManager.Instance.SendMessages(cardDictJson);
+    }
+    
+    public void ShowCardsFromDeckButton()
+    {
+        CardFromDeckBackground.SetActive(true);
+
+        var cardDict = new Dictionary<string, string>()
+        {
+            ["action"] = "showCardsFromDeck",
+            ["data"] = "deck_name"
+        };
+
+        //var cardDictJson = JsonConvert.SerializeObject(cardDict, Formatting.Indented);
+        //DeckManager.Instance.SendMessages(cardDictJson);
+    }
+
+    #endregion
+
+    public void BackButton()
+    {
+        OptionsMenu.SetActive(false);
+        CollectionMenu.SetActive(false);
+        RegisterMenu.SetActive(false);
+        LoginMenu.SetActive(true);
+    }
+
     public void QuitGame()
     {
         Debug.Log("Game Quit!");
+        DeckManager.Instance.SendMessages("close");
         Application.Quit();
     }
 }

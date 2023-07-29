@@ -12,6 +12,7 @@ class OntologyActions:
     #                            #
     ##############################
 
+    # USER MANAGEMENT
     def create_user(self, name, password):
         users = self.onto.search(type = self.onto.CUser)
 
@@ -40,27 +41,51 @@ class OntologyActions:
     def add_deck_to_user(self, user, deck):
         user.hasDecks.append(deck)
 
-    def get_card_role(self, card):
-        return card.hasClass.role
+    # SEARCHING IN ONTOLOGY
 
+    def search_for_decks(self, player : str):
+        cplayer = self.onto.search(iri = f"*{player}")[0]
+        decks = cplayer.hasDecks
+        
+        decks = []
+        
+        for deck in cplayer.hasDecks:
+            decks.append(deck.name)
+            
+        return decks
+    
+    def search_for_deck(self, name):
+        deck = self.onto.search(iri = f"*{name}")[0]
+        return deck
+
+    def search_for_cards(self, player):
+        player = self.onto.search(iri = f"*{player}")[0]
+        decks = player.hasDecks
+
+        cards_list = []
+
+        for deck in decks:
+            for card in deck.hasCards:
+                cards_list.append(card.name)
+
+        return cards_list
+
+    def search_for_deck_cards(self, deck):
+        deck = self.onto.search(iri = f"*{deck}")[0]
+        cards = deck.hasCards
+
+        cards_list = []
+
+        for card in cards:
+            cards_list.append(self.card_to_dict(card))
+
+        return cards_list
+    
     def search_for_card(self, name):
         card = self.onto.search(iri = f"*{name}")[0]
         return card
 
-    def search_for_deck(self, name):
-        deck = self.onto.search(iri = f"*{name}")[0]
-        return deck
-    
-    def search_for_decks(self, player, name):
-        decks = []
-
-        player = self.onto.search(iri = f"*{player}")[0]
-
-        for deck in player.hasDecks:
-            decks.append(deck)
-
-        return decks
-
+    # PARSER
     def deck_to_list(self, cdeck):
         deck_json = []
 
@@ -103,6 +128,22 @@ class OntologyActions:
             my_deck.hasCards.append(card)
             num_cards += 1
             
+        self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
+        return my_deck
+    
+    def create_player_deck(self, player):
+        num_cards = 0
+        cdeck = self.onto.search(iri = "*CDeck")[0]
+        cdeck = self.onto.search(iri = f"*{player}")[0]
+        my_deck = cdeck()
+
+        while num_cards != 5:
+            card = self.create_card(random.randint(1,3))
+            my_deck.hasCards.append(card)
+            num_cards += 1
+            
+        player.hasDecks.append(my_deck)
+
         self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
         return my_deck
 

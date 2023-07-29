@@ -38,9 +38,11 @@ class CardAgent(Agent):
         self.dex = card.dex
         self.damage = card.damage
         self.magic = card.magic
+
         self.range = card.range
         self.prio = card.dex
         self.pos = card.pos
+        self.role = card.role
 
         self.mov = card.mov
         self.max_mov = card.mov
@@ -57,7 +59,7 @@ class CardAgent(Agent):
         self.unity_socket = unity_socket
 
     async def setup(self):
-        print(f"Soy {self.card.name} y he iniciado mi SETUP")
+        print(f"\nSoy {self.card.name} y he iniciado mi SETUP")
 
         # UTILES
         self.mov = 3
@@ -92,7 +94,7 @@ class CardBehav(FSMBehaviour):
         print(f"Soy {self.agent.name} y mi behaviour ha empezado!")
 
     async def on_end(self):
-        print(f"Soy {self.agent.name} y mi behaviour ha acabado!")
+        print(f"Soy {self.agent.name} y mi behaviour ha acabado!\n")
         await self.agent.stop()
 
 ##############################
@@ -123,55 +125,64 @@ class CardAction(State):
         nearest_enemy = self.agent.actions.nearest_enemy(self.agent, self.agent.enemy_card_agents)
         nearest_ally = self.agent.actions.nearest_ally(self.agent, self.agent.ally_card_agents)
 
-        if self.agent.actions.get_card_role(self.agent.card) == "dps":
+        if self.agent.role == "dps":
             if self.agent.attacks == 3:
                 await self.agent.actions.attack(self.agent, nearest_enemy, "ad", special = True)
+                print("soy DPS y he hecho ataque ESPECIAL")
                 self.agent.attacks = 0
 
             else: 
                 await self.agent.actions.attack(self.agent, nearest_enemy, "ad")
+                print("soy DPS y he hecho ataque NORMAL")
                 self.agent.attacks += 1
 
-        elif self.agent.actions.get_card_role(self.agent.card) == "tank":
-            if self.agent.card.hasClass == "paladin":
+        elif self.agent.role == "tank":
+            if self.agent.cclass == "paladin":
                 ally_card_agents_low = [card for card in self.agents.card_agents if ((card.current_hp * 100) / card.hp) < 34]
                 lowest_player_card = ally_card_agents_low.sort(Key = lambda x : x.current_hp)[0]
 
-                if lowest_player_card:
+                if lowest_player_card is not None:
+                    print("soy PALADIN e intento ESCUDAR")
                     await self.agent.actions.shield(self.agent.card, lowest_player_card)
 
                 else: 
+                    print("soy PALADIN y he hecho ataque NORMAL")
                     await self.agent.actions.attack(self.agent, nearest_enemy, "ad")
 
-            elif self.agent.card.hasClass == "barbarian": 
+            elif self.agent.cclass == "barbarian": 
                 if ((self.agent.card.current_hp * 100) / self.agent.card.current_hp) <= 50:
-                    await self.agent.actions.attack(self.agent.card, nearest_enemy, "ad", special = True)
+                    print("soy BARBARO y he hecho ataque ESPECIAL")
+                    await self.agent.actions.attack(self.agent, nearest_enemy, "ad", special = True)
 
                 else: 
+                    print("soy BARBARO y he hecho ataque NORMAL")
                     await self.agent.actions.attack(self.agent, nearest_enemy, "ad")
 
-        elif self.agent.actions.get_card_role(self.agent.card) == "mage":
-
-            if self.agent.card.hasClass == "cleric":
+        elif self.agent.role == "mage":
+            if self.agent.cclass == "cleric":
                 ally_card_agents_low = [card for card in self.agents.card_agents if ((card.current_hp * 100) / card.hp) < 34]
                 lowest_player_card = ally_card_agents_low.sort(Key = lambda x : x.current_hp)[0]
 
                 if lowest_player_card:
+                    print("soy CLERIGO e intento CURAR")
                     await self.agent.actions.heal(self.agent.card, lowest_player_card)
 
                 else: 
+                    print("soy CLERIGO y he hecho ataque NORMAL")
                     await self.agent.actions.attack(self.agent, nearest_enemy, "ap")
 
-            if self.agent.card.hasClass == "druid":
+            if self.agent.cclass == "druid":
                 if self.agens.minions < self.agent.card.level:
                     # invoke minion
                     self.minions += 1
 
                 else: 
-                    await self.agent.actions.attack(self.agent.card, nearest_enemy, "ap")
+                    print("soy DRUIDA e intento SPAWNEAR")
+                    await self.agent.actions.attack(self.agent, nearest_enemy, "ap")
 
             else:
-                await self.agent.actions.attack(self.agent.card, nearest_enemy, "ap")
+                print("soy DRUIDA y he hecho ataque NORMAL")
+                await self.agent.actions.attack(self.agent, nearest_enemy, "ap")
         
         print("State TO: CARD_STOP")
         self.set_next_state(CARD_STOP)
