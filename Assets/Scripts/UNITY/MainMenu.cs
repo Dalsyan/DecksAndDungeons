@@ -4,6 +4,7 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviour
 {
@@ -173,6 +174,10 @@ public class MainMenu : MonoBehaviour
 
             var deckButton = Instantiate(DeckButton, new Vector3(0, 0, 0), Quaternion.identity);
             deckButton.name = deck;
+
+            var buttonComp = deckButton.GetComponent<Button>();
+            buttonComp.onClick.AddListener(() => ShowCardsFromDeckButton());
+
             var deckButtonText = deckButton.GetComponentInChildren<TextMeshProUGUI>();
             deckButtonText.text = deck;
 
@@ -183,6 +188,7 @@ public class MainMenu : MonoBehaviour
     public void ShowCardsButton()
     {
         DeckBackground.SetActive(false);
+        CardFromDeckBackground.SetActive(false);
         CardBackground.SetActive(true);
 
         var cardDict = new Dictionary<string, string>()
@@ -216,7 +222,10 @@ public class MainMenu : MonoBehaviour
         OptionsMenu.SetActive(false);
         CollectionMenu.SetActive(false);
         RegisterMenu.SetActive(false);
-        LoginMenu.SetActive(true);
+        if (!DeckManager.Instance.Logged)
+        {
+            LoginMenu.SetActive(true);
+        }
     }
 
     public void QuitGame()
