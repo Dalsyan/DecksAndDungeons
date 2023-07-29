@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -11,9 +12,9 @@ public class MainMenu : MonoBehaviour
     public GameObject CollectionMenu;
     public GameObject LoginMenu;
     public GameObject RegisterMenu;
+    public GameObject UserMenu;
 
     // Backgrounds
-    public GameObject CollectionBackground;
     public GameObject DeckBackground;
     public GameObject CardBackground;
     public GameObject CardFromDeckBackground;
@@ -31,11 +32,15 @@ public class MainMenu : MonoBehaviour
     private string RegisterText;
     private string RegisterPasswordText;
     private string RegisterVerifyPasswordText;
+    public Dictionary<string, string> User { get; set; }
 
+    // DeckManager
     public GameObject DeckServer;
     private DeckManager DeckManager;
 
-    public Dictionary<string, string> User { get; set; }
+    // Botones
+    public GameObject DeckButton;
+    public List<string> DeckButtonList;
 
     private void Start()
     {
@@ -65,7 +70,6 @@ public class MainMenu : MonoBehaviour
         if (DeckManager.Instance.Logged)
         {
             CollectionMenu.SetActive(true);
-            CollectionBackground.SetActive(true);
             LoginMenu.SetActive(false);
         }
         else
@@ -102,6 +106,7 @@ public class MainMenu : MonoBehaviour
         if (DeckManager.Instance.Logged)
         {
             LoginMenu.SetActive(false);
+            UserMenu.SetActive(true);
         }
         else
         {
@@ -156,6 +161,23 @@ public class MainMenu : MonoBehaviour
 
         var deckDictJson = JsonConvert.SerializeObject(deckDict, Formatting.Indented);
         DeckManager.Instance.SendMessages(deckDictJson);
+
+        foreach (string deck in DeckManager.Instance.DeckNames)
+        {
+            if (DeckButtonList.Any(x => x == deck))
+            {
+                continue;
+            }
+
+            DeckButtonList.Add(deck);
+
+            var deckButton = Instantiate(DeckButton, new Vector3(0, 0, 0), Quaternion.identity);
+            deckButton.name = deck;
+            var deckButtonText = deckButton.GetComponentInChildren<TextMeshProUGUI>();
+            deckButtonText.text = deck;
+
+            deckButton.transform.SetParent(DeckBackground.transform, false);
+        }
     }
     
     public void ShowCardsButton()

@@ -33,6 +33,10 @@ public class DeckManager : MonoBehaviour
     // Gestion de MainMenu 
     public bool Logged { get; set; } = false;
 
+    // Gestion de mazos y cartas
+    public List<string> DeckNames = new List<string>();
+    public List<string> CardNames = new List<string>();
+
 
     private void Awake()
     {
@@ -107,48 +111,22 @@ public class DeckManager : MonoBehaviour
             {
                 string action = actionObj.ToString();
 
-                if (dataObj is List<object> dataList)
+                string dataJson = JsonConvert.SerializeObject(dataObj);
+                var dataList = JsonConvert.DeserializeObject<List<object>>(dataJson);
+
+                switch (action)
                 {
-                    var isListOfDictionaries = dataList.All(item => item is Dictionary<string, object>);
-                    var isListOfStrings = dataList.All(item => item is string);
+                    case "show_cards":
+                        ShowCards(dataList);
+                        break;
 
-                    if (isListOfDictionaries)
-                    {
-                        string dataJson = JsonConvert.SerializeObject(dataObj);
-                        var dataDict = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(dataJson);
+                    case "show_decks":
+                        ShowDecks(dataList);
+                        break;
 
-                        switch (action)
-                        {
-                            case "show_cards":
-                                ShowCards(dataDict);
-                                break;
-
-                            default:
-                                UnityEngine.Debug.LogWarning("Unknown action.");
-                                break;
-                        }
-                    }
-
-                    if (isListOfStrings)
-                    {
-                        string dataJson = JsonConvert.SerializeObject(dataObj);
-                        var dataString = JsonConvert.DeserializeObject<List<string>>(dataJson);
-
-                        switch (action)
-                        {
-                            case "show_decks":
-                                ShowDecks(dataString);
-                                break;
-
-                            default:
-                                UnityEngine.Debug.LogWarning("Unknown action.");
-                                break;
-                        }
-                    }
-                }
-                else
-                {
-                    UnityEngine.Debug.LogWarning("dataObj is not a list.");
+                    default:
+                        UnityEngine.Debug.LogWarning("Unknown action.");
+                        break;
                 }
             }
             else
@@ -158,7 +136,7 @@ public class DeckManager : MonoBehaviour
         }
     }
 
-    private void ShowDecks(List<string> dataList)
+    private void ShowDecks(List<object> dataList)
     {
         foreach (string deckName in dataList)
         {
@@ -167,10 +145,17 @@ public class DeckManager : MonoBehaviour
                 UnityEngine.Debug.LogWarning("Invalid deck data format.");
                 return;
             }
+
+            if (DeckNames.Any(x => x == deckName))
+            {
+                continue;
+            }
+
+            DeckNames.Add(deckName);
         }
     }
 
-    private void ShowCards(List<Dictionary<string, object>> dataList)
+    private void ShowCards(List<object> dataList)
     {
         foreach (Dictionary<string, object> cardDict in dataList)
         {
