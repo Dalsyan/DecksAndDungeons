@@ -76,9 +76,7 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
                         AgentServer.Instance.NumPlayerHand--;
                         AgentServer.Instance.PlayerCardsInTable.Add(newCard);
                         AgentServer.Instance.NumPlayerCardsInTable++;
-                        UnityEngine.Debug.Log($"current mana {AgentServer.Instance.CurrentPlayerManaPool}");
                         AgentServer.Instance.CurrentPlayerManaPool -= cardScript.level;
-                        UnityEngine.Debug.Log($"current mana {AgentServer.Instance.CurrentPlayerManaPool}");
                     }
                 }
                 else
@@ -90,9 +88,7 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
                         AgentServer.Instance.NumEnemyHand--;
                         AgentServer.Instance.EnemyCardsInTable.Add(newCard);
                         AgentServer.Instance.NumEnemyCardsInTable++;
-                        UnityEngine.Debug.Log($"current mana {AgentServer.Instance.CurrentEnemyManaPool}");
                         AgentServer.Instance.CurrentEnemyManaPool -= cardScript.level;
-                        UnityEngine.Debug.Log($"current mana {AgentServer.Instance.CurrentEnemyManaPool}");
                     }
                 }
                 AgentServer.Instance.CardsInTable.Add(newCard);

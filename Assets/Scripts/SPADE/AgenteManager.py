@@ -86,8 +86,8 @@ class AgentManager(Agent):
         behav = ManagerBehav()
 
         # ESTADOS
-        #behav.add_state(name = SELECT_DECKS, state = SelectDecks(), initial = True)
-        behav.add_state(name = PREPARE_DECKS, state = PrepareDecks(), initial = True)
+        behav.add_state(name = SELECT_DECKS, state = SelectDecks(), initial = True)
+        behav.add_state(name = PREPARE_DECKS, state = PrepareDecks())
         behav.add_state(name = GAME_START, state = GameStart())
         behav.add_state(name = PLAYER_PLAY_CARDS, state = PlayerPlayCards())
         behav.add_state(name = ENEMY_PLAY_CARDS, state = EnemyPlayCards())
@@ -95,7 +95,7 @@ class AgentManager(Agent):
         behav.add_state(name = GAME_OVER, state = GameOver())
 
         # TRANSICIONES
-        #behav.add_transition(source = SELECT_DECKS, dest = GAME_START)
+        behav.add_transition(source = SELECT_DECKS, dest = PREPARE_DECKS)
         behav.add_transition(source = PREPARE_DECKS, dest = GAME_START)
         behav.add_transition(source = GAME_START, dest = PLAYER_PLAY_CARDS)
         behav.add_transition(source = PLAYER_PLAY_CARDS, dest = ENEMY_PLAY_CARDS)
@@ -139,6 +139,9 @@ class AgentManager(Agent):
                     await self.ready_action("enemy")
                     self.listening = False
 
+                elif message == "deck_selected":
+                    self.listening = False
+
                 else:
                     try:
                         message_dict = json.loads(message)
@@ -147,17 +150,20 @@ class AgentManager(Agent):
                         action = message_dict.get("action")
                         data = message_dict.get("data")
                         
-                        if action == "selectPlayerDeck":
-                            await self.select_deck_action("player", data)
+                        if action == "selectDeck":
+                            self.select_deck_redux_action(data)
+                                
+                        #elif action == "selectPlayerDeck":
+                        #    await self.select_deck_action("player", data)
 
-                            if self.player_deck is not None and self.enemy_deck is not None:
-                                self.listening = False
+                        #    if self.player_deck is not None and self.enemy_deck is not None:
+                        #        self.listening = False
 
-                        elif action == "selectEnemyDeck":
-                            await self.select_deck_action("enemy", data)
+                        #elif action == "selectEnemyDeck":
+                        #    await self.select_deck_action("enemy", data)
 
-                            if self.player_deck is not None and self.enemy_deck is not None:
-                                self.listening = False
+                        #    if self.player_deck is not None and self.enemy_deck is not None:
+                        #        self.listening = False
 
                         elif action == "createPlayerCard":
                             pos = message_dict.get("pos")
@@ -186,7 +192,7 @@ class AgentManager(Agent):
     #                            #
     ##############################
 
-    async def select_deck_action(self, owner, name):
+    def select_deck_action(self, owner, name):
         deck = self.actions.search_for_deck(name)
 
         if owner == "player":
@@ -196,8 +202,12 @@ class AgentManager(Agent):
         elif owner == "enemy":
             self.enemy_deck = deck
             print(f"enemy_deck: {deck.name}")
-            
-        print(self.actions.deck_to_json_action(deck))
+        
+    def select_deck_redux_action(self, name):
+        deck = self.actions.search_for_deck(name)
+        self.player_deck = deck
+        
+        print(f"player_deck: {deck.name}")
 
     async def play_card_action(self, owner, pos, name):
         card = self.actions.search_for_card(name)
@@ -268,7 +278,8 @@ class SelectDecks(State):
     async def run(self):
         print("State: SELECT_DECKS")
 
-        await self.agent.actions.send_message_to_socket("select_decks")
+        await self.agent.actions.send_message_to_socket("start")
+        time.sleep(1)
         await self.agent.listen_for_messages()
 
         #print("State TO: PREPARE_DECKS")
@@ -278,11 +289,14 @@ class PrepareDecks(State):
     async def run(self):
         print("State: PREPARE_DECKS")
 
-        player_deck = self.agent.actions.create_deck()
+        player_deck = self.agent.player_deck
         enemy_deck = self.agent.actions.create_deck()
+        self.agent.enemy_deck = enemy_deck
+
+        print(f"player: {player_deck} || enemy: {enemy_deck}")
         
-        player_deck_json = self.agent.actions.deck_to_json_action("create_player_deck", player_deck)
-        enemy_deck_json = self.agent.actions.deck_to_json_action("create_enemy_deck", enemy_deck)
+        player_deck_json = self.agent.actions.deck_to_list_action("create_player_deck", player_deck)
+        enemy_deck_json = self.agent.actions.deck_to_list_action("create_enemy_deck", enemy_deck)
 
         await self.agent.actions.send_action_to_socket(player_deck_json)
         time.sleep(1)
@@ -311,7 +325,8 @@ class GameStart(State):
                 await self.agent.actions.send_action_to_socket(initiative_action)
             time.sleep(1)
 
-        await self.agent.actions.send_message_to_socket("start_game")
+        #await self.agent.actions.send_message_to_socket("start_game")
+        time.sleep(1)
 
         #print("State TO: PLAYER_PLAY_CARDS")
         self.set_next_state(PLAYER_PLAY_CARDS)

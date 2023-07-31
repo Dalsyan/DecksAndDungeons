@@ -87,6 +87,9 @@ class OwlManager:
 
                                 client_socket.sendall(bytearray(byte_card_json))
                             
+                        elif action == "createDeck":
+                            deck = self.actions.create_player_deck("dalso")
+
                         elif action == "showDeckCards":
                             self.show_deck_cards(data)
 

@@ -33,6 +33,8 @@ public class MainMenu : MonoBehaviour
     private string RegisterText;
     private string RegisterPasswordText;
     private string RegisterVerifyPasswordText;
+    private string CurrentSelectedDeck;
+    private string SelectedDeck;
 
     // DeckManager
     public GameObject DeckServer;
@@ -43,6 +45,7 @@ public class MainMenu : MonoBehaviour
     public List<string> DeckButtonList;
     public GameObject CardButton;
     public List<string> CardButtonList;
+    public GameObject SelectDeckButton;
 
     private void Start()
     {
@@ -52,6 +55,7 @@ public class MainMenu : MonoBehaviour
         {
             LoginText = PlayerPrefs.GetString("LoginText");
             Debug.Log(LoginText);
+
             if (!string.IsNullOrEmpty(LoginText))
             {
                 LoginMenu.SetActive(false);
@@ -62,6 +66,21 @@ public class MainMenu : MonoBehaviour
                 var usernameText = UserMenu.GetComponentInChildren<TMP_Text>();
                 usernameText.text = LoginText;
             }
+            else
+            {
+                LoginMenu.SetActive(true);
+            }
+        }
+
+        if (PlayerPrefs.HasKey("SelectedDeck"))
+        {
+            SelectedDeck = PlayerPrefs.GetString("SelectedDeck");
+            Debug.Log(SelectedDeck);
+
+            if (!string.IsNullOrEmpty(SelectedDeck))
+            {
+                DeckManager.Instance.SelectedDeck = true;
+            }
         }
     }
 
@@ -69,10 +88,17 @@ public class MainMenu : MonoBehaviour
     {
         if (DeckManager.Instance.Logged)
         {
-            DeckManager.Instance.SendMessages("close");
-            Destroy(DeckManager.Instance);
+            if (DeckManager.Instance.SelectedDeck)
+            {
+                DeckManager.Instance.SendMessages("close");
+                Destroy(DeckManager.Instance);
 
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+            }
+            else
+            {
+                Debug.Log("Necesitas seleccionar un mazo!");
+            }
         }
         else
         {
@@ -180,10 +206,23 @@ public class MainMenu : MonoBehaviour
 
     #region COLLECTION MANAGMENT
 
+    public void CreateDeck()
+    {
+        var createDeckDict = new Dictionary<string, string>()
+        {
+            ["action"] = "createDeck",
+            ["data"] = LoginText
+        };
+
+        var createDeckDictJson = JsonConvert.SerializeObject(createDeckDict, Formatting.Indented);
+        DeckManager.Instance.SendMessages(createDeckDictJson);
+    }
+
     public void ShowDecksButton()
     {
         CardBackground.SetActive(false);
         DeckBackground.SetActive(true);
+        SelectDeckButton.SetActive(true);
 
         var deckDict = new Dictionary<string, string>()
         {
@@ -207,7 +246,7 @@ public class MainMenu : MonoBehaviour
             deckButton.name = deck;
 
             var buttonComp = deckButton.GetComponent<Button>();
-            buttonComp.onClick.AddListener(() => ShowCardsFromDeckButton());
+            buttonComp.onClick.AddListener(() => SelectDeck(deck));
 
             var deckButtonText = deckButton.GetComponentInChildren<TextMeshProUGUI>();
             deckButtonText.text = deck;
@@ -216,6 +255,19 @@ public class MainMenu : MonoBehaviour
         }
     }
     
+    public void SelectCurrentDeckButtonEvent(string deck)
+    {
+        CurrentSelectedDeck = deck;
+    }
+
+    public void SelectDeckButtonEvent()
+    {
+        if (!string.IsNullOrEmpty(CurrentSelectedDeck))
+        {
+            PlayerPrefs.SetString("SelectedDeck", CurrentSelectedDeck);
+        }
+    }
+
     public void ShowCardsButton()
     {
         DeckBackground.SetActive(false);
@@ -250,14 +302,16 @@ public class MainMenu : MonoBehaviour
         }
     }
     
-    public void ShowCardsFromDeckButton()
+    public void SelectDeck(string deck)
     {
+        SelectCurrentDeckButtonEvent(deck);
+
         CardFromDeckBackground.SetActive(true);
 
         var cardDict = new Dictionary<string, string>()
         {
             ["action"] = "showCardsFromDeck",
-            ["data"] = "deck_name"
+            ["data"] = deck
         };
 
         //var cardDictJson = JsonConvert.SerializeObject(cardDict, Formatting.Indented);

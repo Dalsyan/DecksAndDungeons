@@ -32,6 +32,7 @@ public class DeckManager : MonoBehaviour
 
     // Gestion de usuario 
     public bool Logged { get; set; } = false;
+    public bool SelectedDeck { get; set; } = false;
 
     // Gestion de mazos y cartas
     public List<string> DeckNames = new List<string>();
@@ -77,7 +78,7 @@ public class DeckManager : MonoBehaviour
             int bytesRead = stream.Read(buffer, 0, buffer.Length);
             var response = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
-            if (response != null)
+            if (!string.IsNullOrEmpty(response))
             {
                 ProcessMessage(response);
             }
@@ -122,6 +123,10 @@ public class DeckManager : MonoBehaviour
 
                     case "show_decks":
                         ShowDecks(dataList);
+                        break;
+
+                    case "create_deck":
+                        UnityEngine.Debug.Log("Deck created succesfully!");
                         break;
 
                     default:

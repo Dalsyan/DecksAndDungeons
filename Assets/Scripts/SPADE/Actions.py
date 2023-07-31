@@ -227,7 +227,7 @@ class Actions:
 
         return card_json
 
-    def deck_to_json_action(self, sender, deck):
+    def deck_to_list_action(self, sender = None, deck = None):
         deck_json = {'action': sender, 'data': self.owl.deck_to_list(deck) }
 
         return deck_json
@@ -235,5 +235,10 @@ class Actions:
     # CREATION
     def create_deck(self):
         deck = self.owl.create_deck()
+
+        return deck
+
+    def create_player_deck(self, player):
+        deck = self.owl.create_player_deck(player)
 
         return deck

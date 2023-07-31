@@ -42,7 +42,6 @@ class OntologyActions:
         user.hasDecks.append(deck)
 
     # SEARCHING IN ONTOLOGY
-
     def search_for_decks(self, player : str):
         cplayer = self.onto.search(iri = f"*{player}")[0]
         decks = cplayer.hasDecks
@@ -95,6 +94,15 @@ class OntologyActions:
             
         return deck_json
 
+    def deck_to_list_redux(self, cdeck):
+        deck_json = []
+
+        for ccard in cdeck.hasCards:
+            card_json = self.card_to_dict_redux(ccard)
+            deck_json.append(card_json)
+            
+        return deck_json
+
     def card_to_dict(self, ccard):
         stats = {}
 
@@ -130,6 +138,7 @@ class OntologyActions:
             
         return stats
 
+    # CREATION
     def create_deck(self):
         num_cards = 0
         cdeck = self.onto.search(iri = "*CDeck")[0]
@@ -146,7 +155,7 @@ class OntologyActions:
     def create_player_deck(self, player):
         num_cards = 0
         cdeck = self.onto.search(iri = "*CDeck")[0]
-        cdeck = self.onto.search(iri = f"*{player}")[0]
+        cplayer = self.onto.search(iri = f"*{player}")[0]
         my_deck = cdeck()
 
         while num_cards != 5:
@@ -154,7 +163,7 @@ class OntologyActions:
             my_deck.hasCards.append(card)
             num_cards += 1
             
-        player.hasDecks.append(my_deck)
+        cplayer.hasDecks.append(my_deck)
 
         self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
         return my_deck

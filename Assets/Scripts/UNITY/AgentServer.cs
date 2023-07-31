@@ -27,6 +27,7 @@ public class AgentServer : MonoBehaviour
     public List<Dictionary<string, object>> PlayerCardsInTable { get; set; }
     public List<Dictionary<string, object>> EnemyCardsInTable { get; set; }
     public List<Dictionary<string, object>> CardsInTable { get; set; }
+    public string SelectedDeck;
 
     // Gestion de mana
     public int PlayerManaPool { get; set; } = 3;
@@ -99,6 +100,8 @@ public class AgentServer : MonoBehaviour
 
         CurrentPlayerManaPool = PlayerManaPool;
         CurrentEnemyManaPool = EnemyManaPool;
+
+        SelectedDeck = PlayerPrefs.GetString("SelectedDeck");
     }
 
     public void Update()
@@ -186,14 +189,20 @@ public class AgentServer : MonoBehaviour
     {
         UnityEngine.Debug.Log($"Received message: {message}");
 
-        if (message == "select_decks")
+        if (message == "start")
         {
-            // elegir entre los mazos
+            var selectedDeck = new Dictionary<string, string>()
+            {
+                ["action"] = "selectDeck",
+                ["data"] = SelectedDeck
+            };
 
-            return;
+            var selectedDeckJson = JsonConvert.SerializeObject(selectedDeck, Formatting.Indented);
+            SendMessages(selectedDeckJson);
+            SendMessages("deck_selected");
         }
 
-        else if (message == "start_game")
+        else if (message == "game_start")
         {
             GameStart = true;
         }
