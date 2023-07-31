@@ -66,7 +66,7 @@ class OntologyActions:
 
         for deck in decks:
             for card in deck.hasCards:
-                cards_list.append(card.name)
+                cards_list.append(self.card_to_dict_redux(card))
 
         return cards_list
 
@@ -115,6 +115,18 @@ class OntologyActions:
         stats["magic"] = ccard.magic
         stats["range"] = ccard.range
         stats["mov"] = ccard.mov
+            
+        return stats
+    
+    def card_to_dict_redux(self, ccard):
+        stats = {}
+
+        stats["name"] = ccard.name
+        
+        stats["level"] = ccard.level
+        stats["hp"] = ccard.hp
+        stats["ac"] = ccard.ac
+        stats["damage"] = ccard.damage
             
         return stats
 

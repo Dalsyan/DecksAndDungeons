@@ -33,7 +33,6 @@ public class MainMenu : MonoBehaviour
     private string RegisterText;
     private string RegisterPasswordText;
     private string RegisterVerifyPasswordText;
-    public Dictionary<string, string> User { get; set; }
 
     // DeckManager
     public GameObject DeckServer;
@@ -42,11 +41,28 @@ public class MainMenu : MonoBehaviour
     // Botones
     public GameObject DeckButton;
     public List<string> DeckButtonList;
+    public GameObject CardButton;
+    public List<string> CardButtonList;
 
     private void Start()
     {
         DeckManager = DeckServer.GetComponent<DeckManager>();
-        User = new Dictionary<string, string>();
+
+        if (PlayerPrefs.HasKey("LoginText"))
+        {
+            LoginText = PlayerPrefs.GetString("LoginText");
+            Debug.Log(LoginText);
+            if (!string.IsNullOrEmpty(LoginText))
+            {
+                LoginMenu.SetActive(false);
+
+                DeckManager.Instance.Logged = true;
+                UserMenu.SetActive(true);
+
+                var usernameText = UserMenu.GetComponentInChildren<TMP_Text>();
+                usernameText.text = LoginText;
+            }
+        }
     }
 
     public void PlayGame()
@@ -106,6 +122,11 @@ public class MainMenu : MonoBehaviour
 
         if (DeckManager.Instance.Logged)
         {
+            PlayerPrefs.SetString("LoginText", LoginText);
+
+            var usernameText = UserMenu.GetComponentInChildren<TMP_Text>();
+            usernameText.text = LoginText;
+
             LoginMenu.SetActive(false);
             UserMenu.SetActive(true);
         }
@@ -143,6 +164,16 @@ public class MainMenu : MonoBehaviour
         {
             Debug.Log("Passwords doesnt match, try again");
         }
+    }
+
+    public void LogOutButton()
+    {
+        LoginText = null;
+        PlayerPrefs.SetString("LoginText", LoginText);
+        DeckManager.Instance.Logged = false;
+
+        UserMenu.SetActive(false);
+        LoginMenu.SetActive(true);
     }
 
     #endregion
@@ -199,6 +230,24 @@ public class MainMenu : MonoBehaviour
 
         var cardDictJson = JsonConvert.SerializeObject(cardDict, Formatting.Indented);
         DeckManager.Instance.SendMessages(cardDictJson);
+
+        foreach (string card in DeckManager.Instance.CardNames)
+        {
+            if (CardButtonList.Any(x => x == card))
+            {
+                continue;
+            }
+
+            CardButtonList.Add(card);
+
+            var cardButton = Instantiate(CardButton, new Vector3(0, 0, 0), Quaternion.identity);
+            cardButton.name = card;
+
+            var cardButtonText = cardButton.GetComponentInChildren<TextMeshProUGUI>();
+            cardButtonText.text = card;
+
+            cardButton.transform.SetParent(CardBackground.transform, false);
+        }
     }
     
     public void ShowCardsFromDeckButton()
@@ -231,6 +280,7 @@ public class MainMenu : MonoBehaviour
     public void QuitGame()
     {
         Debug.Log("Game Quit!");
+
         DeckManager.Instance.SendMessages("close");
         Application.Quit();
     }

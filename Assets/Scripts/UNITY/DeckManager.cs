@@ -30,7 +30,7 @@ public class DeckManager : MonoBehaviour
     // Prefabs
     public GameObject Card;
 
-    // Gestion de MainMenu 
+    // Gestion de usuario 
     public bool Logged { get; set; } = false;
 
     // Gestion de mazos y cartas
@@ -157,42 +157,32 @@ public class DeckManager : MonoBehaviour
 
     private void ShowCards(List<object> dataList)
     {
-        foreach (Dictionary<string, object> cardDict in dataList)
+        foreach (object dataObject in dataList)
         {
-            if (cardDict is null)
+            string dataJson = JsonConvert.SerializeObject(dataObject);
+            var dataDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(dataJson);
+
+            if (dataDict is Dictionary<string, object> cardDict)
             {
-                UnityEngine.Debug.LogWarning("Invalid deck data format.");
-                return;
+                if (cardDict is null)
+                {
+                    UnityEngine.Debug.LogWarning("Invalid deck data format.");
+                    return;
+                }
+
+                string name = cardDict["name"].ToString();
+                int level = Convert.ToInt32(cardDict["level"]);
+                int hp = Convert.ToInt32(cardDict["hp"]);
+                int ac = Convert.ToInt32(cardDict["ac"]);
+                int damage = Convert.ToInt32(cardDict["damage"]);
+
+                if (DeckNames.Any(x => x == name))
+                {
+                    continue;
+                }
+
+                CardNames.Add(name);
             }
-
-            string name = cardDict["name"].ToString();
-            string cclass = cardDict["class"].ToString();
-            string race = cardDict["race"].ToString();
-            int level = Convert.ToInt32(cardDict["level"]);
-            int hp = Convert.ToInt32(cardDict["hp"]);
-            int ac = Convert.ToInt32(cardDict["ac"]);
-            int str = Convert.ToInt32(cardDict["str"]);
-            int con = Convert.ToInt32(cardDict["con"]);
-            int dex = Convert.ToInt32(cardDict["dex"]);
-            int damage = Convert.ToInt32(cardDict["damage"]);
-            int magic = Convert.ToInt32(cardDict["magic"]);
-            int range = Convert.ToInt32(cardDict["range"]);
-
-            var card = Instantiate(Card, new Vector3(0, 0, 0), Quaternion.identity);
-            card.GetComponent<CardScript>().Name = name;
-            card.GetComponent<CardScript>().Class = cclass;
-            card.GetComponent<CardScript>().Race = race;
-            card.GetComponent<CardScript>().level = level;
-            card.GetComponent<CardScript>().hp = hp;
-            card.GetComponent<CardScript>().ac = ac;
-            card.GetComponent<CardScript>().str = str;
-            card.GetComponent<CardScript>().con = con;
-            card.GetComponent<CardScript>().dex = dex;
-            card.GetComponent<CardScript>().damage = damage;
-            card.GetComponent<CardScript>().magic = magic;
-            card.GetComponent<CardScript>().range = range;
-            card.GetComponent<CardScript>().prio = dex;
-            //card.transform.SetParent(DeckMenu.transform, false);
         }
     }
 
