@@ -106,7 +106,8 @@ class CardBehav(FSMBehaviour):
 class CardWait(State):
     async def run(self):
         print("State: CARD_WAIT")
-        
+        print(f"soy {self.agent.cclass}")
+
         msg = await self.receive(10)
 
         if msg:
@@ -121,7 +122,7 @@ class CardWait(State):
 class CardAction(State):
     async def run(self):
         print("State: CARD_ACTION")
-
+        
         nearest_enemy = self.agent.actions.nearest_enemy(self.agent, self.agent.enemy_card_agents)
         nearest_ally = self.agent.actions.nearest_ally(self.agent, self.agent.ally_card_agents)
 
@@ -137,7 +138,12 @@ class CardAction(State):
                 self.agent.attacks += 1
 
         elif self.agent.role == "tank":
-            if self.agent.cclass == "paladin":
+            print("soy TANK")
+            paladins = self.agent.card.hasClass in self.agent.actions.owl.onto.search(iri = "*paladin*")
+            barbarians = self.agent.card.hasClass in self.agent.actions.owl.onto.search(iri = "*barbarian*")
+            print(f"paladines: {paladins}")
+            print(f"barbarians: {barbarians}")
+            if self.agent.cclass in self.agent.actions.owl.onto.search(iri = "*paladin*"):
                 ally_card_agents_low = [card for card in self.agents.card_agents if ((card.current_hp * 100) / card.hp) < 34]
                 lowest_player_card = ally_card_agents_low.sort(Key = lambda x : x.current_hp)[0]
 
@@ -149,8 +155,9 @@ class CardAction(State):
                     print("soy PALADIN y he hecho ataque NORMAL")
                     await self.agent.actions.attack(self.agent, nearest_enemy, "ad")
 
-            elif self.agent.cclass == "barbarian": 
-                if ((self.agent.card.current_hp * 100) / self.agent.card.current_hp) <= 50:
+            elif self.agent.cclass in self.agent.actions.owl.onto.search(iri = "*barbarian*"): 
+                print("soy barbarian")
+                if ((self.agent.current_hp * 100) / self.agent.hp) <= 50:
                     print("soy BARBARO y he hecho ataque ESPECIAL")
                     await self.agent.actions.attack(self.agent, nearest_enemy, "ad", special = True)
 
@@ -158,8 +165,15 @@ class CardAction(State):
                     print("soy BARBARO y he hecho ataque NORMAL")
                     await self.agent.actions.attack(self.agent, nearest_enemy, "ad")
 
+            else:
+                print("soy tank pero me cago encima")
+
         elif self.agent.role == "mage":
-            if self.agent.cclass == "cleric":
+            clerics = self.agent.card.hasClass in self.agent.actions.owl.onto.search(iri = "*cleric*")
+            druids = self.agent.card.hasClass in self.agent.actions.owl.onto.search(iri = "*druid*")
+            print(f"clerics: {clerics}")
+            print(f"druids: {druids}")
+            if self.agent.cclass in self.agent.actions.owl.onto.search(iri = "*cleric*"):
                 ally_card_agents_low = [card for card in self.agents.card_agents if ((card.current_hp * 100) / card.hp) < 34]
                 lowest_player_card = ally_card_agents_low.sort(Key = lambda x : x.current_hp)[0]
 
@@ -171,17 +185,18 @@ class CardAction(State):
                     print("soy CLERIGO y he hecho ataque NORMAL")
                     await self.agent.actions.attack(self.agent, nearest_enemy, "ap")
 
-            if self.agent.cclass == "druid":
-                if self.agens.minions < self.agent.card.level:
+            if self.agent.cclass in self.agent.actions.owl.onto.search(iri = "*druid*"):
+                if self.agent.minions < self.agent.card.level:
+                    print("soy DRUIDA e intento SPAWNEAR")
                     # invoke minion
                     self.minions += 1
 
                 else: 
-                    print("soy DRUIDA e intento SPAWNEAR")
+                    print("soy DRUIDA y he hecho ataque NORMAL")
                     await self.agent.actions.attack(self.agent, nearest_enemy, "ap")
 
             else:
-                print("soy DRUIDA y he hecho ataque NORMAL")
+                print("soy MAGO/HECHICERO y he hecho ataque NORMAL")
                 await self.agent.actions.attack(self.agent, nearest_enemy, "ap")
         
         print("State TO: CARD_STOP")

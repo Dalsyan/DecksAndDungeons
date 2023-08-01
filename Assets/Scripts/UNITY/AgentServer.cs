@@ -242,14 +242,8 @@ public class AgentServer : MonoBehaviour
                                 messageDict.TryGetValue("pos", out object pos);
                                 var cell = GameObject.Find(pos.ToString());
 
-                                var moved = false;
-                                card.transform.DOMove(cell.transform.position, (float)1);
-                                moved = true;
-
-                                while (!moved)
-                                {
-                                    card.transform.SetParent(cell.transform);
-                                }
+                                card.transform.DOMove(cell.transform.position, (float)0.15);
+                                card.transform.SetParent(cell.transform);
                             });
                             
                             break;

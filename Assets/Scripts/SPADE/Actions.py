@@ -118,6 +118,7 @@ class Actions:
                 self.move(player_card_agent, table, str((x2, y2 + rango)))
 
         await self.send_action_to_socket({"action" : "move_card", "data": player_card_agent.card.name, "pos": player_card_agent.pos})
+        time.sleep(1)
             
     def is_inside_table(self, new_pos: str):
         new_pos = self.process_pos(new_pos)
@@ -146,6 +147,7 @@ class Actions:
             print(f"Soy {player_card_agent.card.name}, ataco a {enemy_card_agent.card.name} haciendole {damage} de danyo")
             enemy_card_agent.current_hp = enemy_card_agent.current_hp - damage
             await self.send_action_to_socket({"action" : "damage_card", "data": enemy_card_agent.card.name, "current_hp": enemy_card_agent.current_hp})
+            time.sleep(1)
             if enemy_card_agent.current_hp <= 0:
                 print(f"Soy {player_card_agent.card.name}, y he matado a {enemy_card_agent}")
                 player_card_agent.card_agents.remove(enemy_card_agent)
@@ -153,6 +155,7 @@ class Actions:
 
                 await enemy_card_agent.stop()
                 await self.send_action_to_socket({"action" : "kill_card", "data": enemy_card_agent.card.name})
+                time.sleep(1)
         else:
             enemy_card_agent.shielded = False
 

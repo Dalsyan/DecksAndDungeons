@@ -384,57 +384,61 @@ class CardActions(State):
         print("State: CARD_ACTIONS")
         
         for agent in self.agent.card_agents:
-            # Enviar tablero y listas de agentes
-            agent.card_agents = self.agent.card_agents
+            if len(self.agent.player_card_agents) == 0 or len(self.agent.enemy_card_agents) == 0:
+                if len(self.agent.player_card_agents) == 0:
+                    self.agent.enemy_score += 1
+                    print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
 
-            if agent.owner == "player":
-                agent.ally_card_agents = self.agent.player_card_agents
-                agent.enemy_card_agents = self.agent.enemy_card_agents
+                elif len(self.agent.enemy_card_agents) == 0:
+                    self.agent.player_score += 1
+                    print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
+                    
+                break
 
-            elif agent.owner == "enemy":
-                agent.ally_card_agents = self.agent.enemy_card_agents
-                agent.enemy_card_agents = self.agent.player_card_agents
+            else:
+                # Enviar tablero y listas de agentes
+                agent.card_agents = self.agent.card_agents
 
-            agent.table = self.agent.table
+                if agent.owner == "player":
+                    agent.ally_card_agents = self.agent.player_card_agents
+                    agent.enemy_card_agents = self.agent.enemy_card_agents
 
-            await agent.start()
+                elif agent.owner == "enemy":
+                    agent.ally_card_agents = self.agent.enemy_card_agents
+                    agent.enemy_card_agents = self.agent.player_card_agents
 
-            sent_start = Message(to = f'{agent.name}@lightwitch.org')
-            sent_start.body = "start"
-            await self.send(sent_start)
+                agent.table = self.agent.table
+
+                await agent.start()
+
+                sent_start = Message(to = f'{agent.name}@lightwitch.org')
+                sent_start.body = "start"
+                await self.send(sent_start)
                 
-            recv_stop = await self.receive(10)
+                recv_stop = await self.receive(10)
 
-            if recv_stop:
-                if recv_stop.body == "stop":
-                    if agent.is_alive():
-                        await agent.stop()
+                if recv_stop:
+                    if recv_stop.body == "stop":
+                        if agent.is_alive():
+                            await agent.stop()
 
-            # Actualizar tablero y listas de agentes
-            self.agent.card_agents = agent.card_agents
+                # Actualizar tablero y listas de agentes
+                self.agent.card_agents = agent.card_agents
 
-            if agent.owner == "player":
-                self.agent.ally_card_agents = agent.ally_card_agents
-                self.agent.enemy_card_agents = agent.enemy_card_agents
+                if agent.owner == "player":
+                    self.agent.ally_card_agents = agent.ally_card_agents
+                    self.agent.enemy_card_agents = agent.enemy_card_agents
 
-            elif agent.owner == "enemy":
-                self.agent.ally_card_agents = agent.enemy_card_agents
-                self.agent.enemy_card_agents = agent.ally_card_agents
+                elif agent.owner == "enemy":
+                    self.agent.ally_card_agents = agent.enemy_card_agents
+                    self.agent.enemy_card_agents = agent.ally_card_agents
 
-            self.agent.table = agent.table
+                self.agent.table = agent.table
 
         if len(self.agent.player_card_agents) != 0 and len(self.agent.enemy_card_agents) != 0:
             self.set_next_state(CARD_ACTIONS)
-
+            
         else: 
-            if len(self.agent.player_card_agents) == 0:
-                self.agent.enemy_score += 1
-                print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
-
-            elif len(self.agent.enemy_card_agents) == 0:
-                self.agent.player_score += 1
-                print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
-
             if self.agent.player_score >= 2:
                 self.agent.winner = "player"
             elif self.agent.enemy_score >= 2:
@@ -442,7 +446,6 @@ class CardActions(State):
 
             if self.agent.winner is None:
                 self.set_next_state(PLAYER_PLAY_CARDS)
-
             else:
                 self.set_next_state(GAME_OVER)
 

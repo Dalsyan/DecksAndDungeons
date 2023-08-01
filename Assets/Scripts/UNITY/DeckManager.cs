@@ -38,7 +38,6 @@ public class DeckManager : MonoBehaviour
     public List<string> DeckNames = new List<string>();
     public List<string> CardNames = new List<string>();
 
-
     private void Awake()
     {
         if (instance != null && instance != this)
