@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-
 using System.Net.Sockets;
 using System.Threading;
 using System.Net;
@@ -8,8 +7,7 @@ using System.Text;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System;
-using UnityEngine.UI;
-using TMPro;
+using DG.Tweening;
 
 public class AgentServer : MonoBehaviour
 {
@@ -244,7 +242,14 @@ public class AgentServer : MonoBehaviour
                                 messageDict.TryGetValue("pos", out object pos);
                                 var cell = GameObject.Find(pos.ToString());
 
-                                card.transform.SetParent(cell.transform);
+                                var moved = false;
+                                card.transform.DOMove(cell.transform.position, (float)1);
+                                moved = true;
+
+                                while (!moved)
+                                {
+                                    card.transform.SetParent(cell.transform);
+                                }
                             });
                             
                             break;

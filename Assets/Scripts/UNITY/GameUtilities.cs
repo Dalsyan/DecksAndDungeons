@@ -5,7 +5,6 @@ using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.SocialPlatforms;
-
 public class GameUtilities : MonoBehaviour
 {
     private bool GameIsPaused = false;
