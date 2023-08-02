@@ -46,7 +46,7 @@ class OwlManager:
                         action = message_dict.get("action")
                         data = message_dict.get("data")
                         password = message_dict.get("password")
-
+                        
                         if action == "registerUser":
                             user = self.create_user(data, password)
                             print(f'user: {user.name}')

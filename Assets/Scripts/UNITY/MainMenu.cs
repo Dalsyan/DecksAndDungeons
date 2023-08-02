@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -91,7 +92,7 @@ public class MainMenu : MonoBehaviour
             if (DeckManager.Instance.SelectedDeck)
             {
                 DeckManager.Instance.SendMessages("close");
-                Destroy(DeckManager.Instance);
+                // Destroy(DeckManager.Instance);
 
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
             }
@@ -195,7 +196,9 @@ public class MainMenu : MonoBehaviour
     public void LogOutButton()
     {
         LoginText = null;
+        SelectedDeck = null;
         PlayerPrefs.SetString("LoginText", LoginText);
+        PlayerPrefs.SetString("SelectedDeck", LoginText);
         DeckManager.Instance.Logged = false;
 
         UserMenu.SetActive(false);
@@ -254,7 +257,15 @@ public class MainMenu : MonoBehaviour
             deckButton.transform.SetParent(DeckBackground.transform, false);
         }
     }
-    
+
+    public void SelectDeck(string deck)
+    {
+        SelectCurrentDeckButtonEvent(deck);
+
+        CardFromDeckBackground.SetActive(true);
+        SelectDeckButton.SetActive(true);
+    }
+
     public void SelectCurrentDeckButtonEvent(string deck)
     {
         CurrentSelectedDeck = deck;
@@ -262,10 +273,7 @@ public class MainMenu : MonoBehaviour
 
     public void SelectDeckButtonEvent()
     {
-        if (!string.IsNullOrEmpty(CurrentSelectedDeck))
-        {
-            PlayerPrefs.SetString("SelectedDeck", CurrentSelectedDeck);
-        }
+        PlayerPrefs.SetString("SelectedDeck", CurrentSelectedDeck);
     }
 
     public void ShowCardsButton()
@@ -302,22 +310,6 @@ public class MainMenu : MonoBehaviour
         }
     }
     
-    public void SelectDeck(string deck)
-    {
-        SelectCurrentDeckButtonEvent(deck);
-
-        CardFromDeckBackground.SetActive(true);
-
-        var cardDict = new Dictionary<string, string>()
-        {
-            ["action"] = "showCardsFromDeck",
-            ["data"] = deck
-        };
-
-        //var cardDictJson = JsonConvert.SerializeObject(cardDict, Formatting.Indented);
-        //DeckManager.Instance.SendMessages(cardDictJson);
-    }
-
     #endregion
 
     public void BackButton()

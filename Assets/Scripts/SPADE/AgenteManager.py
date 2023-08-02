@@ -151,7 +151,9 @@ class AgentManager(Agent):
                         data = message_dict.get("data")
                         
                         if action == "selectDeck":
-                            self.select_deck_redux_action(data)
+                            deck = self.select_deck_redux_action(data)
+                            print(f"selected deck: {deck}")
+                            print(f"player deck: {self.player_deck}")
                                 
                         #elif action == "selectPlayerDeck":
                         #    await self.select_deck_action("player", data)
@@ -207,7 +209,7 @@ class AgentManager(Agent):
         deck = self.actions.search_for_deck(name)
         self.player_deck = deck
         
-        print(f"player_deck: {deck.name}")
+        return deck
 
     async def play_card_action(self, owner, pos, name):
         card = self.actions.search_for_card(name)

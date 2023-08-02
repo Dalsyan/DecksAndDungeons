@@ -107,6 +107,8 @@ class CardWait(State):
     async def run(self):
         print("State: CARD_WAIT")
         print(f"soy {self.agent.cclass}")
+        print(f"soy {''.join(filter(str.isalpha, self.agent.cclass.name))}")
+
 
         msg = await self.receive(10)
 
@@ -138,12 +140,7 @@ class CardAction(State):
                 self.agent.attacks += 1
 
         elif self.agent.role == "tank":
-            print("soy TANK")
-            paladins = self.agent.card.hasClass in self.agent.actions.owl.onto.search(iri = "*paladin*")
-            barbarians = self.agent.card.hasClass in self.agent.actions.owl.onto.search(iri = "*barbarian*")
-            print(f"paladines: {paladins}")
-            print(f"barbarians: {barbarians}")
-            if self.agent.cclass in self.agent.actions.owl.onto.search(iri = "*paladin*"):
+            if ''.join(filter(str.isalpha, self.agent.cclass.name)) == "paladin":
                 ally_card_agents_low = [card for card in self.agents.card_agents if ((card.current_hp * 100) / card.hp) < 34]
                 lowest_player_card = ally_card_agents_low.sort(Key = lambda x : x.current_hp)[0]
 
@@ -155,7 +152,7 @@ class CardAction(State):
                     print("soy PALADIN y he hecho ataque NORMAL")
                     await self.agent.actions.attack(self.agent, nearest_enemy, "ad")
 
-            elif self.agent.cclass in self.agent.actions.owl.onto.search(iri = "*barbarian*"): 
+            elif ''.join(filter(str.isalpha, self.agent.cclass.name)) == "barbarian":
                 print("soy barbarian")
                 if ((self.agent.current_hp * 100) / self.agent.hp) <= 50:
                     print("soy BARBARO y he hecho ataque ESPECIAL")
@@ -169,11 +166,7 @@ class CardAction(State):
                 print("soy tank pero me cago encima")
 
         elif self.agent.role == "mage":
-            clerics = self.agent.card.hasClass in self.agent.actions.owl.onto.search(iri = "*cleric*")
-            druids = self.agent.card.hasClass in self.agent.actions.owl.onto.search(iri = "*druid*")
-            print(f"clerics: {clerics}")
-            print(f"druids: {druids}")
-            if self.agent.cclass in self.agent.actions.owl.onto.search(iri = "*cleric*"):
+            if ''.join(filter(str.isalpha, self.agent.cclass.name)) == "cleric":
                 ally_card_agents_low = [card for card in self.agents.card_agents if ((card.current_hp * 100) / card.hp) < 34]
                 lowest_player_card = ally_card_agents_low.sort(Key = lambda x : x.current_hp)[0]
 
@@ -185,7 +178,7 @@ class CardAction(State):
                     print("soy CLERIGO y he hecho ataque NORMAL")
                     await self.agent.actions.attack(self.agent, nearest_enemy, "ap")
 
-            if self.agent.cclass in self.agent.actions.owl.onto.search(iri = "*druid*"):
+            elif ''.join(filter(str.isalpha, self.agent.cclass.name)) == "druid":
                 if self.agent.minions < self.agent.card.level:
                     print("soy DRUIDA e intento SPAWNEAR")
                     # invoke minion
