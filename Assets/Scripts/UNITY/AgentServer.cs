@@ -189,15 +189,7 @@ public class AgentServer : MonoBehaviour
 
         if (message == "start")
         {
-            var selectedDeck = new Dictionary<string, string>()
-            {
-                ["action"] = "selectDeck",
-                ["data"] = SelectedDeck
-            };
-
-            var selectedDeckJson = JsonConvert.SerializeObject(selectedDeck, Formatting.Indented);
-            SendMessages(selectedDeckJson);
-            SendMessages("deck_selected");
+            StartAction();
         }
 
         else if (message == "game_start")
@@ -236,91 +228,15 @@ public class AgentServer : MonoBehaviour
                     switch (action)
                     {
                         case "move_card":
-                            ActionsQueue.Enqueue(() => {
-                                var card = GameObject.Find(dataString.ToString());
-
-                                messageDict.TryGetValue("pos", out object pos);
-                                var cell = GameObject.Find(pos.ToString());
-
-                                card.transform.DOMove(cell.transform.position, (float)0.15);
-                                card.transform.SetParent(cell.transform);
-                            });
-                            
+                            MoveCardAction(messageDict, dataString);
                             break;
 
                         case "damage_card":
-                            ActionsQueue.Enqueue(() => {
-                                var card = GameObject.Find(dataString.ToString());
-
-                                messageDict.TryGetValue("current_hp", out object current_hp);
-                                
-                                var hp_text = card.GetComponent<CardScript>().HpText.text = current_hp.ToString();
-                            });
-
+                            DamageCardAction(messageDict, dataString);
                             break;
 
                         case "kill_card":
-                            ActionsQueue.Enqueue(() => {
-                                var card = GameObject.Find(dataString.ToString());
-                                var cardScript = card.GetComponent<CardScript>();
-
-                                int indexToRemove = -1;
-                                for (int i = 0; i < CardsInTable.Count; i++)
-                                {
-                                if (CardsInTable[i].ContainsKey("Name") && CardsInTable[i]["Name"].ToString() == cardScript.Name)
-                                    {
-                                        indexToRemove = i;
-                                        break;
-                                    }
-                                }
-                                if (indexToRemove != -1)
-                                {
-                                    CardsInTable.RemoveAt(indexToRemove);
-                                }
-
-                                int indexToRemove2 = -1;
-                                if (card.GetComponent<CardScript>().Owner == "player")
-                                {
-                                    for (int i = 0; i < PlayerCardsInTable.Count; i++)
-                                    {
-                                        if (PlayerCardsInTable[i].ContainsKey("Name") && PlayerCardsInTable[i]["Name"].ToString() == cardScript.Name)
-                                        {
-                                            indexToRemove2 = i;
-                                            break;
-                                        }
-                                    }
-                                    if (indexToRemove2 != -1)
-                                    {
-                                        PlayerCardsInTable.RemoveAt(indexToRemove2);
-                                    }
-                                }
-                                else
-                                {
-                                    for (int i = 0; i < EnemyCardsInTable.Count; i++)
-                                    {
-                                        if (EnemyCardsInTable[i].ContainsKey("Name") && EnemyCardsInTable[i]["Name"].ToString() == cardScript.Name)
-                                        {
-                                            indexToRemove2 = i;
-                                            break;
-                                        }
-                                    }
-                                    if (indexToRemove2 != -1)
-                                    {
-                                        EnemyCardsInTable.RemoveAt(indexToRemove2);
-                                    }
-                                }
-                                    
-
-                                Destroy(card);
-
-                                var playerCardsJson = JsonConvert.SerializeObject(PlayerCardsInTable, Formatting.Indented);
-                                UnityEngine.Debug.Log($"player cards: {playerCardsJson}");
-                                var enemyCardsJson = JsonConvert.SerializeObject(EnemyCardsInTable, Formatting.Indented);
-                                UnityEngine.Debug.Log($"enemy cards: {enemyCardsJson}");
-                                var CardsJson = JsonConvert.SerializeObject(CardsInTable, Formatting.Indented);
-                                UnityEngine.Debug.Log($"cards: {CardsJson}");
-                            });
-
+                            KillCardAction(messageDict, dataString);
                             break;
 
                         default:
@@ -328,7 +244,8 @@ public class AgentServer : MonoBehaviour
                             break;
                     }
                 }
-                
+
+                /* else if (dataObj is int dataInt)
                 else if (dataObj is int dataInt)
                 {
                     switch (action)
@@ -341,6 +258,7 @@ public class AgentServer : MonoBehaviour
                             break;
                     }
                 }
+                */
 
                 else
                 {
@@ -349,9 +267,11 @@ public class AgentServer : MonoBehaviour
 
                     switch (action)
                     {
+                        /* case "first_turn":
                         case "first_turn":
                             // procesar los roles 'player' y 'enemy' de los jugadores
                             break;
+                        */
 
                         case "create_player_deck":
                             CreateDeck("player", dataList);
@@ -391,6 +311,62 @@ public class AgentServer : MonoBehaviour
         {
             UnityEngine.Debug.LogError("Error sending message: " + e.Message);
         }
+    }
+
+    private void StartAction()
+    {
+        var selectedDeck = new Dictionary<string, string>()
+        {
+            ["action"] = "selectDeck",
+            ["data"] = SelectedDeck
+        };
+
+        var selectedDeckJson = JsonConvert.SerializeObject(selectedDeck, Formatting.Indented);
+        SendMessages(selectedDeckJson);
+        SendMessages("deck_selected");
+    }
+
+    private void MoveCardAction(Dictionary<string, object> messageDict, string dataString)
+    {
+        ActionsQueue.Enqueue(() => {
+            var card = GameObject.Find(dataString.ToString());
+
+            messageDict.TryGetValue("pos", out object pos);
+            var cell = GameObject.Find(pos.ToString());
+
+            card.transform.DOMove(cell.transform.position, (float)0.15)
+                .OnComplete(() => {
+                    card.transform.SetParent(cell.transform);
+                });
+        });
+    }
+
+    private void DamageCardAction(Dictionary<string, object> messageDict, string dataString)
+    {
+        ActionsQueue.Enqueue(() => {
+            var card = GameObject.Find(dataString.ToString());
+
+            messageDict.TryGetValue("current_hp", out object current_hp);
+
+            var hp_text = card.GetComponent<CardScript>().HpText.text = current_hp.ToString();
+        });
+    }
+
+    private void KillCardAction(Dictionary<string, object> messageDict, string dataString)
+    {
+        ActionsQueue.Enqueue(() => {
+            var card = GameObject.Find(dataString.ToString());
+            var cardScript = card.GetComponent<CardScript>();
+
+            // Remover de CardsInTable
+            CardsInTable.RemoveAll(c => c.ContainsKey("Name") && c["Name"].ToString() == cardScript.Name);
+
+            // Determinar la lista específica y remover la carta
+            List<Dictionary<string, object>> targetList = cardScript.Owner == "player" ? PlayerCardsInTable : EnemyCardsInTable;
+            targetList.RemoveAll(c => c.ContainsKey("Name") && c["Name"].ToString() == cardScript.Name);
+
+            Destroy(card);
+        });
     }
 
     private void CreateDeck(string sender, List<Dictionary<string, object>> data)
