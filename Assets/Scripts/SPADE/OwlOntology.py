@@ -98,7 +98,7 @@ class OntologyActions:
         deck_json = []
 
         for ccard in cdeck.hasCards:
-            card_json = self.card_to_dict_redux(ccard)
+            card_json = self.card_to_dict(ccard)
             deck_json.append(card_json)
             
         return deck_json
@@ -106,23 +106,43 @@ class OntologyActions:
     def card_to_dict(self, ccard):
         stats = {}
 
-        stats["name"] = ccard.name
-        cclass = ccard.hasClass
-        stats["class"] = ''.join(filter(str.isalpha, cclass.name))
-        crace = ccard.hasRace
-        stats["race"] = ''.join(filter(str.isalpha, crace.name))
+        print(ccard.name)
+
+        creature_list = self.onto.search(type = self.onto.CCreature)
+        print(creature_list)
+        artifact_list = self.onto.search(type = self.onto.CArtifact)
+        print(artifact_list)
+        spell_list = self.onto.search(type = self.onto.CSpell)
+        print(spell_list)
         
-        stats["role"] = ccard.role
-        stats["level"] = ccard.level
-        stats["hp"] = ccard.hp
-        stats["ac"] = ccard.ac
-        stats["str"] = ccard.str
-        stats["con"] = ccard.con
-        stats["dex"] = ccard.dex
-        stats["damage"] = ccard.damage
-        stats["magic"] = ccard.magic
-        stats["range"] = ccard.range
-        stats["mov"] = ccard.mov
+        if ccard in creature_list:
+            stats["name"] = ccard.name
+            cclass = ccard.hasClass
+            stats["class"] = ''.join(filter(str.isalpha, cclass.name))
+            crace = ccard.hasRace
+            stats["race"] = ''.join(filter(str.isalpha, crace.name))
+        
+            stats["type"] = "creature"
+            #stats["role"] = ccard.role
+            stats["level"] = ccard.level
+            stats["hp"] = ccard.hp
+            stats["ac"] = ccard.ac
+            #stats["str"] = ccard.str
+            #stats["con"] = ccard.con
+            #stats["dex"] = ccard.dex
+            stats["damage"] = ccard.damage
+            stats["magic"] = ccard.magic
+            stats["range"] = ccard.range
+
+        elif ccard in artifact_list:
+            stats["type"] = "artifact"
+            stats["name"] = ccard.name
+            stats["power"] = ccard.power
+
+        elif ccard in spell_list:
+            stats["type"] = "spell"
+            stats["name"] = ccard.name
+            stats["power"] = ccard.power
             
         return stats
     
@@ -162,7 +182,12 @@ class OntologyActions:
             card = self.create_card(random.randint(1,3))
             my_deck.hasCards.append(card)
             num_cards += 1
-            
+
+        while num_cards != 10:
+            card = random.choice([self.create_artifact(), self.create_spell()])
+            my_deck.hasCards.append(card)
+            num_cards += 1
+
         cplayer.hasDecks.append(my_deck)
 
         self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
@@ -183,7 +208,7 @@ class OntologyActions:
         cweapon = self.create_weapon()
         carmor = self.create_armor(cweapon)
 
-        ccard = self.onto.search(iri = "*CCard")[0]
+        ccard = self.onto.search(iri = "*CCreature")[0]
         my_card = ccard()
 
         my_card.hasClass = cclass
@@ -241,6 +266,34 @@ class OntologyActions:
         destroy_entity(ccard)
 
         self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
+
+    def create_spell(self):
+        ccard = self.onto.search(iri = "*CSpell")[0]
+        my_card = ccard()
+        
+        spell_type = random.choice(["Evocation","Healing"]) 
+        ctype = self.onto.search(iri = f"*{spell_type}")[0]
+        
+        my_card.knowsSpell = ctype
+        my_card.power = random.randint(1,3)
+        
+        self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
+
+        return my_card
+
+    def create_artifact(self):
+        ccard = self.onto.search(iri = "*CArtifact")[0]
+        my_card = ccard()
+        
+        artifact_type = random.choice(["Belt","Boots","Collar","Gloves"]) 
+        ctype = self.onto.search(iri = f"*{artifact_type}")[0]
+
+        my_card.hasItem = ctype
+        my_card.power = random.randint(1,3)
+        
+        self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
+
+        return my_card
 
     ##############################
     #                            #

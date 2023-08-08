@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using System.Diagnostics;
 using System;
 using DG.Tweening;
+using UnityEngine.SocialPlatforms;
 
 public class AgentServer : MonoBehaviour
 {
@@ -381,18 +382,36 @@ public class AgentServer : MonoBehaviour
                     return;
                 }
 
+                string type = cardDataDict["type"].ToString();
                 string name = cardDataDict["name"].ToString();
-                string cclass = cardDataDict["class"].ToString();
-                string race = cardDataDict["race"].ToString();
-                int level = Convert.ToInt32(cardDataDict["level"]);
-                int hp = Convert.ToInt32(cardDataDict["hp"]);
-                int ac = Convert.ToInt32(cardDataDict["ac"]);
-                int str = Convert.ToInt32(cardDataDict["str"]);
-                int con = Convert.ToInt32(cardDataDict["con"]);
-                int dex = Convert.ToInt32(cardDataDict["dex"]);
-                int damage = Convert.ToInt32(cardDataDict["damage"]);
-                int magic = Convert.ToInt32(cardDataDict["magic"]);
-                int range = Convert.ToInt32(cardDataDict["range"]);
+                string cclass = null;
+                string race = null;
+                int level = 0;
+                int hp = 0;
+                int ac = 0;
+                int damage = 0;
+                int magic = 0;
+                int range = 0;
+                int power = 0;
+
+                if (type == "creature")
+                {
+                    cclass = cardDataDict["class"].ToString();
+                    race = cardDataDict["race"].ToString();
+                    level = Convert.ToInt32(cardDataDict["level"]);
+                    hp = Convert.ToInt32(cardDataDict["hp"]);
+                    ac = Convert.ToInt32(cardDataDict["ac"]);
+                    //str = Convert.ToInt32(cardDataDict["str"]);
+                    //con = Convert.ToInt32(cardDataDict["con"]);
+                    //dex = Convert.ToInt32(cardDataDict["dex"]);
+                    damage = Convert.ToInt32(cardDataDict["damage"]);
+                    magic = Convert.ToInt32(cardDataDict["magic"]);
+                    range = Convert.ToInt32(cardDataDict["range"]);
+                }
+                else
+                {
+                    power = Convert.ToInt32(cardDataDict["power"]);
+                }
 
                 if (sender == "player")
                 {
@@ -400,40 +419,56 @@ public class AgentServer : MonoBehaviour
                     {
                         var card = Instantiate(Card, new Vector3(0, 0, 0), Quaternion.identity);
                         card.GetComponent<CardScript>().Owner = sender;
+                        card.GetComponent<CardScript>().Type = type;
                         card.transform.SetParent(PlayerArea.transform, false);
                         card.GetComponent<CardScript>().Name = name;
-                        card.GetComponent<CardScript>().Class = cclass;
-                        card.GetComponent<CardScript>().Race = race;
-                        card.GetComponent<CardScript>().level = level;
-                        card.GetComponent<CardScript>().hp = hp;
-                        card.GetComponent<CardScript>().ac = ac;
-                        card.GetComponent<CardScript>().str = str;
-                        card.GetComponent<CardScript>().con = con;
-                        card.GetComponent<CardScript>().dex = dex;
-                        card.GetComponent<CardScript>().damage = damage;
-                        card.GetComponent<CardScript>().magic = magic;
-                        card.GetComponent<CardScript>().range = range;
-                        card.GetComponent<CardScript>().prio = dex;
+                        if (type == "creature")
+                        {
+                            card.GetComponent<CardScript>().Class = cclass;
+                            card.GetComponent<CardScript>().Race = race;
+                            card.GetComponent<CardScript>().level = level;
+                            card.GetComponent<CardScript>().hp = hp;
+                            card.GetComponent<CardScript>().ac = ac;
+                            //card.GetComponent<CardScript>().str = str;
+                            //card.GetComponent<CardScript>().con = con;
+                            //card.GetComponent<CardScript>().dex = dex;
+                            card.GetComponent<CardScript>().damage = damage;
+                            card.GetComponent<CardScript>().magic = magic;
+                            card.GetComponent<CardScript>().range = range;
+                            //card.GetComponent<CardScript>().prio = dex;
+                        }
+                        else
+                        {
+                            card.GetComponent<CardScript>().power = power;
+                        }
+
                         NumPlayerHand++;
                     }
                     else
                     {
                         Dictionary<string, object> cardData = new()
                         {
-                            ["name"] = name,
-                            ["class"] = cclass,
-                            ["race"] = race,
-                            ["level"] = level,
-                            ["hp"] = hp,
-                            ["ac"] = ac,
-                            ["str"] = str,
-                            ["con"] = con,
-                            ["dex"] = dex,
-                            ["damage"] = damage,
-                            ["magic"] = magic,
-                            ["range"] = range,
-                            ["prio"] = dex,
+                            ["type"] = type,
+                            ["name"] = name
                         };
+                        
+                        if (type == "creature")
+                        {
+                            
+                            cardData.Add("cclass", cclass);
+                            cardData.Add("race", race);
+                            cardData.Add("level", level);
+                            cardData.Add("hp", hp);
+                            cardData.Add("ac", type);
+                            cardData.Add("damage", type);
+                            cardData.Add("magic", type);
+                            cardData.Add("range", type);
+                        }
+                        else
+                        {
+                            cardData.Add("power", power);
+                        }
+
                         PlayerDeck.Add(cardData);
                     }
                 }
@@ -445,38 +480,54 @@ public class AgentServer : MonoBehaviour
                         card.GetComponent<CardScript>().Owner = sender;
                         card.transform.SetParent(EnemyArea.transform, false);
                         card.GetComponent<CardScript>().Name = name;
-                        card.GetComponent<CardScript>().Class = cclass;
-                        card.GetComponent<CardScript>().Race = race;
-                        card.GetComponent<CardScript>().level = level;
-                        card.GetComponent<CardScript>().hp = hp;
-                        card.GetComponent<CardScript>().ac = ac;
-                        card.GetComponent<CardScript>().str = str;
-                        card.GetComponent<CardScript>().con = con;
-                        card.GetComponent<CardScript>().dex = dex;
-                        card.GetComponent<CardScript>().damage = damage;
-                        card.GetComponent<CardScript>().magic = magic;
-                        card.GetComponent<CardScript>().range = range;
-                        card.GetComponent<CardScript>().prio = dex;
+                        card.GetComponent<CardScript>().Type = type;
+                        if (type == "creature")
+                        {
+                            card.GetComponent<CardScript>().Class = cclass;
+                            card.GetComponent<CardScript>().Race = race;
+                            card.GetComponent<CardScript>().level = level;
+                            card.GetComponent<CardScript>().hp = hp;
+                            card.GetComponent<CardScript>().ac = ac;
+                            //card.GetComponent<CardScript>().str = str;
+                            //card.GetComponent<CardScript>().con = con;
+                            //card.GetComponent<CardScript>().dex = dex;
+                            card.GetComponent<CardScript>().damage = damage;
+                            card.GetComponent<CardScript>().magic = magic;
+                            card.GetComponent<CardScript>().range = range;
+                            //card.GetComponent<CardScript>().prio = dex;
+                        }
+                        else
+                        {
+                            card.GetComponent<CardScript>().power = power;
+                        }
+
                         NumEnemyHand++;
                     }
                     else
                     {
                         Dictionary<string, object> cardData = new()
                         {
-                            ["name"] = name,
-                            ["class"] = cclass,
-                            ["race"] = race,
-                            ["level"] = level,
-                            ["hp"] = hp,
-                            ["ac"] = ac,
-                            ["str"] = str,
-                            ["con"] = con,
-                            ["dex"] = dex,
-                            ["damage"] = damage,
-                            ["magic"] = magic,
-                            ["range"] = range,
-                            ["prio"] = dex,
+                            ["type"] = type,
+                            ["name"] = name
                         };
+
+                        if (type == "creature")
+                        {
+
+                            cardData.Add("cclass", cclass);
+                            cardData.Add("race", race);
+                            cardData.Add("level", level);
+                            cardData.Add("hp", hp);
+                            cardData.Add("ac", type);
+                            cardData.Add("damage", type);
+                            cardData.Add("magic", type);
+                            cardData.Add("range", type);
+                        }
+                        else
+                        {
+                            cardData.Add("power", power);
+                        }
+
                         EnemyDeck.Add(cardData);
                     }
                 }
