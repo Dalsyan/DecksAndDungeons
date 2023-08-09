@@ -106,7 +106,7 @@ class OntologyActions:
     def card_to_dict(self, ccard):
         stats = {}
 
-        print(ccard.name)
+        #print(ccard.name)
 
         creature_list = self.onto.search(type = self.onto.CCreature)
         print(creature_list)

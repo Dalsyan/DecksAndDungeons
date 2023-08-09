@@ -141,7 +141,7 @@ class CardAction(State):
 
         elif self.agent.role == "tank":
             if ''.join(filter(str.isalpha, self.agent.cclass.name)) == "paladin":
-                ally_card_agents_low = [card for card in self.agents.card_agents if ((card.current_hp * 100) / card.hp) < 34]
+                ally_card_agents_low = [card for card in self.agent.card_agents if ((card.current_hp * 100) / card.hp) < 34]
                 lowest_player_card = ally_card_agents_low.sort(Key = lambda x : x.current_hp)[0]
 
                 if lowest_player_card is not None:
@@ -167,7 +167,7 @@ class CardAction(State):
 
         elif self.agent.role == "mage":
             if ''.join(filter(str.isalpha, self.agent.cclass.name)) == "cleric":
-                ally_card_agents_low = [card for card in self.agents.card_agents if ((card.current_hp * 100) / card.hp) < 34]
+                ally_card_agents_low = [card for card in self.agent.card_agents if ((card.current_hp * 100) / card.hp) < 34]
                 lowest_player_card = ally_card_agents_low.sort(Key = lambda x : x.current_hp)[0]
 
                 if lowest_player_card:
@@ -182,7 +182,7 @@ class CardAction(State):
                 if self.agent.minions < self.agent.card.level:
                     print("soy DRUIDA e intento SPAWNEAR")
                     # invoke minion
-                    self.minions += 1
+                    self.agent.minions += 1
 
                 else: 
                     print("soy DRUIDA y he hecho ataque NORMAL")

@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System;
 using DG.Tweening;
 using UnityEngine.SocialPlatforms;
+using System.Linq;
 
 public class AgentServer : MonoBehaviour
 {
@@ -23,6 +24,8 @@ public class AgentServer : MonoBehaviour
     public int NumEnemyCardsInTable { get; set; }
     public List<Dictionary<string, object>> PlayerDeck { get; set; }
     public List<Dictionary<string, object>> EnemyDeck { get; set; }
+    public List<Dictionary<string, object>> PlayerHand { get; set; }
+    public List<Dictionary<string, object>> EnemyHand { get; set; }
     public List<Dictionary<string, object>> PlayerCardsInTable { get; set; }
     public List<Dictionary<string, object>> EnemyCardsInTable { get; set; }
     public List<Dictionary<string, object>> CardsInTable { get; set; }
@@ -90,6 +93,8 @@ public class AgentServer : MonoBehaviour
         NumPlayerCardsInTable = 0;
         NumEnemyCardsInTable = 0;
 
+        PlayerHand = new List<Dictionary<string, object>>();
+        EnemyHand = new List<Dictionary<string, object>>();
         PlayerDeck = new List<Dictionary<string, object>>();
         EnemyDeck = new List<Dictionary<string, object>>();
 
@@ -216,6 +221,10 @@ public class AgentServer : MonoBehaviour
                             
                         case "enemy_play_cards":
                             EnemyPlayCards = dataBool;
+
+                            //EnemyPlayCardsAction();
+                            //SendEnemyCardAction();
+
                             break;
 
                         default:
@@ -401,9 +410,6 @@ public class AgentServer : MonoBehaviour
                     level = Convert.ToInt32(cardDataDict["level"]);
                     hp = Convert.ToInt32(cardDataDict["hp"]);
                     ac = Convert.ToInt32(cardDataDict["ac"]);
-                    //str = Convert.ToInt32(cardDataDict["str"]);
-                    //con = Convert.ToInt32(cardDataDict["con"]);
-                    //dex = Convert.ToInt32(cardDataDict["dex"]);
                     damage = Convert.ToInt32(cardDataDict["damage"]);
                     magic = Convert.ToInt32(cardDataDict["magic"]);
                     range = Convert.ToInt32(cardDataDict["range"]);
@@ -429,18 +435,39 @@ public class AgentServer : MonoBehaviour
                             card.GetComponent<CardScript>().level = level;
                             card.GetComponent<CardScript>().hp = hp;
                             card.GetComponent<CardScript>().ac = ac;
-                            //card.GetComponent<CardScript>().str = str;
-                            //card.GetComponent<CardScript>().con = con;
-                            //card.GetComponent<CardScript>().dex = dex;
                             card.GetComponent<CardScript>().damage = damage;
                             card.GetComponent<CardScript>().magic = magic;
                             card.GetComponent<CardScript>().range = range;
-                            //card.GetComponent<CardScript>().prio = dex;
                         }
                         else
                         {
                             card.GetComponent<CardScript>().power = power;
                         }
+
+                        Dictionary<string, object> cardData = new()
+                        {
+                            ["Type"] = type,
+                            ["Name"] = name
+                        };
+
+                        if (type == "creature")
+                        {
+
+                            cardData.Add("cclass", cclass);
+                            cardData.Add("race", race);
+                            cardData.Add("level", level);
+                            cardData.Add("hp", hp);
+                            cardData.Add("ac", type);
+                            cardData.Add("damage", type);
+                            cardData.Add("magic", type);
+                            cardData.Add("range", type);
+                        }
+                        else
+                        {
+                            cardData.Add("power", power);
+                        }
+
+                        PlayerHand.Add(cardData);
 
                         NumPlayerHand++;
                     }
@@ -448,8 +475,8 @@ public class AgentServer : MonoBehaviour
                     {
                         Dictionary<string, object> cardData = new()
                         {
-                            ["type"] = type,
-                            ["name"] = name
+                            ["Type"] = type,
+                            ["Name"] = name
                         };
                         
                         if (type == "creature")
@@ -488,18 +515,39 @@ public class AgentServer : MonoBehaviour
                             card.GetComponent<CardScript>().level = level;
                             card.GetComponent<CardScript>().hp = hp;
                             card.GetComponent<CardScript>().ac = ac;
-                            //card.GetComponent<CardScript>().str = str;
-                            //card.GetComponent<CardScript>().con = con;
-                            //card.GetComponent<CardScript>().dex = dex;
                             card.GetComponent<CardScript>().damage = damage;
                             card.GetComponent<CardScript>().magic = magic;
                             card.GetComponent<CardScript>().range = range;
-                            //card.GetComponent<CardScript>().prio = dex;
                         }
                         else
                         {
                             card.GetComponent<CardScript>().power = power;
                         }
+
+                        Dictionary<string, object> cardData = new()
+                        {
+                            ["Type"] = type,
+                            ["Name"] = name
+                        };
+
+                        if (type == "creature")
+                        {
+
+                            cardData.Add("cclass", cclass);
+                            cardData.Add("race", race);
+                            cardData.Add("level", level);
+                            cardData.Add("hp", hp);
+                            cardData.Add("ac", type);
+                            cardData.Add("damage", type);
+                            cardData.Add("magic", type);
+                            cardData.Add("range", type);
+                        }
+                        else
+                        {
+                            cardData.Add("power", power);
+                        }
+
+                        EnemyHand.Add(cardData);
 
                         NumEnemyHand++;
                     }
@@ -507,8 +555,8 @@ public class AgentServer : MonoBehaviour
                     {
                         Dictionary<string, object> cardData = new()
                         {
-                            ["type"] = type,
-                            ["name"] = name
+                            ["Type"] = type,
+                            ["Name"] = name
                         };
 
                         if (type == "creature")
@@ -537,6 +585,121 @@ public class AgentServer : MonoBehaviour
                     return;
                 }
             }
+        });
+    }
+
+    private void EnemyPlayCardsAction()
+    {
+        ActionsQueue.Enqueue(() =>
+        {
+            var random = new System.Random();
+            
+            foreach (var cardData in EnemyHand)
+            {
+                #region CREAR CELDA
+
+                GameObject cell = null;
+                var randomCellName = "";
+
+                var trying = true;
+                while (trying)
+                {
+                    randomCellName = "(" + random.Next(3) + ", " + random.Next(6) + ")";
+
+                    cell = GameObject.Find(randomCellName);
+
+                    if (cell == null)
+                    {
+                        UnityEngine.Debug.LogError("Cell " + randomCellName + " not found.");
+                        return;
+                    }
+
+                    if (cell.transform.childCount > 0)
+                    {
+                        continue;
+                    }
+                    trying = false;
+                }
+                #endregion
+
+                if (cardData.TryGetValue("level", out object manaCostObj) && manaCostObj is int manaCost)
+                {
+                    if (CurrentEnemyManaPool >= manaCost)
+                    {
+                        if (cardData.TryGetValue("Name", out object cardName) && cardName is string name)
+                        {
+                            var cardObject = GameObject.Find(name);
+                            cardObject.transform.SetParent(cell.transform, false);
+                            var cardScript = cardObject.GetComponent<CardScript>();
+
+                            #region CARD DICT
+                            var card = new Dictionary<string, object>()
+                            {
+                                ["Name"] = cardScript.Name,
+                                ["Type"] = cardScript.Type,
+                                ["class"] = cardScript.Class,
+                                ["race"] = cardScript.Race,
+                                ["level"] = cardScript.level,
+                                ["hp"] = cardScript.hp,
+                                ["ac"] = cardScript.ac,
+                                ["str"] = cardScript.str,
+                                ["con"] = cardScript.con,
+                                ["dex"] = cardScript.dex,
+                                ["damage"] = cardScript.damage,
+                                ["magic"] = cardScript.magic,
+                                ["range"] = cardScript.range,
+                                ["prio"] = cardScript.prio
+                            }; 
+                            var newCard = card;
+                            newCard.Add("pos", transform.name);
+
+                            cardScript.transform.SetParent(cell.transform);
+                            EnemyDeck.Remove(card);
+                            NumEnemyHand--;
+                            EnemyCardsInTable.Add(newCard);
+                            NumEnemyCardsInTable++;
+                            CurrentEnemyManaPool -= manaCost;
+
+                            CardsInTable.Add(newCard);
+                            #endregion
+
+                            Dictionary<string, object> cardDict = new()
+                            {
+                                ["action"] = "createEnemyCard",
+                                ["data"] = cardName,
+                                ["pos"] = cell.name
+                            };
+                            var createEnemyCardActionJson = JsonConvert.SerializeObject(cardDict, Formatting.Indented);
+                            SendMessages(createEnemyCardActionJson);
+                        }
+                    }
+                }
+            }
+
+            EnemyHand = EnemyHand.Except(EnemyCardsInTable).ToList();
+        });
+    }
+
+    private void SendEnemyCardAction()
+    {
+        ActionsQueue.Enqueue(() =>
+        {
+            foreach (var enemyCardInTable in EnemyCardsInTable)
+            {
+                Dictionary<string, object> cardData = new()
+                {
+                    ["action"] = "createEnemyCard",
+                    ["data"] = enemyCardInTable["Name"],
+                    ["pos"] = enemyCardInTable["pos"]
+                };
+                var createEnemyCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
+                SendMessages(createEnemyCardActionJson);
+            }
+
+            SendMessages("enemyReady");
+
+            EnemyManaPool++;
+            CurrentEnemyManaPool = EnemyManaPool;
         });
     }
 

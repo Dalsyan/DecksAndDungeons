@@ -52,6 +52,7 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
                 var card = new Dictionary<string, object>()
                 {
                     ["Name"] = cardScript.Name,
+                    ["Type"] = cardScript.Type,
                     ["class"] = cardScript.Class,
                     ["race"] = cardScript.Race,
                     ["level"] = cardScript.level,

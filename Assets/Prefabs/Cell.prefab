@@ -120,7 +120,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Card: {fileID: 0}
   Server: {fileID: 8819343916380666297, guid: ba85ae4f983455c41b830ef38774cee4, type: 3}
-  AgentServer: {fileID: 0}
 --- !u!114 &-351181312234527750
 MonoBehaviour:
   m_ObjectHideFlags: 0
