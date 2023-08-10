@@ -10,6 +10,7 @@ using System;
 using DG.Tweening;
 using UnityEngine.SocialPlatforms;
 using System.Linq;
+using UnityEditor;
 
 public class AgentServer : MonoBehaviour
 {
@@ -217,13 +218,20 @@ public class AgentServer : MonoBehaviour
                     {
                         case "player_play_cards":
                             PlayerPlayCards = dataBool;
+
+                            if (PlayerPlayCards)
+                                CardsToArea();
+
                             break;
                             
                         case "enemy_play_cards":
                             EnemyPlayCards = dataBool;
 
-                            //EnemyPlayCardsAction();
-                            //SendEnemyCardAction();
+                            if (EnemyPlayCards)
+                            {
+                                CardsToArea();
+                                EnemyPlayCardsAction();
+                            }
 
                             break;
 
@@ -592,114 +600,149 @@ public class AgentServer : MonoBehaviour
     {
         ActionsQueue.Enqueue(() =>
         {
-            var random = new System.Random();
-            
-            foreach (var cardData in EnemyHand)
+            if (EnemyPlayCards)
             {
-                #region CREAR CELDA
+                var random = new System.Random();
 
-                GameObject cell = null;
-                var randomCellName = "";
-
-                var trying = true;
-                while (trying)
+                foreach (var cardData in EnemyHand)
                 {
-                    randomCellName = "(" + random.Next(3) + ", " + random.Next(6) + ")";
+                    #region CREAR CELDA
 
-                    cell = GameObject.Find(randomCellName);
+                    GameObject cell = null;
+                    var randomCellName = "";
 
-                    if (cell == null)
+                    var trying = true;
+                    while (trying)
                     {
-                        UnityEngine.Debug.LogError("Cell " + randomCellName + " not found.");
-                        return;
-                    }
+                        randomCellName = "(" + random.Next(3) + ", " + random.Next(6) + ")";
 
-                    if (cell.transform.childCount > 0)
-                    {
-                        continue;
-                    }
-                    trying = false;
-                }
-                #endregion
+                        cell = GameObject.Find(randomCellName);
 
-                if (cardData.TryGetValue("level", out object manaCostObj) && manaCostObj is int manaCost)
-                {
-                    if (CurrentEnemyManaPool >= manaCost)
-                    {
-                        if (cardData.TryGetValue("Name", out object cardName) && cardName is string name)
+                        if (cell == null)
                         {
-                            var cardObject = GameObject.Find(name);
-                            cardObject.transform.SetParent(cell.transform, false);
-                            var cardScript = cardObject.GetComponent<CardScript>();
+                            UnityEngine.Debug.LogError("Cell " + randomCellName + " not found.");
+                            return;
+                        }
 
-                            #region CARD DICT
-                            var card = new Dictionary<string, object>()
+                        if (cell.transform.childCount > 0)
+                        {
+                            continue;
+                        }
+                        trying = false;
+                    }
+
+                    #endregion
+
+                    if (cardData.TryGetValue("level", out object manaCostObj) && manaCostObj is int manaCost)
+                    {
+                        if (CurrentEnemyManaPool >= manaCost)
+                        {
+                            if (cardData.TryGetValue("Name", out object cardName) && cardName is string name)
                             {
-                                ["Name"] = cardScript.Name,
-                                ["Type"] = cardScript.Type,
-                                ["class"] = cardScript.Class,
-                                ["race"] = cardScript.Race,
-                                ["level"] = cardScript.level,
-                                ["hp"] = cardScript.hp,
-                                ["ac"] = cardScript.ac,
-                                ["str"] = cardScript.str,
-                                ["con"] = cardScript.con,
-                                ["dex"] = cardScript.dex,
-                                ["damage"] = cardScript.damage,
-                                ["magic"] = cardScript.magic,
-                                ["range"] = cardScript.range,
-                                ["prio"] = cardScript.prio
-                            }; 
-                            var newCard = card;
-                            newCard.Add("pos", transform.name);
+                                var cardObject = GameObject.Find(name);
+                                cardObject.transform.SetParent(cell.transform, false);
+                                var cardScript = cardObject.GetComponent<CardScript>();
 
-                            cardScript.transform.SetParent(cell.transform);
-                            EnemyDeck.Remove(card);
-                            NumEnemyHand--;
-                            EnemyCardsInTable.Add(newCard);
-                            NumEnemyCardsInTable++;
-                            CurrentEnemyManaPool -= manaCost;
+                                #region CARD DICT
+                                var card = new Dictionary<string, object>()
+                                {
+                                    ["Name"] = cardScript.Name,
+                                    ["Type"] = cardScript.Type,
+                                    ["Owner"] = cardScript.Owner,
+                                    ["class"] = cardScript.Class,
+                                    ["race"] = cardScript.Race,
+                                    ["level"] = cardScript.level,
+                                    ["hp"] = cardScript.hp,
+                                    ["ac"] = cardScript.ac,
+                                    ["str"] = cardScript.str,
+                                    ["con"] = cardScript.con,
+                                    ["dex"] = cardScript.dex,
+                                    ["damage"] = cardScript.damage,
+                                    ["magic"] = cardScript.magic,
+                                    ["range"] = cardScript.range,
+                                    ["prio"] = cardScript.prio
+                                };
+                                var newCard = card;
+                                newCard.Add("pos", cell.transform.name);
 
-                            CardsInTable.Add(newCard);
-                            #endregion
+                                cardScript.transform.SetParent(cell.transform);
+                                EnemyDeck.Remove(card);
+                                NumEnemyHand--;
+                                EnemyCardsInTable.Add(newCard);
+                                NumEnemyCardsInTable++;
+                                CurrentEnemyManaPool -= manaCost;
 
-                            Dictionary<string, object> cardDict = new()
-                            {
-                                ["action"] = "createEnemyCard",
-                                ["data"] = cardName,
-                                ["pos"] = cell.name
-                            };
-                            var createEnemyCardActionJson = JsonConvert.SerializeObject(cardDict, Formatting.Indented);
-                            SendMessages(createEnemyCardActionJson);
+                                CardsInTable.Add(newCard);
+                                #endregion
+                            }
                         }
                     }
                 }
-            }
 
-            EnemyHand = EnemyHand.Except(EnemyCardsInTable).ToList();
+                EnemyHand = EnemyHand.Except(EnemyCardsInTable).ToList();
+
+                foreach (var enemyCardInTable in EnemyCardsInTable)
+                {
+                    Dictionary<string, object> cardData = new()
+                    {
+                        ["action"] = "createEnemyCard",
+                        ["data"] = enemyCardInTable["Name"],
+                        ["pos"] = enemyCardInTable["pos"]
+                    };
+                    var createEnemyCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
+                    SendMessages(createEnemyCardActionJson);
+                }
+
+                SendMessages("enemyReady");
+
+                EnemyManaPool++;
+                CurrentEnemyManaPool = EnemyManaPool;
+            }
         });
     }
 
-    private void SendEnemyCardAction()
+    private void CardsToArea()
     {
         ActionsQueue.Enqueue(() =>
         {
-            foreach (var enemyCardInTable in EnemyCardsInTable)
+            foreach (var card in CardsInTable)
             {
-                Dictionary<string, object> cardData = new()
+                if (card.TryGetValue("Name", out object cardName) && cardName is string name)
                 {
-                    ["action"] = "createEnemyCard",
-                    ["data"] = enemyCardInTable["Name"],
-                    ["pos"] = enemyCardInTable["pos"]
-                };
-                var createEnemyCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
-                SendMessages(createEnemyCardActionJson);
+                    var cardObject = GameObject.Find(name);
+                    var cardScript = cardObject.GetComponent<CardScript>();
+
+                    if (card.TryGetValue("Owner", out object cardOwner) && cardOwner is string owner)
+                    {
+                        if (owner == "player" && PlayerPlayCards)
+                        {
+                            cardObject.transform.SetParent(PlayerArea.transform, false);
+                            cardScript.transform.SetParent(PlayerArea.transform, false);
+
+                            PlayerDeck.Add(card);
+                            NumPlayerHand++;
+                            PlayerCardsInTable.Remove(card);
+                            NumPlayerCardsInTable--;
+                        }
+                        else
+                        {
+                            if (owner == "enemy" && EnemyPlayCards)
+                            {
+                                cardObject.transform.SetParent(EnemyArea.transform, false);
+                                cardScript.transform.SetParent(EnemyArea.transform, false);
+
+                                EnemyDeck.Add(card);
+                                NumEnemyHand++;
+                                EnemyCardsInTable.Remove(card);
+                                NumEnemyCardsInTable--;
+                            }
+                        }
+                    }
+
+                }
             }
 
-            SendMessages("enemyReady");
-
-            EnemyManaPool++;
-            CurrentEnemyManaPool = EnemyManaPool;
+            CardsInTable = CardsInTable.Except(PlayerDeck).ToList();
         });
     }
 

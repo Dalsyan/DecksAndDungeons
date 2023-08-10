@@ -178,10 +178,12 @@ class Actions:
     async def send_message_to_socket(self, msg : str):
         encoded_msg = (msg).encode()
         self.unity_sock.sendall(bytearray(encoded_msg))
+        print(msg)
 
     async def send_action_to_socket(self, msg : dict):
         encoded_msg = json.dumps(msg).encode()
         self.unity_sock.sendall(bytearray(encoded_msg))
+        print(msg)
 
     ##############################
     #                            #

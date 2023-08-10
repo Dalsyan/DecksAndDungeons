@@ -53,6 +53,7 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
                 {
                     ["Name"] = cardScript.Name,
                     ["Type"] = cardScript.Type,
+                    ["Owner"] = cardScript.Owner,
                     ["class"] = cardScript.Class,
                     ["race"] = cardScript.Race,
                     ["level"] = cardScript.level,
