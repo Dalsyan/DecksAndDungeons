@@ -256,6 +256,14 @@ public class AgentServer : MonoBehaviour
                         case "kill_card":
                             KillCardAction(messageDict, dataString);
                             break;
+                        
+                        case "shield_card":
+                            ShieldCardAction(messageDict, dataString);
+                            break;
+                        
+                        case "heal_card":
+                            HealCardAction(messageDict, dataString);
+                            break;
 
                         default:
                             UnityEngine.Debug.LogWarning("Unknown action.");
@@ -362,11 +370,16 @@ public class AgentServer : MonoBehaviour
     private void DamageCardAction(Dictionary<string, object> messageDict, string dataString)
     {
         ActionsQueue.Enqueue(() => {
-            var card = GameObject.Find(dataString.ToString());
+            var card = GameObject.Find(dataString.ToString()); 
+            var cardScript = card.GetComponent<CardScript>();
 
-            messageDict.TryGetValue("current_hp", out object current_hp);
+            messageDict.TryGetValue("damage", out object damage);
 
-            var hp_text = card.GetComponent<CardScript>().HpText.text = current_hp.ToString();
+            if (damage is int dmg)
+            {
+                cardScript.hp = cardScript.hp - dmg;
+                var hp_text = card.GetComponent<CardScript>().HpText.text = (cardScript.hp - dmg).ToString();
+            }
         });
     }
 
@@ -384,6 +397,41 @@ public class AgentServer : MonoBehaviour
             targetList.RemoveAll(c => c.ContainsKey("Name") && c["Name"].ToString() == cardScript.Name);
 
             Destroy(card);
+        });
+    }
+    
+    private void ShieldCardAction(Dictionary<string, object> messageDict, string dataString)
+    {
+        ActionsQueue.Enqueue(() => {
+            var card = GameObject.Find(dataString.ToString());
+            var cardScript = card.GetComponent<CardScript>();
+
+            messageDict.TryGetValue("is_shielded", out object is_shielded);
+
+            if (is_shielded is bool)
+            {
+                cardScript.shield = true;
+            }
+            else
+            {
+                cardScript.shield = false;
+            }
+        });
+    }
+    
+    private void HealCardAction(Dictionary<string, object> messageDict, string dataString)
+    {
+        ActionsQueue.Enqueue(() => {
+            var card = GameObject.Find(dataString.ToString());
+            var cardScript = card.GetComponent<CardScript>();
+
+            messageDict.TryGetValue("current_hp", out object heal);
+
+            if (heal is int hp)
+            {
+                cardScript.hp = cardScript.hp + hp;
+                var hp_text = card.GetComponent<CardScript>().HpText.text = (cardScript.hp + hp).ToString();
+            }
         });
     }
 

@@ -42,6 +42,7 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     public int prio;
     public string pos;
     public int power;
+    public bool shield = false;
 
     private void Start()
     {
