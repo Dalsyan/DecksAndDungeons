@@ -182,14 +182,14 @@ class CardAction(State):
                     await self.agent.actions.attack(self.agent, nearest_enemy, "ap")
 
             elif ''.join(filter(str.isalpha, self.agent.cclass.name)) == "druid":
-                if self.agent.minions < self.agent.card.level:
-                    print("soy DRUIDA e intento SPAWNEAR")
-                    # invoke minion
-                    self.agent.minions += 1
+                #if self.agent.minions < self.agent.card.level:
+                #    print("soy DRUIDA e intento SPAWNEAR")
+                #    # invoke minion
+                #    self.agent.minions += 1
 
-                else: 
-                    print("soy DRUIDA y he hecho ataque NORMAL")
-                    await self.agent.actions.attack(self.agent, nearest_enemy, "ap")
+                #else: 
+                print("soy DRUIDA y he hecho ataque NORMAL")
+                await self.agent.actions.attack(self.agent, nearest_enemy, "ap")
 
             else:
                 print("soy MAGO/HECHICERO y he hecho ataque NORMAL")

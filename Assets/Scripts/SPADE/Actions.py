@@ -146,12 +146,17 @@ class Actions:
         if not enemy_card_agent.shielded:
             print(f"Soy {player_card_agent.card.name}, ataco a {enemy_card_agent.card.name} haciendole {damage} de danyo")
             enemy_card_agent.current_hp = enemy_card_agent.current_hp - damage
-            await self.send_action_to_socket({"action" : "damage_card", "data": enemy_card_agent.card.name, "damage": damage})
-            time.sleep(1)
             if enemy_card_agent.current_hp <= 0:
                 print(f"Soy {player_card_agent.card.name}, y he matado a {enemy_card_agent}")
                 player_card_agent.card_agents.remove(enemy_card_agent)
                 player_card_agent.enemy_card_agents.remove(enemy_card_agent)
+
+                await self.send_action_to_socket({"action" : "kill_card", "data": enemy_card_agent.card.name})
+                time.sleep(1)
+
+            else:
+                await self.send_action_to_socket({"action" : "damage_card", "data": enemy_card_agent.card.name, "damage": damage})
+                time.sleep(1)
         else:
            self.send_action_to_socket({"action" : "shield_card", "data": enemy_card_agent.card.name, "is_shielded" : "false"})
 
@@ -160,10 +165,10 @@ class Actions:
             ally_card_agent.shielded = True
             await self.send_action_to_socket({"action" : "shield_card", "data": ally_card_agent.card.name, "is_shielded" : "true"})
 
-    async def heal(self, player_card_agent : card.CardAgent, ally_card_agent : card.CardAgent, heal : int):
+    async def heal(self, player_card_agent : card.CardAgent, ally_card_agent : card.CardAgent):
         if self.dist(player_card_agent, ally_card_agent) <= player_card_agent.range and ally_card_agent.current_hp < ally_card_agent.hp:
             healed_hp = 0
-            while healed_hp < heal:
+            while healed_hp < player_card_agent.level:
                 ally_card_agent.current_hp += 1
 
             await self.send_action_to_socket({"action" : "heal_card", "data": ally_card_agent.card.name, "current_hp" : healed_hp})
