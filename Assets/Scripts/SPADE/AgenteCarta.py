@@ -142,7 +142,10 @@ class CardAction(State):
         elif self.agent.role == "tank":
             if ''.join(filter(str.isalpha, self.agent.cclass.name)) == "paladin":
                 ally_card_agents_low = [card for card in self.agent.card_agents if ((card.current_hp * 100) / card.hp) < 34]
-                lowest_player_card = min(ally_card_agents_low, key=lambda x: x.current_hp)
+                lowest_player_card = None
+
+                if len(ally_card_agents_low) > 0:
+                    lowest_player_card = min(ally_card_agents_low, key=lambda x: x.current_hp)
 
                 if lowest_player_card is not None:
                     print("soy PALADIN e intento ESCUDAR")
@@ -162,15 +165,15 @@ class CardAction(State):
                     print("soy BARBARO y he hecho ataque NORMAL")
                     await self.agent.actions.attack(self.agent, nearest_enemy, "ad")
 
-            else:
-                print("soy tank pero me cago encima")
-
         elif self.agent.role == "mage":
             if ''.join(filter(str.isalpha, self.agent.cclass.name)) == "cleric":
                 ally_card_agents_low = [card for card in self.agent.card_agents if ((card.current_hp * 100) / card.hp) < 34]
-                lowest_player_card = min(ally_card_agents_low, key=lambda x: x.current_hp)
+                lowest_player_card = None
 
-                if lowest_player_card:
+                if len(ally_card_agents_low) > 0:
+                    lowest_player_card = min(ally_card_agents_low, key=lambda x: x.current_hp)
+
+                if lowest_player_card is not None:
                     print("soy CLERIGO e intento CURAR")
                     await self.agent.actions.heal(self.agent.card, lowest_player_card)
 

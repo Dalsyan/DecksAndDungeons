@@ -152,10 +152,11 @@ class Actions:
                 print(f"Soy {player_card_agent.card.name}, y he matado a {enemy_card_agent}")
                 player_card_agent.card_agents.remove(enemy_card_agent)
                 player_card_agent.enemy_card_agents.remove(enemy_card_agent)
-            await self.send_action_to_socket({"action" : "shield_card", "data": enemy_card_agent.card.name, "is_shielded" : "false"})
+        else:
+           self.send_action_to_socket({"action" : "shield_card", "data": enemy_card_agent.card.name, "is_shielded" : "false"})
 
     async def shield(self, player_card_agent : card.CardAgent, ally_card_agent : card.CardAgent):
-        if self.Dist(player_card_agent, ally_card_agent) <= player_card_agent.range:
+        if self.dist(player_card_agent, ally_card_agent) <= player_card_agent.range:
             ally_card_agent.shielded = True
             await self.send_action_to_socket({"action" : "shield_card", "data": ally_card_agent.card.name, "is_shielded" : "true"})
 
@@ -166,6 +167,26 @@ class Actions:
                 ally_card_agent.current_hp += 1
 
             await self.send_action_to_socket({"action" : "heal_card", "data": ally_card_agent.card.name, "current_hp" : healed_hp})
+
+    async def artifact_action(self, artifact, target):
+        if ''.join(filter(str.isalpha, artifact.hasItem.name)) == "belt":
+            target.con += artifact.power
+
+        elif ''.join(filter(str.isalpha, artifact.hasItem.name)) == "boots":
+            target.dex += artifact.power
+
+        elif ''.join(filter(str.isalpha, artifact.hasItem.name)) == "collar":
+            target.magic += artifact.power
+
+        elif ''.join(filter(str.isalpha, artifact.hasItem.name)) == "gloves":
+            target.str += artifact.power
+
+    async def spell_action(self, spell, target):
+        if ''.join(filter(str.isalpha, spell.knowsSpell.name)) == "healing":
+            target.hp += spell.power
+
+        elif ''.join(filter(str.isalpha, spell.knowsSpell.name)) == "evocation":
+            target.hp -= spell.power
 
     ##############################
     #                            #
@@ -190,8 +211,8 @@ class Actions:
     ##############################
 
     # ORDERING
-    def order_cards_by_prio(self, cards : list[card.CardAgent]):
-        res = cards.sort(Key = lambda x : x.prio, reverse = True)
+    def order_cards_by_prio(self, cards: list):
+        res = sorted(cards, key=lambda x: x.prio, reverse=True)
         return res
 
     # USER MANAGEMENT
@@ -222,6 +243,10 @@ class Actions:
     
     def search_for_card(self, name):
         card = self.owl.search_for_card(name)
+        return card
+
+    def search_for_card_in_pos(self, cards, pos):
+        card = self.owl.search_for_card_in_pos(cards, pos)
         return card
 
     # JSON PARSER

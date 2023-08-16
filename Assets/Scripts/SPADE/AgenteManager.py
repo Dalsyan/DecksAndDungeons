@@ -63,6 +63,7 @@ class AgentManager(Agent):
         self.listening = False
         self.player_ready = False
         self.enemy_ready = False
+        self.playing = False
         
         # INICIALIZACION TABLERO
         for i in range(6):
@@ -151,21 +152,7 @@ class AgentManager(Agent):
                         data = message_dict.get("data")
                         
                         if action == "selectDeck":
-                            deck = self.select_deck_redux_action(data)
-                            print(f"selected deck: {deck}")
-                            print(f"player deck: {self.player_deck}")
-                                
-                        #elif action == "selectPlayerDeck":
-                        #    await self.select_deck_action("player", data)
-
-                        #    if self.player_deck is not None and self.enemy_deck is not None:
-                        #        self.listening = False
-
-                        #elif action == "selectEnemyDeck":
-                        #    await self.select_deck_action("enemy", data)
-
-                        #    if self.player_deck is not None and self.enemy_deck is not None:
-                        #        self.listening = False
+                            self.select_deck_redux_action(data)
 
                         elif action == "createPlayerCard":
                             pos = message_dict.get("pos")
@@ -213,26 +200,40 @@ class AgentManager(Agent):
 
     async def play_card_action(self, owner, pos, name):
         card = self.actions.search_for_card(name)
-        card.pos = pos
-        card.owner = owner
-        #print(self.actions.card_to_json_action(card))
+
+        if card.type == "creature":
+            card.pos = pos
+            card.owner = owner
+            #print(self.actions.card_to_json_action(card))
     
-        self.table[card.pos] = OCCUPIED
+            self.table[card.pos] = OCCUPIED
 
-        for agent in self.card_agents:
-            if agent.name == card.name:
-                print(f"agent {agent.name} already exists!")
-                return
+            for agent in self.card_agents:
+                if agent.name == card.name:
+                    print(f"agent {agent.name} already exists!")
+                    return
 
-        card_agent = AgenteCarta.CardAgent(f"{card.name}@lightwitch.org", "Pepelxmpp11,", card, self.unity_socket)
+            card_agent = AgenteCarta.CardAgent(f"{card.name}@lightwitch.org", "Pepelxmpp11,", card, self.unity_socket)
         
-        self.card_agents.append(card_agent)
+            self.card_agents.append(card_agent)
 
-        if owner == "player":
-            self.player_card_agents.append(card_agent)
+            if owner == "player":
+                self.player_card_agents.append(card_agent)
 
-        elif owner == "enemy":
-            self.enemy_card_agents.append(card_agent)
+            elif owner == "enemy":
+                self.enemy_card_agents.append(card_agent)
+
+        elif card.type == "artifact":
+            target_card = self.actions.search_for_card_in_pos(self.card_agents, pos)
+
+            if card is not None:
+                self.actions.artifact_action(card, target_card)
+
+        elif card.type == "spell":
+            target_card = self.actions.search_for_card_in_pos(self.card_agents, pos)
+
+            if card is not None:
+                self.actions.spell_action(card, target_card)
             
     async def ready_action(self, owner):
         if owner == "player":
@@ -379,68 +380,74 @@ class EnemyPlayCards(State):
         time.sleep(1)
 
         #print("State TO: CARD_ACTIONS")
+        self.agent.playing = True
         self.set_next_state(CARD_ACTIONS)
 
 class CardActions(State):
     async def run(self):
         print("State: CARD_ACTIONS")
         
+        self.agent.card_agents = self.agent.actions.order_cards_by_prio(self.agent.card_agents)
+
         for agent in self.agent.card_agents:
-            if len(self.agent.player_card_agents) == 0 or len(self.agent.enemy_card_agents) == 0:
-                if len(self.agent.player_card_agents) == 0:
-                    self.agent.enemy_score += 1
-                    print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
+            if self.agent.playing:
+                if len(self.agent.player_card_agents) == 0 or len(self.agent.enemy_card_agents) == 0:
+                    if len(self.agent.player_card_agents) == 0:
+                        self.agent.enemy_score += 1
+                        print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
 
-                elif len(self.agent.enemy_card_agents) == 0:
-                    self.agent.player_score += 1
-                    print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
+                    elif len(self.agent.enemy_card_agents) == 0:
+                        self.agent.player_score += 1
+                        print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
                     
-                break
+                    break
 
-            else:
-                # Enviar tablero y listas de agentes
-                agent.card_agents = self.agent.card_agents
+                else:
+                    # Enviar tablero y listas de agentes
+                    agent.card_agents = self.agent.card_agents
 
-                if agent.owner == "player":
-                    agent.ally_card_agents = self.agent.player_card_agents
-                    agent.enemy_card_agents = self.agent.enemy_card_agents
+                    if agent.owner == "player":
+                        agent.ally_card_agents = self.agent.player_card_agents
+                        agent.enemy_card_agents = self.agent.enemy_card_agents
 
-                elif agent.owner == "enemy":
-                    agent.ally_card_agents = self.agent.enemy_card_agents
-                    agent.enemy_card_agents = self.agent.player_card_agents
+                    elif agent.owner == "enemy":
+                        agent.ally_card_agents = self.agent.enemy_card_agents
+                        agent.enemy_card_agents = self.agent.player_card_agents
 
-                agent.table = self.agent.table
+                    agent.table = self.agent.table
 
-                await agent.start()
+                    await agent.start()
 
-                sent_start = Message(to = f'{agent.name}@lightwitch.org')
-                sent_start.body = "start"
-                await self.send(sent_start)
+                    sent_start = Message(to = f'{agent.name}@lightwitch.org')
+                    sent_start.body = "start"
+                    await self.send(sent_start)
                 
-                recv_stop = await self.receive(10)
+                    recv_stop = await self.receive(10)
 
-                if recv_stop:
-                    if recv_stop.body == "stop":
-                        if agent.is_alive():
-                            await agent.stop()
+                    if recv_stop:
+                        if recv_stop.body == "stop":
+                            if agent.is_alive():
+                                await agent.stop()
 
-                # Actualizar tablero y listas de agentes
-                self.agent.card_agents = agent.card_agents
+                    # Actualizar tablero y listas de agentes
+                    self.agent.card_agents = agent.card_agents
 
-                if agent.owner == "player":
-                    self.agent.ally_card_agents = agent.ally_card_agents
-                    self.agent.enemy_card_agents = agent.enemy_card_agents
+                    if agent.owner == "player":
+                        self.agent.ally_card_agents = agent.ally_card_agents
+                        self.agent.enemy_card_agents = agent.enemy_card_agents
 
-                elif agent.owner == "enemy":
-                    self.agent.ally_card_agents = agent.enemy_card_agents
-                    self.agent.enemy_card_agents = agent.ally_card_agents
+                    elif agent.owner == "enemy":
+                        self.agent.ally_card_agents = agent.enemy_card_agents
+                        self.agent.enemy_card_agents = agent.ally_card_agents
 
-                self.agent.table = agent.table
-
+                    self.agent.table = agent.table
+                    
         if len(self.agent.player_card_agents) != 0 and len(self.agent.enemy_card_agents) != 0:
             self.set_next_state(CARD_ACTIONS)
             
         else: 
+            self.agent.playing = False
+
             if self.agent.player_score >= 2:
                 self.agent.winner = "player"
             elif self.agent.enemy_score >= 2:
@@ -450,6 +457,8 @@ class CardActions(State):
                 self.set_next_state(PLAYER_PLAY_CARDS)
             else:
                 self.set_next_state(GAME_OVER)
+                
+        #self.set_next_state(GAME_OVER)
 
 class GameOver(State):
     async def run(self):

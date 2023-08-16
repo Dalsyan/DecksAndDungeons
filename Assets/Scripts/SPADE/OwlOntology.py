@@ -84,6 +84,11 @@ class OntologyActions:
         card = self.onto.search(iri = f"*{name}")[0]
         return card
 
+    def search_for_card_in_pos(self, cards, pos):
+        for card in cards:
+            if card.pos == pos:
+                return card
+
     # PARSER
     def deck_to_list(self, cdeck):
         deck_json = []
@@ -215,6 +220,7 @@ class OntologyActions:
         my_card.hasRace = crace
         my_card.hasWeapon = cweapon
         
+        my_card.type = "creature"
         my_card.level = level
         my_card.role = my_card.hasClass.role
         my_card.hp = (my_card.level * cclass.hp) + self.skill_mods(crace.con)
@@ -274,6 +280,7 @@ class OntologyActions:
         spell_type = random.choice(["Evocation","Healing"]) 
         ctype = self.onto.search(iri = f"*{spell_type}")[0]
         
+        my_card.type = "spell"
         my_card.knowsSpell = ctype
         my_card.power = random.randint(1,3)
         
@@ -288,6 +295,7 @@ class OntologyActions:
         artifact_type = random.choice(["Belt","Boots","Collar","Gloves"]) 
         ctype = self.onto.search(iri = f"*{artifact_type}")[0]
 
+        my_card.type = "artifact"
         my_card.hasItem = ctype
         my_card.power = random.randint(1,3)
         
