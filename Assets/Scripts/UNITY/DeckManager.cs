@@ -45,6 +45,9 @@ public class DeckManager : MonoBehaviour
     // Menus
     public GameObject UserMenu;
 
+    // Paginacion
+    private int paginaCartas = 1;
+
     #endregion
 
     private void Awake()
@@ -198,6 +201,8 @@ public class DeckManager : MonoBehaviour
 
     private void ShowDeckCards(string dataJson)
     {
+        var counter = 1 * paginaCartas;
+
         foreach (string dataObject in CardDeckNames)
         {
             Destroy(GameObject.Find(dataObject));
@@ -209,6 +214,11 @@ public class DeckManager : MonoBehaviour
 
         foreach (object dataObject in dataList)
         {
+            if (counter == 10 * paginaCartas)
+            {
+                break;
+            }
+
             string cardJson = JsonConvert.SerializeObject(dataObject);
             var dataDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(cardJson);
 

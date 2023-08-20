@@ -51,6 +51,9 @@ public class MainMenu : MonoBehaviour
     public List<string> CardDeckButtonList;
     public GameObject SelectDeckButton;
 
+    // Cartas
+    public GameObject CardRedux;
+
     private void Start()
     {
         DeckManager = DeckServer.GetComponent<DeckManager>();
@@ -379,13 +382,13 @@ public class MainMenu : MonoBehaviour
 
                 CardButtonList.Add(card);
 
-                var cardButton = Instantiate(CardButton, new Vector3(0, 0, 0), Quaternion.identity);
-                cardButton.name = card;
+                var cardObject = Instantiate(CardRedux, new Vector3(0, 0, 0), Quaternion.identity);
+                cardObject.name = card;
 
-                var cardButtonText = cardButton.GetComponentInChildren<TextMeshProUGUI>();
+                var cardButtonText = cardObject.GetComponentInChildren<TextMeshProUGUI>();
                 cardButtonText.text = card;
 
-                cardButton.transform.SetParent(CardBackground.transform, false);
+                cardObject.transform.SetParent(CardBackground.transform, false);
             }
         }
         else
@@ -401,7 +404,7 @@ public class MainMenu : MonoBehaviour
 
                 CardDeckButtonList.Add(card);
 
-                var cardButton = Instantiate(DeckButton, new Vector3(0, 0, 0), Quaternion.identity);
+                var cardButton = Instantiate(CardButton, new Vector3(0, 0, 0), Quaternion.identity);
                 cardButton.name = card;
 
                 var cardButtonText = cardButton.GetComponentInChildren<TextMeshProUGUI>();

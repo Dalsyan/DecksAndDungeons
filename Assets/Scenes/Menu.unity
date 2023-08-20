@@ -1323,14 +1323,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding:
-    m_Left: 130
+    m_Left: 120
     m_Right: 0
-    m_Top: 140
+    m_Top: 175
     m_Bottom: 0
   m_ChildAlignment: 0
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 150, y: 230}
+  m_CellSize: {x: 200, y: 315}
   m_Spacing: {x: 25, y: 25}
   m_Constraint: 0
   m_ConstraintCount: 2
@@ -2827,6 +2827,7 @@ MonoBehaviour:
   Card: {fileID: 5039315420785451892, guid: 25f92dd4a12be2e4db06902049fceaa4, type: 3}
   DeckNames: []
   CardNames: []
+  CardDeckNames: []
   UserMenu: {fileID: 70035467}
 --- !u!1 &662740301
 GameObject:
@@ -4338,7 +4339,9 @@ MonoBehaviour:
   DeckButtonList: []
   CardButton: {fileID: 2826278634968170965, guid: 6ac30e43f1d573e48960d27e52c866a6, type: 3}
   CardButtonList: []
+  CardDeckButtonList: []
   SelectDeckButton: {fileID: 2099720152}
+  CardRedux: {fileID: 892455442076390634, guid: cf258021a2c76b34a8a24e8792754280, type: 3}
 --- !u!1 &1176250108
 GameObject:
   m_ObjectHideFlags: 0
@@ -8238,7 +8241,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1924662172
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8252,15 +8255,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding:
-    m_Left: 20
+    m_Left: 70
     m_Right: 0
-    m_Top: 20
+    m_Top: 140
     m_Bottom: 0
   m_ChildAlignment: 0
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 135, y: 190}
-  m_Spacing: {x: 0, y: 0}
+  m_CellSize: {x: 420, y: 65}
+  m_Spacing: {x: 0, y: 15}
   m_Constraint: 0
   m_ConstraintCount: 2
 --- !u!114 &1924662173
