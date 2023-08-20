@@ -9,10 +9,13 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using TMPro;
 using UnityEngine;
 
 public class DeckManager : MonoBehaviour
 {
+    #region VARIABLES 
+
     // Instancia de DeckManager
     private static DeckManager instance;
     public static DeckManager Instance => instance;
@@ -38,6 +41,11 @@ public class DeckManager : MonoBehaviour
     public List<string> DeckNames = new List<string>();
     public List<string> CardNames = new List<string>();
 
+    // Menus
+    public GameObject UserMenu;
+
+    #endregion
+
     private void Awake()
     {
         if (instance != null && instance != this)
@@ -59,6 +67,8 @@ public class DeckManager : MonoBehaviour
     {
         SendMessages("close");
     }
+
+    #region SOCKETS
 
     public void SendMessages(string message)
     {
@@ -110,18 +120,24 @@ public class DeckManager : MonoBehaviour
             if (messageDict.TryGetValue("action", out object actionObj) && messageDict.TryGetValue("data", out object dataObj))
             {
                 string action = actionObj.ToString();
-
                 string dataJson = JsonConvert.SerializeObject(dataObj);
-                var dataList = JsonConvert.DeserializeObject<List<object>>(dataJson);
 
                 switch (action)
                 {
+                    case "logged":
+                        UnityEngine.Debug.Log("You logged correctly!");
+                        Logged = true;
+
+                        LogAction(dataJson);
+
+                        break;
+
                     case "show_cards":
-                        ShowCards(dataList);
+                        ShowCards(dataJson);
                         break;
 
                     case "show_decks":
-                        ShowDecks(dataList);
+                        ShowDecks(dataJson);
                         break;
 
                     case "create_deck":
@@ -140,8 +156,30 @@ public class DeckManager : MonoBehaviour
         }
     }
 
-    private void ShowDecks(List<object> dataList)
+    #endregion
+
+    private void LogAction(string dataJson)
     {
+        var dataDict = JsonConvert.DeserializeObject<Dictionary<string, int>>(dataJson);
+
+        int wins = Convert.ToInt32(dataDict["wins"]);
+        int loses = Convert.ToInt32(dataDict["loses"]);
+
+        PlayerPrefs.SetInt("Wins", wins);
+        PlayerPrefs.SetInt("Loses", loses);
+
+        var winsText = UserMenu.transform.Find("Wins").GetComponentInChildren<TMP_Text>();
+        var losesText = UserMenu.transform.Find("Loses").GetComponentInChildren<TMP_Text>();
+        winsText.text = wins.ToString();
+        losesText.text = loses.ToString();
+    }
+
+    #region CARD MANAGEMENT
+
+    private void ShowDecks(string dataJson)
+    {
+        var dataList = JsonConvert.DeserializeObject<List<object>>(dataJson);
+
         foreach (string deckName in dataList)
         {
             if (deckName is null)
@@ -159,12 +197,14 @@ public class DeckManager : MonoBehaviour
         }
     }
 
-    private void ShowCards(List<object> dataList)
+    private void ShowCards(string dataJson)
     {
+        var dataList = JsonConvert.DeserializeObject<List<object>>(dataJson);
+
         foreach (object dataObject in dataList)
         {
-            string dataJson = JsonConvert.SerializeObject(dataObject);
-            var dataDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(dataJson);
+            string cardJson = JsonConvert.SerializeObject(dataObject);
+            var dataDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(cardJson);
 
             if (dataDict is Dictionary<string, object> cardDict)
             {
@@ -190,6 +230,10 @@ public class DeckManager : MonoBehaviour
         }
     }
 
+    #endregion 
+
+    #region PYTHON THREAD
+
     /// <summary>
     /// Creo hilo para abrir CMD
     /// </summary>
@@ -212,4 +256,6 @@ public class DeckManager : MonoBehaviour
         };
         Process.Start(startInfo);
     }
+
+    #endregion
 }

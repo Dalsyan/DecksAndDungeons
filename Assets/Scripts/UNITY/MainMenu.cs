@@ -36,6 +36,8 @@ public class MainMenu : MonoBehaviour
     private string RegisterVerifyPasswordText;
     private string CurrentSelectedDeck;
     private string SelectedDeck;
+    private int Wins;
+    private int Loses;
 
     // DeckManager
     public GameObject DeckServer;
@@ -81,6 +83,33 @@ public class MainMenu : MonoBehaviour
             if (!string.IsNullOrEmpty(SelectedDeck))
             {
                 DeckManager.Instance.SelectedDeck = true;
+
+                var selectedDeckText = UserMenu.transform.Find("SelectedDeckText").GetComponentInChildren<TMP_Text>();
+                selectedDeckText.text = SelectedDeck;
+            }
+        }
+
+        if (PlayerPrefs.HasKey("Wins"))
+        {
+            var nWins = PlayerPrefs.GetInt("Wins");
+            Debug.Log(nWins);
+
+            if (!string.IsNullOrEmpty(nWins.ToString()))
+            {
+                var nWinsText = UserMenu.transform.Find("Wins").GetComponentInChildren<TMP_Text>();
+                nWinsText.text = nWins.ToString();
+            }
+        }
+
+        if (PlayerPrefs.HasKey("Loses"))
+        {
+            var nLoses = PlayerPrefs.GetInt("Loses");
+            Debug.Log(nLoses);
+
+            if (!string.IsNullOrEmpty(nLoses.ToString()))
+            {
+                var nLosesText = UserMenu.transform.Find("Loses").GetComponentInChildren<TMP_Text>();
+                nLosesText.text = nLoses.ToString();
             }
         }
     }
@@ -137,6 +166,65 @@ public class MainMenu : MonoBehaviour
         LoginText = LoginInput.text;
         LoginPasswordText = LoginPasswordInput.text;
 
+        LoginMessage();
+    }
+    
+    public void RegisterMenuButton()
+    {
+        RegisterMenu.SetActive(true);
+        LoginMenu.SetActive(false);
+    }
+
+    public void RegisterButton()
+    {
+        RegisterText = RegisterInput.text;
+        RegisterPasswordText = RegisterPasswordInput.text;
+        RegisterVerifyPasswordText = RegisterVerifyPasswordInput.text;
+
+
+        if (RegisterPasswordText == RegisterVerifyPasswordText)
+        {
+            Dictionary<string, object> userData = new()
+            {
+                ["action"] = "registerUser",
+                ["data"] = RegisterText,
+                ["password"] = RegisterPasswordText
+            };
+
+            var createUserJson = JsonConvert.SerializeObject(userData, Formatting.Indented);
+            DeckManager.Instance.SendMessages(createUserJson);
+
+            LoginText = RegisterInput.text;
+            LoginPasswordText = RegisterPasswordInput.text;
+            LoginMessage();
+
+            RegisterMenu.SetActive(false);
+        }
+        else
+        {
+            Debug.Log("Passwords doesnt match, try again");
+        }
+    }
+
+    public void LogOutButton()
+    {
+        LoginText = null;
+        SelectedDeck = null;
+        Wins = 0;
+        Loses = 0;
+        PlayerPrefs.SetString("LoginText", LoginText);
+        PlayerPrefs.SetString("SelectedDeck", SelectedDeck);
+        PlayerPrefs.SetInt("Wins", Wins);
+        PlayerPrefs.SetInt("Loses", Loses);
+        DeckManager.Instance.Logged = false;
+
+        UserMenu.SetActive(false);
+        CollectionMenu.SetActive(false);
+        LoginMenu.SetActive(true);
+    }
+
+    private void LoginMessage()
+    {
         Dictionary<string, object> userData = new()
         {
             ["action"] = "loginUser",
@@ -163,48 +251,6 @@ public class MainMenu : MonoBehaviour
         }
     }
     
-    public void RegisterMenuButton()
-    {
-        RegisterMenu.SetActive(true);
-        LoginMenu.SetActive(false);
-    }
-
-    public void RegisterButton()
-    {
-        RegisterText = RegisterInput.text;
-        RegisterPasswordText = RegisterPasswordInput.text;
-        RegisterVerifyPasswordText = RegisterVerifyPasswordInput.text;
-
-        if (RegisterPasswordText == RegisterVerifyPasswordText)
-        {
-            Dictionary<string, object> userData = new()
-            {
-                ["action"] = "registerUser",
-                ["data"] = RegisterText,
-                ["password"] = RegisterPasswordText
-            };
-
-            var createUserJson = JsonConvert.SerializeObject(userData, Formatting.Indented);
-            DeckManager.Instance.SendMessages(createUserJson);
-        }
-        else
-        {
-            Debug.Log("Passwords doesnt match, try again");
-        }
-    }
-
-    public void LogOutButton()
-    {
-        LoginText = null;
-        SelectedDeck = null;
-        PlayerPrefs.SetString("LoginText", LoginText);
-        PlayerPrefs.SetString("SelectedDeck", LoginText);
-        DeckManager.Instance.Logged = false;
-
-        UserMenu.SetActive(false);
-        LoginMenu.SetActive(true);
-    }
-
     #endregion
 
     #region COLLECTION MANAGMENT
@@ -260,20 +306,36 @@ public class MainMenu : MonoBehaviour
 
     public void SelectDeck(string deck)
     {
-        SelectCurrentDeckButtonEvent(deck);
-
         CardFromDeckBackground.SetActive(true);
         SelectDeckButton.SetActive(true);
+
+        var buttonComp = SelectDeckButton.GetComponent<Button>();
+        buttonComp.onClick.AddListener(() => SelectCurrentDeckButtonEvent(deck));
     }
 
     public void SelectCurrentDeckButtonEvent(string deck)
     {
         CurrentSelectedDeck = deck;
+        SelectDeckButtonEvent();
     }
 
     public void SelectDeckButtonEvent()
     {
         PlayerPrefs.SetString("SelectedDeck", CurrentSelectedDeck);
+
+        if (PlayerPrefs.HasKey("SelectedDeck"))
+        {
+            SelectedDeck = PlayerPrefs.GetString("SelectedDeck");
+            Debug.Log(SelectedDeck);
+
+            if (!string.IsNullOrEmpty(SelectedDeck))
+            {
+                DeckManager.Instance.SelectedDeck = true;
+
+                var selectedDeckText = UserMenu.transform.Find("SelectedDeckText").GetComponentInChildren<TMP_Text>();
+                selectedDeckText.text = SelectedDeck;
+            }
+        }
     }
 
     public void ShowCardsButton()

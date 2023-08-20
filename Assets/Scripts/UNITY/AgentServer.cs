@@ -14,6 +14,7 @@ using UnityEditor;
 
 public class AgentServer : MonoBehaviour
 {
+    #region VARIABLES
     // Instancia de AgentServer
     private static AgentServer instance;
     public static AgentServer Instance => instance;
@@ -70,6 +71,8 @@ public class AgentServer : MonoBehaviour
     public bool PlayerPlayCards = false;
     public bool EnemyPlayCards = false;
 
+    #endregion
+
     private void Awake()
     {
         if (instance != null && instance != this)
@@ -123,6 +126,8 @@ public class AgentServer : MonoBehaviour
         SendMessages("close");
         UnityListener?.Stop();
     }
+
+    #region SOCKETS
 
     /// <summary>
     /// Creo hilo para escuchar en el servidor Unity.
@@ -271,40 +276,22 @@ public class AgentServer : MonoBehaviour
                     }
                 }
 
-                /* else if (dataObj is int dataInt)
-                else if (dataObj is int dataInt)
-                {
-                    switch (action)
-                    {
-                        case "":
-                            var x = dataInt;
-                            break;
-                        default:
-                            UnityEngine.Debug.LogWarning("Unknown action.");
-                            break;
-                    }
-                }
-                */
-
                 else
                 {
                     string dataJson = JsonConvert.SerializeObject(dataObj);
-                    var dataList = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(dataJson);
 
                     switch (action)
                     {
-                        /* case "first_turn":
-                        case "first_turn":
-                            // procesar los roles 'player' y 'enemy' de los jugadores
+                        case "damage_card":
+                            DamageCardAction(messageDict, dataJson);
                             break;
-                        */
 
                         case "create_player_deck":
-                            CreateDeck("player", dataList);
+                            CreateDeck("player", dataJson);
                             break;
 
                         case "create_enemy_deck":
-                            CreateDeck("enemy", dataList);
+                            CreateDeck("enemy", dataJson);
                             break;
 
                         default:
@@ -339,6 +326,8 @@ public class AgentServer : MonoBehaviour
         }
     }
 
+    #endregion
+
     private void StartAction()
     {
         var selectedDeck = new Dictionary<string, string>()
@@ -352,13 +341,18 @@ public class AgentServer : MonoBehaviour
         SendMessages("deck_selected");
     }
 
+    #region CARD ACTIONS
+
     private void MoveCardAction(Dictionary<string, object> messageDict, string dataString)
     {
         ActionsQueue.Enqueue(() => {
             var card = GameObject.Find(dataString.ToString());
+            var cardcript = card.GetComponent<CardScript>();
 
             messageDict.TryGetValue("pos", out object pos);
             var cell = GameObject.Find(pos.ToString());
+
+            cardcript.pos = pos.ToString();
 
             card.transform.DOMove(cell.transform.position, (float)0.15)
                 .OnComplete(() => {
@@ -367,18 +361,28 @@ public class AgentServer : MonoBehaviour
         });
     }
 
-    private void DamageCardAction(Dictionary<string, object> messageDict, string dataString)
+    private void DamageCardAction(Dictionary<string, object> messageDict, string dataJson)
     {
         ActionsQueue.Enqueue(() => {
-            var card = GameObject.Find(dataString.ToString()); 
-            var cardScript = card.GetComponent<CardScript>();
+            var dataDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(dataJson);
+
+            var attacker = dataDict["attacker"].ToString();
+            var target = dataDict["target"].ToString();
+
+            var cardAttacker = GameObject.Find(attacker);
+            var cardAttackerScript = cardAttacker.GetComponent<CardScript>();
+
+            var cardTarget = GameObject.Find(target); 
+            var cardTargetScript = cardTarget.GetComponent<CardScript>();
+
+            cardAttackerScript.Attack(cardTargetScript.pos);
 
             messageDict.TryGetValue("damage", out object damage);
 
             if (damage is int dmg)
             {
-                cardScript.hp = cardScript.hp - dmg;
-                var hp_text = card.GetComponent<CardScript>().HpText.text = (cardScript.hp - dmg).ToString();
+                cardTargetScript.hp = cardTargetScript.hp - dmg;
+                var hp_text = cardTarget.GetComponent<CardScript>().HpText.text = (cardTargetScript.hp - dmg).ToString();
             }
         });
     }
@@ -435,10 +439,12 @@ public class AgentServer : MonoBehaviour
         });
     }
 
-    private void CreateDeck(string sender, List<Dictionary<string, object>> data)
+    private void CreateDeck(string sender, string dataJson)
     {
         ActionsQueue.Enqueue(() =>
         {
+            var data = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(dataJson);
+
             foreach (Dictionary<string, object> cardDataDict in data)
             {
                 if (cardDataDict is null)
@@ -713,7 +719,11 @@ public class AgentServer : MonoBehaviour
                                 var newCard = card;
                                 newCard.Add("pos", cell.transform.name);
 
+                                cardScript.pos = cell.transform.name;
+
                                 cardScript.transform.SetParent(cell.transform);
+                                cardScript.OriginalSize = new Vector3(0.5f, 0.5f, 1);
+
                                 EnemyDeck.Remove(card);
                                 NumEnemyHand--;
                                 EnemyCardsInTable.Add(newCard);
@@ -759,6 +769,7 @@ public class AgentServer : MonoBehaviour
                 {
                     var cardObject = GameObject.Find(name);
                     var cardScript = cardObject.GetComponent<CardScript>();
+                    cardScript.OriginalSize = Vector3.one;
 
                     if (card.TryGetValue("Owner", out object cardOwner) && cardOwner is string owner)
                     {
@@ -794,6 +805,10 @@ public class AgentServer : MonoBehaviour
         });
     }
 
+    #endregion
+
+    #region AGENTE MANAGER
+
     /// <summary>
     /// Creo hilo para abrir CMD
     /// </summary>
@@ -816,5 +831,6 @@ public class AgentServer : MonoBehaviour
         };
         Process.Start(startInfo);
     }
-}
 
+    #endregion
+}

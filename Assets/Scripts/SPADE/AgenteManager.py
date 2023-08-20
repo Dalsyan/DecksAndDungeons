@@ -450,8 +450,10 @@ class CardActions(State):
 
             if self.agent.player_score >= 2:
                 self.agent.winner = "player"
+                self.agent.actions.set_scores(self.agent.winner)
             elif self.agent.enemy_score >= 2:
                 self.agent.winner = "enemy"
+                self.agent.actions.set_scores(self.agent.winner)
 
             if self.agent.winner is None:
                 self.set_next_state(PLAYER_PLAY_CARDS)

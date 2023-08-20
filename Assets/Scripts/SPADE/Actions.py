@@ -155,7 +155,7 @@ class Actions:
                 time.sleep(1)
 
             else:
-                await self.send_action_to_socket({"action" : "damage_card", "data": enemy_card_agent.card.name, "damage": damage})
+                await self.send_action_to_socket({"action" : "damage_card", "data": {"attacker" : player_card_agent.card.name , "target" : enemy_card_agent.card.name, "damage": damage}})
                 time.sleep(1)
         else:
            self.send_action_to_socket({"action" : "shield_card", "data": enemy_card_agent.card.name, "is_shielded" : "false"})
@@ -228,6 +228,9 @@ class Actions:
     def login_user(self, name, password):
         user = self.owl.verify_user_login(name, password)
         return user
+
+    def set_scores(self, winner):
+        self.owl.verify_user_login(winner)
 
     # SEARCH IN ONTOLOGY    
     def search_for_decks(self, player):

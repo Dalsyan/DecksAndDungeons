@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -6,6 +8,8 @@ using UnityEngine.UI;
 public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
 
 {
+    #region VARIABLES
+
     public GameObject Card;
     private Image CardImage;
     private Image Border;
@@ -20,6 +24,7 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     private TextMeshProUGUI DexText;
     private TextMeshProUGUI MagText;
     private TextMeshProUGUI DamageText;
+    [SerializeField] private GameObject meleeAttack;
 
     public Transform ParentAfterDrag;
     public Vector3 OriginalSize;
@@ -43,6 +48,8 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     public string pos;
     public int power;
     public bool shield = false;
+
+    #endregion
 
     private void Start()
     {
@@ -74,12 +81,6 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             HpText.text = hp.ToString();
             AcText = Border.transform.Find("ac").GetComponent<Image>().transform.Find("acText").GetComponent<TextMeshProUGUI>();
             AcText.text = ac.ToString();
-            //StrText = Border.transform.Find("Attributes").GetComponent<Image>().transform.Find("strText").GetComponent<TextMeshProUGUI>();
-            //StrText.text = "STR: \n" + str.ToString();
-            //ConText = Border.transform.Find("Attributes").GetComponent<Image>().transform.Find("conText").GetComponent<TextMeshProUGUI>();
-            //ConText.text = "CON: \n" + con.ToString();
-            //DexText = Border.transform.Find("Attributes").GetComponent<Image>().transform.Find("dexText").GetComponent<TextMeshProUGUI>();
-            //DexText.text = "DEX: \n" + dex.ToString();
             MagText = Border.transform.Find("Attributes").GetComponent<Image>().transform.Find("magText").GetComponent<TextMeshProUGUI>();
             MagText.text = "MAG: \n" + magic.ToString();
             DamageText = Border.transform.Find("dmg").GetComponent<Image>().transform.Find("dmgText").GetComponent<TextMeshProUGUI>();
@@ -91,6 +92,8 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             ManaText.text = power.ToString();
         }
     }
+
+    #region INTERACTION
 
     public void OnPointerEnter(PointerEventData eventData)
     {
@@ -150,4 +153,56 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             CardImage.raycastTarget = true;
         }
     }
+
+    #endregion
+
+    #region ATTACK
+
+    private Vector2 stringToVector2(string pos)
+    {
+        pos = pos.Trim('(', ')');
+        var partes = pos.Split(',');
+
+        string dataJson = JsonConvert.SerializeObject(partes);
+
+        print($"{dataJson}, {partes.Length}");
+
+        if (partes.Length != 2)
+        {
+            throw new ArgumentException("El formato debe ser (x, y)");
+        }
+
+        if (float.TryParse(partes[0], out float x) && float.TryParse(partes[1], out float y))
+        {
+            return new Vector2(x, y);
+        }
+        else
+        {
+            throw new ArgumentException("No se pudieron convertir las coordenadas a números válidos.");
+        }
+    }
+
+    public void Attack(string targetPos)
+    {
+        Vector2 currPosV2 = stringToVector2(pos);
+        Vector2 targetPosV2 = stringToVector2(targetPos);
+        if(range == 1)
+        {
+            Vector2 dir = targetPosV2 - currPosV2;
+            GameObject a = Instantiate(meleeAttack, transform.position, Quaternion.identity, GameObject.Find("Weapons").transform);
+            MeleeAttack script = a.GetComponent<MeleeAttack>();
+
+            int dirInt = 0;
+            print(dir);
+            if (dir == new Vector2(0, 1)) dirInt = 0;
+            else if (dir == new Vector2(-1, 0)) dirInt = 1;
+            else if(dir == new Vector2(0, -1)) dirInt = 2;
+            else dirInt = 3;
+
+            script.Init(dirInt);
+            script.Attack();
+        }
+    }
+
+    #endregion
 }

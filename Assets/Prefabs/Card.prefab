@@ -951,6 +951,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Card: {fileID: 5039315420785451892}
   HpText: {fileID: 0}
+  meleeAttack: {fileID: 6205759127041238783, guid: cc8f8bb61c6b4c74fb2fd442f66983b5, type: 3}
   ParentAfterDrag: {fileID: 0}
   OriginalSize: {x: 0, y: 0, z: 0}
   PublicName: 
@@ -958,6 +959,7 @@ MonoBehaviour:
   Class: 
   Race: 
   Owner: 
+  Type: 
   level: 0
   hp: 0
   ac: 0
@@ -969,6 +971,8 @@ MonoBehaviour:
   range: 0
   prio: 0
   pos: 
+  power: 0
+  shield: 0
 --- !u!61 &-2925181320096503698
 BoxCollider2D:
   m_ObjectHideFlags: 0

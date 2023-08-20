@@ -46,6 +46,8 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
         {
             Card = eventData.pointerDrag;
             var cardScript = Card.GetComponent<CardScript>();
+            cardScript.OriginalSize = new Vector3(0.5f, 0.5f, 1);
+            Card.transform.localScale = new Vector3(0.5f, 0.5f, 1);
 
             var card = new Dictionary<string, object>()
             {
@@ -74,6 +76,9 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
                     {
                         var newCard = card;
                         newCard.Add("pos", transform.name);
+
+                        cardScript.pos = transform.name;
+
                         if (cardScript.Owner == "player")
                         {
                             if (cardScript.level <= AgentServer.Instance.CurrentPlayerManaPool)
@@ -105,6 +110,9 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
                 {
                     var newCard = card;
                     newCard.Add("pos", transform.name);
+
+                    cardScript.pos = transform.name;
+
                     if (cardScript.Owner == "player")
                     {
                         if (cardScript.level <= AgentServer.Instance.CurrentPlayerManaPool)

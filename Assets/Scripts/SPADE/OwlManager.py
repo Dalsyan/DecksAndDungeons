@@ -64,10 +64,9 @@ class OwlManager:
                             if user:
                                 print(f"user: {user.name} logged")
 
-                                response = "logged"
-                                byte_response = (response).encode()
-                                client_socket.sendall(bytearray(byte_response))
-                                print(f"enviado: {response}")
+                                response_json = {"action" : "logged", "data" : {"wins" : int(user.wins), "loses" : int(user.loses)}}
+                                byte_response_json = json.dumps(response_json).encode()
+                                client_socket.sendall(byte_response_json)
 
                         elif action == "showDecks":
                             decks = self.show_decks("dalso")

@@ -26,6 +26,8 @@ class OntologyActions:
 
         user.name = name
         user.password = password
+        user.wins = 0
+        user.loses = 0
 
         self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
         return user
@@ -41,6 +43,24 @@ class OntologyActions:
     def add_deck_to_user(self, user, deck):
         user.hasDecks.append(deck)
 
+    def set_scores(self, player, winner, enemy = None):
+        user = self.onto.search(iri=f"*{player}").first()
+        if enemy is not None:
+            enemy_user = self.onto.search(iri=f"*{enemy}").first()
+
+        if winner == "player":
+            user.wins += 1
+            
+            if enemy is not None:
+                enemy_user.loses += 1
+
+        elif winner == "enemy":
+            user.loses += 1
+
+            if enemy is not None:
+                enemy_user.wins += 1
+
+                
     # SEARCHING IN ONTOLOGY
     def search_for_decks(self, player : str):
         cplayer = self.onto.search(iri = f"*{player}")[0]
