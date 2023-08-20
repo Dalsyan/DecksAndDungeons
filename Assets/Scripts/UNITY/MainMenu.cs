@@ -48,6 +48,7 @@ public class MainMenu : MonoBehaviour
     public List<string> DeckButtonList;
     public GameObject CardButton;
     public List<string> CardButtonList;
+    public List<string> CardDeckButtonList;
     public GameObject SelectDeckButton;
 
     private void Start()
@@ -309,6 +310,8 @@ public class MainMenu : MonoBehaviour
         CardFromDeckBackground.SetActive(true);
         SelectDeckButton.SetActive(true);
 
+        ShowCardsMessage(deck);
+
         var buttonComp = SelectDeckButton.GetComponent<Button>();
         buttonComp.onClick.AddListener(() => SelectCurrentDeckButtonEvent(deck));
     }
@@ -344,34 +347,71 @@ public class MainMenu : MonoBehaviour
         CardFromDeckBackground.SetActive(false);
         CardBackground.SetActive(true);
 
-        var cardDict = new Dictionary<string, string>()
+        ShowCardsMessage();
+    }
+
+    private void ShowCardsMessage(string deck = null)
+    {
+        var cardDict = new Dictionary<string, string>();
+
+        if (string.IsNullOrEmpty(deck))
         {
-            ["action"] = "showCards",
-            ["data"] = LoginText
-        };
+            cardDict.Add("action", "showCards");
+            cardDict.Add("data", LoginText);
+        }
+        else
+        {
+            cardDict.Add("action", "showDeckCards");
+            cardDict.Add("data", deck);
+        }
 
         var cardDictJson = JsonConvert.SerializeObject(cardDict, Formatting.Indented);
         DeckManager.Instance.SendMessages(cardDictJson);
 
-        foreach (string card in DeckManager.Instance.CardNames)
+        if (string.IsNullOrEmpty(deck))
         {
-            if (CardButtonList.Any(x => x == card))
+            foreach (string card in DeckManager.Instance.CardNames)
             {
-                continue;
+                if (CardButtonList.Any(x => x == card))
+                {
+                    continue;
+                }
+
+                CardButtonList.Add(card);
+
+                var cardButton = Instantiate(CardButton, new Vector3(0, 0, 0), Quaternion.identity);
+                cardButton.name = card;
+
+                var cardButtonText = cardButton.GetComponentInChildren<TextMeshProUGUI>();
+                cardButtonText.text = card;
+
+                cardButton.transform.SetParent(CardBackground.transform, false);
             }
+        }
+        else
+        {
+            CardDeckButtonList.Clear();
 
-            CardButtonList.Add(card);
+            foreach (string card in DeckManager.Instance.CardDeckNames)
+            {
+                if (CardDeckButtonList.Any(x => x == card))
+                {
+                    continue;
+                }
 
-            var cardButton = Instantiate(CardButton, new Vector3(0, 0, 0), Quaternion.identity);
-            cardButton.name = card;
+                CardDeckButtonList.Add(card);
 
-            var cardButtonText = cardButton.GetComponentInChildren<TextMeshProUGUI>();
-            cardButtonText.text = card;
+                var cardButton = Instantiate(DeckButton, new Vector3(0, 0, 0), Quaternion.identity);
+                cardButton.name = card;
 
-            cardButton.transform.SetParent(CardBackground.transform, false);
+                var cardButtonText = cardButton.GetComponentInChildren<TextMeshProUGUI>();
+                cardButtonText.text = card;
+
+                cardButton.transform.SetParent(CardFromDeckBackground.transform, false);
+            }
         }
     }
-    
+
     #endregion
 
     public void BackButton()

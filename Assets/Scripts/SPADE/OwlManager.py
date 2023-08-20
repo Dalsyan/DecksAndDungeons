@@ -90,7 +90,13 @@ class OwlManager:
                             deck = self.actions.create_player_deck("dalso")
 
                         elif action == "showDeckCards":
-                            self.show_deck_cards(data)
+                            cards = self.show_deck_cards(data)
+
+                            if cards is not None:
+                                card_json = {'action': 'show_deck_cards', 'data': cards}
+                                byte_card_json = json.dumps(card_json).encode()
+
+                                client_socket.sendall(bytearray(byte_card_json))
 
                         else:
                             print("Unknown action:", action)
@@ -122,8 +128,8 @@ class OwlManager:
         cards = self.actions.search_for_cards(name)
         return cards
     
-    def show_deck_cards(self):
-        pass
+    def show_deck_cards(self, deck):
+        return self.actions.search_for_deck_cards(deck)
 
     def close_action(self):
         self.owl_socket.close()

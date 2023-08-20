@@ -40,6 +40,7 @@ public class DeckManager : MonoBehaviour
     // Gestion de mazos y cartas
     public List<string> DeckNames = new List<string>();
     public List<string> CardNames = new List<string>();
+    public List<string> CardDeckNames = new List<string>();
 
     // Menus
     public GameObject UserMenu;
@@ -107,12 +108,6 @@ public class DeckManager : MonoBehaviour
             UnityEngine.Debug.Log("You created you account correctly!");
         }
         
-        else if (message == "logged")
-        {
-            UnityEngine.Debug.Log("You logged correctly!");
-            Logged = true;
-        }
-
         else
         {
             Dictionary<string, object> messageDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(message);
@@ -134,6 +129,10 @@ public class DeckManager : MonoBehaviour
 
                     case "show_cards":
                         ShowCards(dataJson);
+                        break;
+                    
+                    case "show_deck_cards":
+                        ShowDeckCards(dataJson);
                         break;
 
                     case "show_decks":
@@ -197,6 +196,46 @@ public class DeckManager : MonoBehaviour
         }
     }
 
+    private void ShowDeckCards(string dataJson)
+    {
+        foreach (string dataObject in CardDeckNames)
+        {
+            Destroy(GameObject.Find(dataObject));
+        }
+
+        CardDeckNames.Clear();
+
+        var dataList = JsonConvert.DeserializeObject<List<object>>(dataJson);
+
+        foreach (object dataObject in dataList)
+        {
+            string cardJson = JsonConvert.SerializeObject(dataObject);
+            var dataDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(cardJson);
+
+            if (dataDict is Dictionary<string, object> cardDict)
+            {
+                if (cardDict is null)
+                {
+                    UnityEngine.Debug.LogWarning("Invalid deck data format.");
+                    return;
+                }
+
+                string name = cardDict["name"].ToString();
+                int level = Convert.ToInt32(cardDict["level"]);
+                int hp = Convert.ToInt32(cardDict["hp"]);
+                int ac = Convert.ToInt32(cardDict["ac"]);
+                int damage = Convert.ToInt32(cardDict["damage"]);
+
+                if (CardDeckNames.Any(x => x == name))
+                {
+                    continue;
+                }
+
+                CardDeckNames.Add(name);
+            }
+        }
+    }
+    
     private void ShowCards(string dataJson)
     {
         var dataList = JsonConvert.DeserializeObject<List<object>>(dataJson);

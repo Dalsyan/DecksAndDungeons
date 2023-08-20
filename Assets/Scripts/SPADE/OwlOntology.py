@@ -96,7 +96,7 @@ class OntologyActions:
         cards_list = []
 
         for card in cards:
-            cards_list.append(self.card_to_dict(card))
+            cards_list.append(self.card_to_dict_redux(card))
 
         return cards_list
     
