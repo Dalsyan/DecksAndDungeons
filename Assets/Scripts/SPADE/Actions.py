@@ -174,24 +174,38 @@ class Actions:
             await self.send_action_to_socket({"action" : "heal_card", "data": ally_card_agent.card.name, "current_hp" : healed_hp})
 
     async def artifact_action(self, artifact, target):
+        print(f'artifact: {artifact}, target: {target}')
         if ''.join(filter(str.isalpha, artifact.hasItem.name)) == "belt":
+            print(f'target con before: {target.con}')
             target.con += artifact.power
+            print(f'target con after: {target.con}')
 
         elif ''.join(filter(str.isalpha, artifact.hasItem.name)) == "boots":
+            print(f'target dex before: {target.dex}')
             target.dex += artifact.power
+            print(f'target dex after: {target.dex}')
 
         elif ''.join(filter(str.isalpha, artifact.hasItem.name)) == "collar":
+            print(f'target magic before: {target.magic}')
             target.magic += artifact.power
+            print(f'target magic after: {target.magic}')
 
         elif ''.join(filter(str.isalpha, artifact.hasItem.name)) == "gloves":
+            print(f'target str before: {target.str}')
             target.str += artifact.power
+            print(f'target str after: {target.str}')
 
     async def spell_action(self, spell, target):
+        print(f'spell: {spell}, target: {target}')
         if ''.join(filter(str.isalpha, spell.knowsSpell.name)) == "healing":
+            print(f'target hp before: {target.hp}')
             target.hp += spell.power
+            print(f'target hp after: {target.hp}')
 
         elif ''.join(filter(str.isalpha, spell.knowsSpell.name)) == "evocation":
+            print(f'target hp before: {target.hp}')
             target.hp -= spell.power
+            print(f'target hp before: {target.hp}')
 
     ##############################
     #                            #

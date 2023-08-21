@@ -227,13 +227,13 @@ class AgentManager(Agent):
             target_card = self.actions.search_for_card_in_pos(self.card_agents, pos)
 
             if card is not None:
-                self.actions.artifact_action(card, target_card)
+                await self.actions.artifact_action(card, target_card)
 
         elif card.type == "spell":
             target_card = self.actions.search_for_card_in_pos(self.card_agents, pos)
 
             if card is not None:
-                self.actions.spell_action(card, target_card)
+                await self.actions.spell_action(card, target_card)
             
     async def ready_action(self, owner):
         if owner == "player":

@@ -52,26 +52,27 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
             var card = new Dictionary<string, object>()
             {
                 ["Name"] = cardScript.Name,
-                ["Type"] = cardScript.Type,
-                ["Owner"] = cardScript.Owner,
-                ["class"] = cardScript.Class,
-                ["race"] = cardScript.Race,
-                ["level"] = cardScript.level,
-                ["hp"] = cardScript.hp,
-                ["ac"] = cardScript.ac,
-                ["str"] = cardScript.str,
-                ["con"] = cardScript.con,
-                ["dex"] = cardScript.dex,
-                ["damage"] = cardScript.damage,
-                ["magic"] = cardScript.magic,
-                ["range"] = cardScript.range,
-                ["prio"] = cardScript.prio
+                ["Type"] = cardScript.Type
             };
 
             if (card["Type"] is string type)
             {
                 if (type == "creature")
                 {
+                    card.Add("Owner", cardScript.Owner);
+                    card.Add("class", cardScript.Class);
+                    card.Add("race", cardScript.Race);
+                    card.Add("level", cardScript.level);
+                    card.Add("hp", cardScript.hp);
+                    card.Add("ac", cardScript.ac);
+                    card.Add("str", cardScript.str);
+                    card.Add("con", cardScript.con);
+                    card.Add("dex", cardScript.dex);
+                    card.Add("damage", cardScript.damage);
+                    card.Add("magic", cardScript.magic);
+                    card.Add("range", cardScript.range);
+                    card.Add("prio", cardScript.prio);
+
                     if (transform.childCount <= 0)
                     {
                         var newCard = card;
@@ -84,7 +85,7 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
                             if (cardScript.level <= AgentServer.Instance.CurrentPlayerManaPool)
                             {
                                 cardScript.ParentAfterDrag = transform;
-                                AgentServer.Instance.PlayerDeck.Remove(card);
+                                AgentServer.Instance.PlayerHand.Remove(card);
                                 AgentServer.Instance.NumPlayerHand--;
                                 AgentServer.Instance.PlayerCardsInTable.Add(newCard);
                                 AgentServer.Instance.NumPlayerCardsInTable++;
@@ -96,7 +97,7 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
                             if (cardScript.level <= AgentServer.Instance.CurrentEnemyManaPool)
                             {
                                 cardScript.ParentAfterDrag = transform;
-                                AgentServer.Instance.EnemyDeck.Remove(card);
+                                AgentServer.Instance.EnemyHand.Remove(card);
                                 AgentServer.Instance.NumEnemyHand--;
                                 AgentServer.Instance.EnemyCardsInTable.Add(newCard);
                                 AgentServer.Instance.NumEnemyCardsInTable++;
@@ -108,45 +109,52 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
                 }
                 else
                 {
+                    card.Add("power", cardScript.power);
+                    card.Add("level", cardScript.power);
+
                     var newCard = card;
                     newCard.Add("pos", transform.name);
 
                     cardScript.pos = transform.name;
 
-                    if (cardScript.Owner == "player")
+                    if (transform.childCount > 0)
                     {
-                        if (cardScript.level <= AgentServer.Instance.CurrentPlayerManaPool)
+                        if (cardScript.Owner == "player")
                         {
-                            Dictionary<string, object> cardData = new()
+                            if (cardScript.level <= AgentServer.Instance.CurrentPlayerManaPool)
                             {
-                                ["action"] = "createPlayerCard",
-                                ["data"] = newCard["Name"],
-                                ["pos"] = newCard["pos"]
-                            };
-                            var createPlayerCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
-                            AgentServer.Instance.SendMessages(createPlayerCardActionJson);
+                                Dictionary<string, object> cardData = new()
+                                {
+                                    ["action"] = "createPlayerCard",
+                                    ["data"] = newCard["Name"],
+                                    ["pos"] = newCard["pos"]
+                                };
+                                var createPlayerCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
+                                AgentServer.Instance.SendMessages(createPlayerCardActionJson);
 
-                            AgentServer.Instance.PlayerDeck.Remove(card);
-                            AgentServer.Instance.NumPlayerHand--;
-                            AgentServer.Instance.CurrentPlayerManaPool -= cardScript.level;
+                                AgentServer.Instance.PlayerHand.Remove(card);
+                                AgentServer.Instance.NumPlayerHand--;
+                                AgentServer.Instance.CurrentPlayerManaPool -= cardScript.level;
+                                Destroy(Card);
+                            }
                         }
-                    }
-                    else
-                    {
-                        if (cardScript.level <= AgentServer.Instance.CurrentEnemyManaPool)
+                        else
                         {
-                            Dictionary<string, object> cardData = new()
+                            if (cardScript.level <= AgentServer.Instance.CurrentEnemyManaPool)
                             {
-                                ["action"] = "createEnemyCard",
-                                ["data"] = newCard["Name"],
-                                ["pos"] = newCard["pos"]
-                            };
-                            var createEnemyCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
-                            AgentServer.Instance.SendMessages(createEnemyCardActionJson);
+                                Dictionary<string, object> cardData = new()
+                                {
+                                    ["action"] = "createEnemyCard",
+                                    ["data"] = newCard["Name"],
+                                    ["pos"] = newCard["pos"]
+                                };
+                                var createEnemyCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
+                                AgentServer.Instance.SendMessages(createEnemyCardActionJson);
 
-                            AgentServer.Instance.EnemyDeck.Remove(card);
-                            AgentServer.Instance.NumEnemyHand--;
-                            AgentServer.Instance.CurrentEnemyManaPool -= cardScript.level;
+                                AgentServer.Instance.EnemyHand.Remove(card);
+                                AgentServer.Instance.NumEnemyHand--;
+                                AgentServer.Instance.CurrentEnemyManaPool -= cardScript.level;
+                            }
                         }
                     }
                 }
