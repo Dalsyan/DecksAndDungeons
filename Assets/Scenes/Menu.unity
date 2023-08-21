@@ -2825,10 +2825,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Card: {fileID: 5039315420785451892, guid: 25f92dd4a12be2e4db06902049fceaa4, type: 3}
+  CardRedux: {fileID: 892455442076390634, guid: cf258021a2c76b34a8a24e8792754280, type: 3}
   DeckNames: []
   CardNames: []
+  Cards: []
   CardDeckNames: []
   UserMenu: {fileID: 70035467}
+  MainMenu: {fileID: 0}
 --- !u!1 &662740301
 GameObject:
   m_ObjectHideFlags: 0
@@ -8241,7 +8244,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1924662172
 MonoBehaviour:
   m_ObjectHideFlags: 0

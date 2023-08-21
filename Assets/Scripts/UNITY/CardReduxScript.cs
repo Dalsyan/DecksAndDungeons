@@ -37,19 +37,32 @@ public class CardReduxScript : MonoBehaviour
 
         if (Type == "creature")
         {
-            ManaText = Border.transform.Find("mana").GetComponent<Image>().transform.Find("manaText").GetComponent<TextMeshProUGUI>();
+            ManaText = transform.Find("mana").GetComponent<Image>().transform.Find("manaText").GetComponent<TextMeshProUGUI>();
             ManaText.text = level.ToString();
-            HpText = Border.transform.Find("hp").GetComponent<Image>().transform.Find("hpText").GetComponent<TextMeshProUGUI>();
+            HpText = transform.Find("hp").GetComponent<Image>().transform.Find("hpText").GetComponent<TextMeshProUGUI>();
             HpText.text = hp.ToString();
-            AcText = Border.transform.Find("ac").GetComponent<Image>().transform.Find("acText").GetComponent<TextMeshProUGUI>();
+            AcText = transform.Find("ac").GetComponent<Image>().transform.Find("acText").GetComponent<TextMeshProUGUI>();
             AcText.text = ac.ToString();
-            DamageText = Border.transform.Find("dmg").GetComponent<Image>().transform.Find("dmgText").GetComponent<TextMeshProUGUI>();
+            DamageText = transform.Find("dmg").GetComponent<Image>().transform.Find("dmgText").GetComponent<TextMeshProUGUI>();
             DamageText.text = damage.ToString();
         }
         else
         {
-            ManaText = Border.transform.Find("mana").GetComponent<Image>().transform.Find("manaText").GetComponent<TextMeshProUGUI>();
+            ManaText = transform.Find("mana").GetComponent<Image>().transform.Find("manaText").GetComponent<TextMeshProUGUI>();
             ManaText.text = power.ToString();
+
+            var hp = transform.Find("hp").GetComponent<Image>();
+            HpText = hp.transform.Find("hpText").GetComponent<TextMeshProUGUI>();
+            Destroy(HpText);
+            Destroy(hp);
+            var ac = transform.Find("ac").GetComponent<Image>();
+            AcText = ac.transform.Find("acText").GetComponent<TextMeshProUGUI>();
+            Destroy(AcText);
+            Destroy(ac);
+            var dmg = transform.Find("dmg").GetComponent<Image>();
+            DamageText = dmg.transform.Find("dmgText").GetComponent<TextMeshProUGUI>();
+            Destroy(DamageText);
+            Destroy(dmg);
         }
     }
 }

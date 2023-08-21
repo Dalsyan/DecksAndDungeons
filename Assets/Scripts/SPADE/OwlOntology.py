@@ -173,13 +173,22 @@ class OntologyActions:
     
     def card_to_dict_redux(self, ccard):
         stats = {}
-
-        stats["name"] = ccard.name
         
-        stats["level"] = ccard.level
-        stats["hp"] = ccard.hp
-        stats["ac"] = ccard.ac
-        stats["damage"] = ccard.damage
+        stats["name"] = ccard.name
+        stats["type"] = ccard.type 
+
+        if ccard.type == "creature":
+            stats["level"] = ccard.level
+            stats["class"] = ccard.hasClass.name
+            stats["race"] = ccard.hasRace.name
+            stats["hp"] = ccard.hp
+            stats["ac"] = ccard.ac
+            stats["damage"] = ccard.damage
+            stats["magic"] = ccard.magic
+        
+        elif ccard.type == "artifact" or ccard.type == "spell":
+            stats["level"] = ccard.power
+            stats["power"] = ccard.power
             
         return stats
 

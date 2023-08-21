@@ -370,49 +370,6 @@ public class MainMenu : MonoBehaviour
 
         var cardDictJson = JsonConvert.SerializeObject(cardDict, Formatting.Indented);
         DeckManager.Instance.SendMessages(cardDictJson);
-
-        if (string.IsNullOrEmpty(deck))
-        {
-            foreach (string card in DeckManager.Instance.CardNames)
-            {
-                if (CardButtonList.Any(x => x == card))
-                {
-                    continue;
-                }
-
-                CardButtonList.Add(card);
-
-                var cardObject = Instantiate(CardRedux, new Vector3(0, 0, 0), Quaternion.identity);
-                cardObject.name = card;
-
-                var cardButtonText = cardObject.GetComponentInChildren<TextMeshProUGUI>();
-                cardButtonText.text = card;
-
-                cardObject.transform.SetParent(CardBackground.transform, false);
-            }
-        }
-        else
-        {
-            CardDeckButtonList.Clear();
-
-            foreach (string card in DeckManager.Instance.CardDeckNames)
-            {
-                if (CardDeckButtonList.Any(x => x == card))
-                {
-                    continue;
-                }
-
-                CardDeckButtonList.Add(card);
-
-                var cardButton = Instantiate(CardButton, new Vector3(0, 0, 0), Quaternion.identity);
-                cardButton.name = card;
-
-                var cardButtonText = cardButton.GetComponentInChildren<TextMeshProUGUI>();
-                cardButtonText.text = card;
-
-                cardButton.transform.SetParent(CardFromDeckBackground.transform, false);
-            }
-        }
     }
 
     #endregion

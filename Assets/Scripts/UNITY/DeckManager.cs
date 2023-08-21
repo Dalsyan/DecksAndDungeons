@@ -32,6 +32,7 @@ public class DeckManager : MonoBehaviour
 
     // Prefabs
     public GameObject Card;
+    public GameObject CardRedux;
 
     // Gestion de usuario 
     public bool Logged { get; set; } = false;
@@ -40,6 +41,8 @@ public class DeckManager : MonoBehaviour
     // Gestion de mazos y cartas
     public List<string> DeckNames = new List<string>();
     public List<string> CardNames = new List<string>();
+    public List<CardReduxScript> Cards = new List<CardReduxScript>();
+    public GameObject CardBackground;
     public List<string> CardDeckNames = new List<string>();
 
     // Menus
@@ -231,10 +234,10 @@ public class DeckManager : MonoBehaviour
                 }
 
                 string name = cardDict["name"].ToString();
-                int level = Convert.ToInt32(cardDict["level"]);
-                int hp = Convert.ToInt32(cardDict["hp"]);
-                int ac = Convert.ToInt32(cardDict["ac"]);
-                int damage = Convert.ToInt32(cardDict["damage"]);
+                //int level = Convert.ToInt32(cardDict["level"]);
+                //int hp = Convert.ToInt32(cardDict["hp"]);
+                //int ac = Convert.ToInt32(cardDict["ac"]);
+                //int damage = Convert.ToInt32(cardDict["damage"]);
 
                 if (CardDeckNames.Any(x => x == name))
                 {
@@ -263,18 +266,51 @@ public class DeckManager : MonoBehaviour
                     return;
                 }
 
-                string name = cardDict["name"].ToString();
-                int level = Convert.ToInt32(cardDict["level"]);
-                int hp = Convert.ToInt32(cardDict["hp"]);
-                int ac = Convert.ToInt32(cardDict["ac"]);
-                int damage = Convert.ToInt32(cardDict["damage"]);
+                string nombre = cardDict["name"].ToString();
+                string type = cardDict["type"].ToString();
 
-                if (DeckNames.Any(x => x == name))
+                var cardObject = Instantiate(CardRedux, new Vector3(0, 0, 0), Quaternion.identity);
+                var cardScript = cardObject.GetComponent<CardReduxScript>();
+                cardScript.Name = nombre;
+                cardScript.Type = type;
+
+                var cardButtonText = cardObject.GetComponentInChildren<TextMeshProUGUI>();
+                cardButtonText.text = nombre;
+
+                if (type == "creature")
+                {
+                    string cclass = cardDict["class"].ToString();
+                    string race = cardDict["race"].ToString();
+                    int level = Convert.ToInt32(cardDict["level"]);
+                    int hp = Convert.ToInt32(cardDict["hp"]);
+                    int ac = Convert.ToInt32(cardDict["ac"]);
+                    int damage = Convert.ToInt32(cardDict["damage"]);
+                    int magic = Convert.ToInt32(cardDict["magic"]);
+
+                    cardScript.Class = cclass;
+                    cardScript.Race = race;
+                    cardScript.level = level;
+                    cardScript.hp = hp;
+                    cardScript.ac = ac;
+                    cardScript.damage = damage;
+                    cardScript.magic = magic;
+                }
+                else
+                {
+                    int level = Convert.ToInt32(cardDict["level"]);
+                    int power = Convert.ToInt32(cardDict["level"]);
+
+                    cardScript.level = power;
+                    cardScript.power = power;
+                }
+
+                if (DeckNames.Any(x => x == nombre))
                 {
                     continue;
                 }
 
-                CardNames.Add(name);
+                CardNames.Add(nombre);
+                cardObject.transform.SetParent(CardBackground.transform, false);
             }
         }
     }
