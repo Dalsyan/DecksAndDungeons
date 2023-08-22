@@ -504,6 +504,7 @@ public class AgentServer : MonoBehaviour
                         else
                         {
                             card.GetComponent<CardScript>().power = power;
+                            card.GetComponent<CardScript>().level = power;
                         }
 
                         Dictionary<string, object> cardData = new()
@@ -584,6 +585,7 @@ public class AgentServer : MonoBehaviour
                         else
                         {
                             card.GetComponent<CardScript>().power = power;
+                            card.GetComponent<CardScript>().level = power;
                         }
 
                         Dictionary<string, object> cardData = new()
@@ -723,6 +725,7 @@ public class AgentServer : MonoBehaviour
 
                                 cardScript.transform.SetParent(cell.transform);
                                 cardScript.OriginalSize = new Vector3(0.5f, 0.5f, 1);
+                                cardObject.transform.localScale = cardScript.OriginalSize;
 
                                 EnemyDeck.Remove(card);
                                 NumEnemyHand--;

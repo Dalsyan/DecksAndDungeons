@@ -155,41 +155,41 @@ public class GameUtilities : MonoBehaviour
     {
         if (AgentServer.Instance.PlayerPlayCards)
         {
-            foreach (var playerCardInTable in AgentServer.Instance.PlayerCardsInTable)
-            {
-                Dictionary<string, object> cardData = new()
-                {
-                    ["action"] = "createPlayerCard",
-                    ["data"] = playerCardInTable["Name"],
-                    ["pos"] = playerCardInTable["pos"]
-                };
-                var createPlayerCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
-                AgentServer.Instance.SendMessages(createPlayerCardActionJson);
-            }
+            //foreach (var playerCardInTable in AgentServer.Instance.PlayerCardsInTable)
+            //{
+            //    Dictionary<string, object> cardData = new()
+            //    {
+            //        ["action"] = "createPlayerCard",
+            //        ["data"] = playerCardInTable["Name"],
+            //        ["pos"] = playerCardInTable["pos"]
+            //    };
+            //    var createPlayerCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
+            //    AgentServer.Instance.SendMessages(createPlayerCardActionJson);
+            //}
             AgentServer.Instance.SendMessages("playerReady");
 
             AgentServer.Instance.PlayerManaPool++;
             AgentServer.Instance.CurrentPlayerManaPool = AgentServer.Instance.PlayerManaPool;
         }
 
-        if (AgentServer.Instance.EnemyPlayCards)
-        {
-            foreach (var enemyCardInTable in AgentServer.Instance.EnemyCardsInTable)
-            {
-                Dictionary<string, object> cardData = new()
-                {
-                    ["action"] = "createEnemyCard",
-                    ["data"] = enemyCardInTable["Name"],
-                    ["pos"] = enemyCardInTable["pos"]
-                };
-                var createEnemyCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
-                AgentServer.Instance.SendMessages(createEnemyCardActionJson);
-            }
-            AgentServer.Instance.SendMessages("enemyReady");
+        //if (AgentServer.Instance.EnemyPlayCards)
+        //{
+        //    foreach (var enemyCardInTable in AgentServer.Instance.EnemyCardsInTable)
+        //    {
+        //        Dictionary<string, object> cardData = new()
+        //        {
+        //            ["action"] = "createEnemyCard",
+        //            ["data"] = enemyCardInTable["Name"],
+        //            ["pos"] = enemyCardInTable["pos"]
+        //        };
+        //        var createEnemyCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
+        //        AgentServer.Instance.SendMessages(createEnemyCardActionJson);
+        //    }
+        //    AgentServer.Instance.SendMessages("enemyReady");
 
-            AgentServer.Instance.EnemyManaPool++;
-            AgentServer.Instance.CurrentEnemyManaPool = AgentServer.Instance.EnemyManaPool;
-        }
+        //    AgentServer.Instance.EnemyManaPool++;
+        //    AgentServer.Instance.CurrentEnemyManaPool = AgentServer.Instance.EnemyManaPool;
+        //}
     }
     #endregion
 }

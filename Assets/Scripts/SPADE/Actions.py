@@ -174,35 +174,27 @@ class Actions:
             await self.send_action_to_socket({"action" : "heal_card", "data": ally_card_agent.card.name, "current_hp" : healed_hp})
 
     async def artifact_action(self, artifact, target):
-        print(f'artifact: {artifact}, target: {target}')
-        if ''.join(filter(str.isalpha, artifact.hasItem.name)) == "belt":
-            print(f'target con before: {target.con}')
+        if ''.join(filter(str.isalpha, artifact.hasItem.name)) == "Belt":
             target.con += artifact.power
-            print(f'target con after: {target.con}')
 
-        elif ''.join(filter(str.isalpha, artifact.hasItem.name)) == "boots":
-            print(f'target dex before: {target.dex}')
+        elif ''.join(filter(str.isalpha, artifact.hasItem.name)) == "Boots":
             target.dex += artifact.power
-            print(f'target dex after: {target.dex}')
 
-        elif ''.join(filter(str.isalpha, artifact.hasItem.name)) == "collar":
-            print(f'target magic before: {target.magic}')
+        elif ''.join(filter(str.isalpha, artifact.hasItem.name)) == "Collar":
             target.magic += artifact.power
-            print(f'target magic after: {target.magic}')
 
-        elif ''.join(filter(str.isalpha, artifact.hasItem.name)) == "gloves":
-            print(f'target str before: {target.str}')
+        elif ''.join(filter(str.isalpha, artifact.hasItem.name)) == "Gloves":
             target.str += artifact.power
-            print(f'target str after: {target.str}')
 
     async def spell_action(self, spell, target):
-        print(f'spell: {spell}, target: {target}')
-        if ''.join(filter(str.isalpha, spell.knowsSpell.name)) == "healing":
+        spell_name = ''.join(filter(str.isalpha, spell.knowsSpell.name))
+        print(f'spell: {spell_name}, target: {target}')
+        if ''.join(filter(str.isalpha, spell.knowsSpell.name)) == "Healing":
             print(f'target hp before: {target.hp}')
             target.hp += spell.power
             print(f'target hp after: {target.hp}')
 
-        elif ''.join(filter(str.isalpha, spell.knowsSpell.name)) == "evocation":
+        elif ''.join(filter(str.isalpha, spell.knowsSpell.name)) == "Evocation":
             print(f'target hp before: {target.hp}')
             target.hp -= spell.power
             print(f'target hp before: {target.hp}')

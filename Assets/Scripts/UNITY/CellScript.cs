@@ -46,8 +46,6 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
         {
             Card = eventData.pointerDrag;
             var cardScript = Card.GetComponent<CardScript>();
-            cardScript.OriginalSize = new Vector3(0.5f, 0.5f, 1);
-            Card.transform.localScale = new Vector3(0.5f, 0.5f, 1);
 
             var card = new Dictionary<string, object>()
             {
@@ -84,6 +82,18 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
                         {
                             if (cardScript.level <= AgentServer.Instance.CurrentPlayerManaPool)
                             {
+                                cardScript.OriginalSize = new Vector3(0.5f, 0.5f, 1);
+                                Card.transform.localScale = new Vector3(0.5f, 0.5f, 1);
+
+                                Dictionary<string, object> cardData = new()
+                                {
+                                    ["action"] = "createPlayerCard",
+                                    ["data"] = newCard["Name"],
+                                    ["pos"] = newCard["pos"]
+                                };
+                                var createPlayerCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
+                                AgentServer.Instance.SendMessages(createPlayerCardActionJson);
+
                                 cardScript.ParentAfterDrag = transform;
                                 AgentServer.Instance.PlayerHand.Remove(card);
                                 AgentServer.Instance.NumPlayerHand--;
@@ -96,6 +106,15 @@ public class CellScript : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPo
                         {
                             if (cardScript.level <= AgentServer.Instance.CurrentEnemyManaPool)
                             {
+                                Dictionary<string, object> cardData = new()
+                                {
+                                    ["action"] = "createEnemyCard",
+                                    ["data"] = newCard["Name"],
+                                    ["pos"] = newCard["pos"]
+                                };
+                                var createEnemyCardActionJson = JsonConvert.SerializeObject(cardData, Formatting.Indented);
+                                AgentServer.Instance.SendMessages(createEnemyCardActionJson);
+
                                 cardScript.ParentAfterDrag = transform;
                                 AgentServer.Instance.EnemyHand.Remove(card);
                                 AgentServer.Instance.NumEnemyHand--;
