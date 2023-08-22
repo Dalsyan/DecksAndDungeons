@@ -386,48 +386,45 @@ public class MainMenu : MonoBehaviour
 
     public void SetNextPage()
     {
-        if (DeckManager.Instance.CardNames.Count >= 8)
+        LeftPage.SetActive(true);
+
+        foreach (string card in DeckManager.Instance.CardNames)
         {
-            LeftPage.SetActive(true);
-
-            foreach (string card in DeckManager.Instance.CardNames)
-            {
-                Destroy(GameObject.Find(card));
-            }
-
-            DeckManager.Instance.CardNames.Clear();
-
-            CurrentPage++;
-
-            ShowCardsMessage();
+            Destroy(GameObject.Find(card));
         }
-        else
+
+        DeckManager.Instance.CardNames.Clear();
+
+        CurrentPage++;
+
+        if (DeckManager.Instance.CardNames.Count < 8)
         {
+
             RightPage.SetActive(false);
         }
+
+        ShowCardsMessage();
     }
 
     public void SetPreviousPage()
     {
-        if (CurrentPage > 1)
+        RightPage.SetActive(true);
+
+        foreach (string card in DeckManager.Instance.CardNames)
         {
-            RightPage.SetActive(true);
-
-            foreach (string card in DeckManager.Instance.CardNames)
-            {
-                Destroy(GameObject.Find(card));
-            }
-
-            DeckManager.Instance.CardNames.Clear();
-
-            CurrentPage--;
-
-            ShowCardsMessage();
+            Destroy(GameObject.Find(card));
         }
-        else
+
+        DeckManager.Instance.CardNames.Clear();
+
+        CurrentPage--;
+
+        if (CurrentPage <= 1)
         {
             LeftPage.SetActive(false);
         }
+
+        ShowCardsMessage();
     }
 
     #endregion
@@ -438,6 +435,11 @@ public class MainMenu : MonoBehaviour
         CollectionMenu.SetActive(false);
         RegisterMenu.SetActive(false);
 
+        DeckBackground.SetActive(false);
+        CardBackground.SetActive(false);
+        CardFromDeckBackground.SetActive(false);
+
+        CurrentPage = 1;
         RightPage.SetActive(false);
         LeftPage.SetActive(false);
 

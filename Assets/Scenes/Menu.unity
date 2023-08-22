@@ -1289,7 +1289,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &356183453
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2826,10 +2826,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Card: {fileID: 5039315420785451892, guid: 25f92dd4a12be2e4db06902049fceaa4, type: 3}
   CardRedux: {fileID: 892455442076390634, guid: cf258021a2c76b34a8a24e8792754280, type: 3}
+  Deck: {fileID: 2826278634968170965, guid: 6917f71880e4ae346a9baae62945458d, type: 3}
   DeckNames: []
   CardNames: []
   Cards: []
   CardBackground: {fileID: 356183452}
+  CardFromDeckBackground: {fileID: 1924662171}
   CardDeckNames: []
   UserMenu: {fileID: 70035467}
 --- !u!1 &662740301
@@ -3891,7 +3893,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1041131870
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4018,8 +4020,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd3e0be4eec65a142ad40f9c5dc2e9a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Number: 0
-  CounterPageButton: {fileID: 1418131791}
 --- !u!1 &1049349720
 GameObject:
   m_ObjectHideFlags: 0
@@ -4493,6 +4493,8 @@ MonoBehaviour:
   CardDeckButtonList: []
   SelectDeckButton: {fileID: 2099720152}
   CardRedux: {fileID: 892455442076390634, guid: cf258021a2c76b34a8a24e8792754280, type: 3}
+  RightPage: {fileID: 1041131869}
+  LeftPage: {fileID: 1418131791}
   CurrentPage: 1
 --- !u!1 &1176250108
 GameObject:
@@ -5681,7 +5683,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1415814560
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5727,7 +5729,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1418131792
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5854,8 +5856,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd3e0be4eec65a142ad40f9c5dc2e9a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Number: 0
-  CounterPageButton: {fileID: 1041131869}
 --- !u!1 &1428187004
 GameObject:
   m_ObjectHideFlags: 0

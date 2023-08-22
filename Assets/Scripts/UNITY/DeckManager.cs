@@ -33,6 +33,7 @@ public class DeckManager : MonoBehaviour
     // Prefabs
     public GameObject Card;
     public GameObject CardRedux;
+    public GameObject Deck;
 
     // Gestion de usuario 
     public bool Logged { get; set; } = false;
@@ -43,6 +44,7 @@ public class DeckManager : MonoBehaviour
     public List<string> CardNames = new List<string>();
     public List<CardReduxScript> Cards = new List<CardReduxScript>();
     public GameObject CardBackground;
+    public GameObject CardFromDeckBackground;
     public List<string> CardDeckNames = new List<string>();
 
     // Menus
@@ -217,7 +219,7 @@ public class DeckManager : MonoBehaviour
         {
             string cardJson = JsonConvert.SerializeObject(dataObject);
             var dataDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(cardJson);
-
+            
             if (dataDict is Dictionary<string, object> cardDict)
             {
                 if (cardDict is null)
@@ -225,6 +227,16 @@ public class DeckManager : MonoBehaviour
                     UnityEngine.Debug.LogWarning("Invalid deck data format.");
                     return;
                 }
+
+                string nombre = cardDict["name"].ToString();
+
+                var cardObject = Instantiate(Deck, new Vector3(0, 0, 0), Quaternion.identity);
+                cardObject.name = nombre;
+
+                var cardButtonText = cardObject.GetComponentInChildren<TextMeshProUGUI>();
+                cardButtonText.text = nombre;
+
+                cardObject.transform.SetParent(CardFromDeckBackground.transform, false);
 
                 string name = cardDict["name"].ToString();
 
@@ -240,6 +252,13 @@ public class DeckManager : MonoBehaviour
     
     private void ShowCards(string dataJson)
     {
+        foreach (string card in CardNames)
+        {
+            Destroy(GameObject.Find(card));
+        }
+
+        CardNames.Clear();
+
         var dataList = JsonConvert.DeserializeObject<List<object>>(dataJson);
 
         foreach (object dataObject in dataList)
