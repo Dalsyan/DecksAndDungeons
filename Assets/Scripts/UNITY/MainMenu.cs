@@ -1,3 +1,4 @@
+using Mono.Cecil;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,6 +54,11 @@ public class MainMenu : MonoBehaviour
 
     // Cartas
     public GameObject CardRedux;
+
+    // Paginacion
+    public GameObject RightPage;
+    public GameObject LeftPage;
+    public int CurrentPage = 1;
 
     private void Start()
     {
@@ -277,6 +283,9 @@ public class MainMenu : MonoBehaviour
         DeckBackground.SetActive(true);
         SelectDeckButton.SetActive(true);
 
+        RightPage.SetActive(false);
+        LeftPage.SetActive(false);
+
         var deckDict = new Dictionary<string, string>()
         {
             ["action"] = "showDecks",
@@ -350,17 +359,20 @@ public class MainMenu : MonoBehaviour
         CardFromDeckBackground.SetActive(false);
         CardBackground.SetActive(true);
 
+        RightPage.SetActive(true);
+
         ShowCardsMessage();
     }
 
     private void ShowCardsMessage(string deck = null)
     {
-        var cardDict = new Dictionary<string, string>();
+        var cardDict = new Dictionary<string, object>();
 
         if (string.IsNullOrEmpty(deck))
         {
             cardDict.Add("action", "showCards");
             cardDict.Add("data", LoginText);
+            cardDict.Add("page", CurrentPage);
         }
         else
         {
@@ -372,6 +384,52 @@ public class MainMenu : MonoBehaviour
         DeckManager.Instance.SendMessages(cardDictJson);
     }
 
+    public void SetNextPage()
+    {
+        if (DeckManager.Instance.CardNames.Count >= 8)
+        {
+            LeftPage.SetActive(true);
+
+            foreach (string card in DeckManager.Instance.CardNames)
+            {
+                Destroy(GameObject.Find(card));
+            }
+
+            DeckManager.Instance.CardNames.Clear();
+
+            CurrentPage++;
+
+            ShowCardsMessage();
+        }
+        else
+        {
+            RightPage.SetActive(false);
+        }
+    }
+
+    public void SetPreviousPage()
+    {
+        if (CurrentPage > 1)
+        {
+            RightPage.SetActive(true);
+
+            foreach (string card in DeckManager.Instance.CardNames)
+            {
+                Destroy(GameObject.Find(card));
+            }
+
+            DeckManager.Instance.CardNames.Clear();
+
+            CurrentPage--;
+
+            ShowCardsMessage();
+        }
+        else
+        {
+            LeftPage.SetActive(false);
+        }
+    }
+
     #endregion
 
     public void BackButton()
@@ -379,6 +437,10 @@ public class MainMenu : MonoBehaviour
         OptionsMenu.SetActive(false);
         CollectionMenu.SetActive(false);
         RegisterMenu.SetActive(false);
+
+        RightPage.SetActive(false);
+        LeftPage.SetActive(false);
+
         if (!DeckManager.Instance.Logged)
         {
             LoginMenu.SetActive(true);

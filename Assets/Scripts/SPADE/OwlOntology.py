@@ -77,7 +77,7 @@ class OntologyActions:
         deck = self.onto.search(iri = f"*{name}")[0]
         return deck
 
-    def search_for_cards(self, player):
+    def search_for_cards(self, player, page = 1):
         player = self.onto.search(iri = f"*{player}")[0]
         decks = player.hasDecks
 
@@ -87,7 +87,10 @@ class OntologyActions:
             for card in deck.hasCards:
                 cards_list.append(self.card_to_dict_redux(card))
 
-        return cards_list
+        start = 1 + 8 * (page - 1)
+        end = 8 * page
+
+        return cards_list[start:end + 1]
 
     def search_for_deck_cards(self, deck):
         deck = self.onto.search(iri = f"*{deck}")[0]

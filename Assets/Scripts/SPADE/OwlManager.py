@@ -46,6 +46,7 @@ class OwlManager:
                         action = message_dict.get("action")
                         data = message_dict.get("data")
                         password = message_dict.get("password")
+                        page = message_dict.get("page")
                         
                         if action == "registerUser":
                             user = self.create_user(data, password)
@@ -78,7 +79,7 @@ class OwlManager:
                                 client_socket.sendall(bytearray(byte_deck_json))
 
                         elif action == "showCards":
-                            cards = self.show_cards("dalso")
+                            cards = self.show_cards("dalso", page)
 
                             if cards is not None:
                                 card_json = {'action': 'show_cards', 'data': cards}
@@ -124,8 +125,8 @@ class OwlManager:
         print(decks)
         return decks
     
-    def show_cards(self, name):
-        cards = self.actions.search_for_cards(name)
+    def show_cards(self, name, page):
+        cards = self.actions.search_for_cards(name, page)
         return cards
     
     def show_deck_cards(self, deck):

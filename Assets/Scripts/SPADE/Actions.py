@@ -251,8 +251,8 @@ class Actions:
         cards = self.owl.search_for_deck_cards(deck)
         return cards
 
-    def search_for_cards(self, name):
-        cards = self.owl.search_for_cards(name)
+    def search_for_cards(self, name, page):
+        cards = self.owl.search_for_cards(name, page)
         return cards
     
     def search_for_card(self, name):

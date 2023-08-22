@@ -204,8 +204,6 @@ public class DeckManager : MonoBehaviour
 
     private void ShowDeckCards(string dataJson)
     {
-        var counter = 1 * paginaCartas;
-
         foreach (string dataObject in CardDeckNames)
         {
             Destroy(GameObject.Find(dataObject));
@@ -217,11 +215,6 @@ public class DeckManager : MonoBehaviour
 
         foreach (object dataObject in dataList)
         {
-            if (counter == 10 * paginaCartas)
-            {
-                break;
-            }
-
             string cardJson = JsonConvert.SerializeObject(dataObject);
             var dataDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(cardJson);
 
@@ -234,10 +227,6 @@ public class DeckManager : MonoBehaviour
                 }
 
                 string name = cardDict["name"].ToString();
-                //int level = Convert.ToInt32(cardDict["level"]);
-                //int hp = Convert.ToInt32(cardDict["hp"]);
-                //int ac = Convert.ToInt32(cardDict["ac"]);
-                //int damage = Convert.ToInt32(cardDict["damage"]);
 
                 if (CardDeckNames.Any(x => x == name))
                 {
@@ -271,6 +260,7 @@ public class DeckManager : MonoBehaviour
 
                 var cardObject = Instantiate(CardRedux, new Vector3(0, 0, 0), Quaternion.identity);
                 var cardScript = cardObject.GetComponent<CardReduxScript>();
+                cardObject.name = nombre;
                 cardScript.Name = nombre;
                 cardScript.Type = type;
 
