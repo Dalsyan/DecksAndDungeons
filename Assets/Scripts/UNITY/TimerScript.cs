@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class TimerScript : MonoBehaviour
 {
-    public float CountdownTime = 10f;
-    private TextMeshProUGUI CounterText;
+    public float CountdownTime = 90f;
+    public TextMeshProUGUI CounterText;
 
     private float currentTime;
 
@@ -30,5 +30,10 @@ public class TimerScript : MonoBehaviour
     private void UpdateCountdownText()
     {
         CounterText.text = currentTime.ToString("F0");
+    }
+
+    public void RestartCounter()
+    {
+        currentTime = 90f;
     }
 }

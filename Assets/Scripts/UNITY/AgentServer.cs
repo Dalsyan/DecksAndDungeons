@@ -71,6 +71,9 @@ public class AgentServer : MonoBehaviour
     public bool PlayerPlayCards = false;
     public bool EnemyPlayCards = false;
 
+    public GameObject Timer;
+    public bool IsTimer;
+
     #endregion
 
     private void Awake()
@@ -368,6 +371,7 @@ public class AgentServer : MonoBehaviour
 
             var attacker = dataDict["attacker"].ToString();
             var target = dataDict["target"].ToString();
+            var damage = Convert.ToInt32(dataDict["damage"]);
 
             var cardAttacker = GameObject.Find(attacker);
             var cardAttackerScript = cardAttacker.GetComponent<CardScript>();
@@ -377,13 +381,8 @@ public class AgentServer : MonoBehaviour
 
             cardAttackerScript.Attack(cardTargetScript.pos);
 
-            messageDict.TryGetValue("damage", out object damage);
-
-            if (damage is int dmg)
-            {
-                cardTargetScript.hp = cardTargetScript.hp - dmg;
-                var hp_text = cardTarget.GetComponent<CardScript>().HpText.text = (cardTargetScript.hp - dmg).ToString();
-            }
+            cardTargetScript.hp = cardTargetScript.hp - damage;
+            var hp_text = cardTarget.GetComponent<CardScript>().HpText.text = (cardTargetScript.hp - damage).ToString();
         });
     }
 
@@ -549,10 +548,10 @@ public class AgentServer : MonoBehaviour
                             cardData.Add("race", race);
                             cardData.Add("level", level);
                             cardData.Add("hp", hp);
-                            cardData.Add("ac", type);
-                            cardData.Add("damage", type);
-                            cardData.Add("magic", type);
-                            cardData.Add("range", type);
+                            cardData.Add("ac", ac);
+                            cardData.Add("damage", damage);
+                            cardData.Add("magic", magic);
+                            cardData.Add("range", range);
                         }
                         else
                         {
@@ -601,10 +600,10 @@ public class AgentServer : MonoBehaviour
                             cardData.Add("race", race);
                             cardData.Add("level", level);
                             cardData.Add("hp", hp);
-                            cardData.Add("ac", type);
-                            cardData.Add("damage", type);
-                            cardData.Add("magic", type);
-                            cardData.Add("range", type);
+                            cardData.Add("ac", ac);
+                            cardData.Add("damage", damage);
+                            cardData.Add("magic", magic);
+                            cardData.Add("range", range);
                         }
                         else
                         {
@@ -630,10 +629,10 @@ public class AgentServer : MonoBehaviour
                             cardData.Add("race", race);
                             cardData.Add("level", level);
                             cardData.Add("hp", hp);
-                            cardData.Add("ac", type);
-                            cardData.Add("damage", type);
-                            cardData.Add("magic", type);
-                            cardData.Add("range", type);
+                            cardData.Add("ac", ac);
+                            cardData.Add("damage", damage);
+                            cardData.Add("magic", magic);
+                            cardData.Add("range", range);
                         }
                         else
                         {
@@ -800,11 +799,17 @@ public class AgentServer : MonoBehaviour
                             }
                         }
                     }
-
                 }
             }
 
             CardsInTable = CardsInTable.Except(PlayerDeck).ToList();
+
+            if (!EnemyPlayCards)
+            {
+                Timer.SetActive(false);
+                var timerScript = Timer.GetComponent<TimerScript>();
+                timerScript.RestartCounter();
+            }
         });
     }
 

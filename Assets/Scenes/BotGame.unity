@@ -1400,6 +1400,7 @@ MonoBehaviour:
   Card: {fileID: 5039315420785451892, guid: 25f92dd4a12be2e4db06902049fceaa4, type: 3}
   PlayerArea: {fileID: 1743878774}
   EnemyArea: {fileID: 1154740625}
+  Timer: {fileID: 1941023719}
 --- !u!1 &1941023719
 GameObject:
   m_ObjectHideFlags: 0
@@ -1411,13 +1412,14 @@ GameObject:
   - component: {fileID: 1941023720}
   - component: {fileID: 1941023722}
   - component: {fileID: 1941023721}
+  - component: {fileID: 1941023723}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: Timer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1941023720
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1535,6 +1537,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1941023719}
   m_CullTransparentMesh: 1
+--- !u!114 &1941023723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1941023719}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9dca9bc6dd3d179498a803f571f5824d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CountdownTime: 90
+  CounterText: {fileID: 1941023721}
 --- !u!1 &1948281397
 GameObject:
   m_ObjectHideFlags: 0
@@ -2229,6 +2245,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8819343916380666300, guid: ba85ae4f983455c41b830ef38774cee4, type: 3}
+      propertyPath: Timer
+      value: 
+      objectReference: {fileID: 1941023719}
     - target: {fileID: 8819343916380666300, guid: ba85ae4f983455c41b830ef38774cee4, type: 3}
       propertyPath: EnemyArea
       value: 
