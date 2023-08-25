@@ -45,6 +45,7 @@ class OntologyActions:
 
     def set_scores(self, player, winner, enemy = None):
         user = self.onto.search(iri=f"*{player}").first()
+        print(f"user : {user}, wins: {user.wins}, loses: {user.loses}")
         if enemy is not None:
             enemy_user = self.onto.search(iri=f"*{enemy}").first()
 
@@ -59,7 +60,9 @@ class OntologyActions:
 
             if enemy is not None:
                 enemy_user.wins += 1
-
+                
+        print(f"user : {user}, wins: {user.wins}, loses: {user.loses}")
+        self.onto.save(file = "D:\TEMP\dungeons-and-dragons.owx", format = "rdfxml")
                 
     # SEARCHING IN ONTOLOGY
     def search_for_decks(self, player : str):
@@ -201,7 +204,7 @@ class OntologyActions:
         cdeck = self.onto.search(iri = "*CDeck")[0]
         my_deck = cdeck()
 
-        while num_cards != 5:
+        while num_cards != 10:
             card = self.create_card(random.randint(1,3))
             my_deck.hasCards.append(card)
             num_cards += 1

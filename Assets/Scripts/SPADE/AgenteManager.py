@@ -58,6 +58,7 @@ class AgentManager(Agent):
         self.player_score = 0
         self.enemy_score = 0
         self.winner = None
+        self.user = None
 
         # FLAGS
         self.listening = False
@@ -154,6 +155,9 @@ class AgentManager(Agent):
                         if action == "selectDeck":
                             self.select_deck_redux_action(data)
 
+                        elif action == "logIn":
+                            self.log_in_action(data)
+
                         elif action == "createPlayerCard":
                             pos = message_dict.get("pos")
                             await self.play_card_action("player", pos, data)
@@ -180,6 +184,9 @@ class AgentManager(Agent):
     #      LISTENER_ACTIONS      #
     #                            #
     ##############################
+
+    def log_in_action(self, user):
+        self.user = user
 
     def select_deck_action(self, owner, name):
         deck = self.actions.search_for_deck(name)
@@ -388,21 +395,17 @@ class CardActions(State):
         print("State: CARD_ACTIONS")
         
         self.agent.card_agents = self.agent.actions.order_cards_by_prio(self.agent.card_agents)
+        len_players = len(self.agent.player_card_agents)
+        len_enemies = len(self.agent.enemy_card_agents)
 
         for agent in self.agent.card_agents:
             if self.agent.playing:
                 if len(self.agent.player_card_agents) == 0 or len(self.agent.enemy_card_agents) == 0:
-                    if len(self.agent.player_card_agents) == 0:
-                        self.agent.enemy_score += 1
-                        print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
-
-                    elif len(self.agent.enemy_card_agents) == 0:
-                        self.agent.player_score += 1
-                        print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
-                    
                     break
 
                 else:
+
+                    print(f"aliados: {len_players}\n      vs \nenemigos: {len_enemies}")
                     # Enviar tablero y listas de agentes
                     agent.card_agents = self.agent.card_agents
 
@@ -433,34 +436,47 @@ class CardActions(State):
                     self.agent.card_agents = agent.card_agents
 
                     if agent.owner == "player":
-                        self.agent.ally_card_agents = agent.ally_card_agents
+                        self.agent.player_card_agents = agent.ally_card_agents
                         self.agent.enemy_card_agents = agent.enemy_card_agents
 
                     elif agent.owner == "enemy":
-                        self.agent.ally_card_agents = agent.enemy_card_agents
+                        self.agent.player_card_agents = agent.enemy_card_agents
                         self.agent.enemy_card_agents = agent.ally_card_agents
 
                     self.agent.table = agent.table
                     
         if len(self.agent.player_card_agents) != 0 and len(self.agent.enemy_card_agents) != 0:
+            if len_players != 0:
+                print(f"aun quedan aliados vivos: {len_players}")
+            if len_enemies != 0:
+                print(f"aun quedan enemigos vivos: {len_enemies}")
+                
             self.set_next_state(CARD_ACTIONS)
             
         else: 
             self.agent.playing = False
 
+            if len(self.agent.player_card_agents) == 0:
+                self.agent.enemy_score += 1
+                print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
+
+            elif len(self.agent.enemy_card_agents) == 0:
+                self.agent.player_score += 1
+                print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
+
             if self.agent.player_score >= 2:
                 self.agent.winner = "player"
-                self.agent.actions.set_scores(self.agent.winner)
+                self.agent.actions.set_scores("dalso", self.agent.winner)
             elif self.agent.enemy_score >= 2:
                 self.agent.winner = "enemy"
-                self.agent.actions.set_scores(self.agent.winner)
+                self.agent.actions.set_scores("dalso", self.agent.winner)
+            else:
+                print("soy imbecil y no se elegir un ganador")
 
             if self.agent.winner is None:
                 self.set_next_state(PLAYER_PLAY_CARDS)
             else:
                 self.set_next_state(GAME_OVER)
-                
-        #self.set_next_state(GAME_OVER)
 
 class GameOver(State):
     async def run(self):

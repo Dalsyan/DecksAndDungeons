@@ -24,13 +24,13 @@ public class AgentServer : MonoBehaviour
     public int NumEnemyHand { get; set; }
     public int NumPlayerCardsInTable { get; set; }
     public int NumEnemyCardsInTable { get; set; }
-    public List<Dictionary<string, object>> PlayerDeck { get; set; }
-    public List<Dictionary<string, object>> EnemyDeck { get; set; }
-    public List<Dictionary<string, object>> PlayerHand { get; set; }
-    public List<Dictionary<string, object>> EnemyHand { get; set; }
-    public List<Dictionary<string, object>> PlayerCardsInTable { get; set; }
-    public List<Dictionary<string, object>> EnemyCardsInTable { get; set; }
-    public List<Dictionary<string, object>> CardsInTable { get; set; }
+    [SerializeField] public List<Dictionary<string, object>> PlayerDeck { get; set; }
+    [SerializeField] public List<Dictionary<string, object>> EnemyDeck { get; set; }
+    [SerializeField] public List<Dictionary<string, object>> PlayerHand { get; set; }
+    [SerializeField] public List<Dictionary<string, object>> EnemyHand { get; set; }
+    [SerializeField] public List<Dictionary<string, object>> PlayerCardsInTable { get; set; }
+    [SerializeField] public List<Dictionary<string, object>> EnemyCardsInTable { get; set; }
+    [SerializeField] public List<Dictionary<string, object>> CardsInTable { get; set; }
     public string SelectedDeck;
 
     // Gestion de mana
@@ -382,7 +382,7 @@ public class AgentServer : MonoBehaviour
             cardAttackerScript.Attack(cardTargetScript.pos);
 
             cardTargetScript.hp = cardTargetScript.hp - damage;
-            var hp_text = cardTarget.GetComponent<CardScript>().HpText.text = (cardTargetScript.hp - damage).ToString();
+            var hp_text = cardTarget.GetComponent<CardScript>().HpText.text = (cardTargetScript.hp).ToString();
         });
     }
 
@@ -396,7 +396,7 @@ public class AgentServer : MonoBehaviour
             CardsInTable.RemoveAll(c => c.ContainsKey("Name") && c["Name"].ToString() == cardScript.Name);
 
             // Determinar la lista específica y remover la carta
-            List<Dictionary<string, object>> targetList = cardScript.Owner == "player" ? PlayerCardsInTable : EnemyCardsInTable;
+            var targetList = cardScript.Owner == "player" ? PlayerCardsInTable : EnemyCardsInTable;
             targetList.RemoveAll(c => c.ContainsKey("Name") && c["Name"].ToString() == cardScript.Name);
 
             Destroy(card);
@@ -657,6 +657,8 @@ public class AgentServer : MonoBehaviour
         {
             if (EnemyPlayCards)
             {
+                ClickOnEnemyDeck();
+
                 var random = new System.Random();
 
                 foreach (var cardData in EnemyHand)
@@ -694,6 +696,8 @@ public class AgentServer : MonoBehaviour
                         {
                             if (cardData.TryGetValue("Name", out object cardName) && cardName is string name)
                             {
+                                UnityEngine.Debug.Log($"Busco a {name}");
+
                                 var cardObject = GameObject.Find(name);
                                 cardObject.transform.SetParent(cell.transform, false);
                                 var cardScript = cardObject.GetComponent<CardScript>();
@@ -709,13 +713,9 @@ public class AgentServer : MonoBehaviour
                                     ["level"] = cardScript.level,
                                     ["hp"] = cardScript.hp,
                                     ["ac"] = cardScript.ac,
-                                    ["str"] = cardScript.str,
-                                    ["con"] = cardScript.con,
-                                    ["dex"] = cardScript.dex,
                                     ["damage"] = cardScript.damage,
                                     ["magic"] = cardScript.magic,
-                                    ["range"] = cardScript.range,
-                                    ["prio"] = cardScript.prio
+                                    ["range"] = cardScript.range
                                 };
                                 var newCard = card;
                                 newCard.Add("pos", cell.transform.name);
@@ -726,7 +726,6 @@ public class AgentServer : MonoBehaviour
                                 cardScript.OriginalSize = new Vector3(0.5f, 0.5f, 1);
                                 cardObject.transform.localScale = cardScript.OriginalSize;
 
-                                EnemyDeck.Remove(card);
                                 NumEnemyHand--;
                                 EnemyCardsInTable.Add(newCard);
                                 NumEnemyCardsInTable++;
@@ -739,7 +738,9 @@ public class AgentServer : MonoBehaviour
                     }
                 }
 
-                EnemyHand = EnemyHand.Except(EnemyCardsInTable).ToList();
+                var EnemyCardsInTableNames = EnemyCardsInTable.Where(c => c.ContainsKey("Name")).Select(c => c["Name"]).ToList();
+                var EnemyHandNames = EnemyHand.Where(c => c.ContainsKey("Name") && EnemyCardsInTableNames.Contains(c["Name"].ToString())).ToList();
+                EnemyHand = EnemyHand.Except(EnemyHandNames).ToList();
 
                 foreach (var enemyCardInTable in EnemyCardsInTable)
                 {
@@ -761,6 +762,65 @@ public class AgentServer : MonoBehaviour
         });
     }
 
+    public void ClickOnEnemyDeck()
+    {
+        if (EnemyDeck.Count > 0 && NumEnemyHand < 5)
+        {
+            var card = EnemyDeck[0];
+            string name = card["Name"].ToString();
+            string type = card["Type"].ToString();
+
+            string cclass = "";
+            string race = "";
+            int level = 0;
+            int hp = 0;
+            int ac = 0;
+            int damage = 0;
+            int magic = 0;
+            int range = 0;
+            int power = 0;
+
+            if (type == "creature")
+            {
+                cclass = card["cclass"].ToString();
+                race = card["race"].ToString();
+                level = Convert.ToInt32(card["level"]);
+                hp = Convert.ToInt32(card["hp"]);
+                ac = Convert.ToInt32(card["ac"]);
+                damage = Convert.ToInt32(card["damage"]);
+                magic = Convert.ToInt32(card["magic"]);
+                range = Convert.ToInt32(card["range"]);
+            }
+            else
+            {
+                power = Convert.ToInt32(card["power"]);
+                level = power;
+            }
+
+            EnemyDeck.RemoveAt(0);
+
+            var playerCard = Instantiate(Card, new Vector3(0, 0, 0), Quaternion.identity);
+            var cardScript = playerCard.GetComponent<CardScript>();
+            playerCard.transform.SetParent(EnemyArea.transform, false);
+
+            cardScript.Name = name;
+            cardScript.Type = type;
+            cardScript.Class = cclass;
+            cardScript.Race = race;
+            cardScript.Owner = "enemy";
+            cardScript.level = level;
+            cardScript.hp = hp;
+            cardScript.ac = ac;
+            cardScript.damage = damage;
+            cardScript.magic = magic;
+            cardScript.range = range;
+            cardScript.power = power;
+
+            EnemyHand.Add(card);
+            NumEnemyHand++;
+        }
+    }
+
     private void CardsToArea()
     {
         ActionsQueue.Enqueue(() =>
@@ -771,28 +831,31 @@ public class AgentServer : MonoBehaviour
                 {
                     var cardObject = GameObject.Find(name);
                     var cardScript = cardObject.GetComponent<CardScript>();
-                    cardScript.OriginalSize = Vector3.one;
 
                     if (card.TryGetValue("Owner", out object cardOwner) && cardOwner is string owner)
                     {
                         if (owner == "player" && PlayerPlayCards)
                         {
                             cardObject.transform.SetParent(PlayerArea.transform, false);
-                            cardScript.transform.SetParent(PlayerArea.transform, false);
 
-                            PlayerDeck.Add(card);
+                            cardScript.OriginalSize = Vector3.one;
+                            cardScript.transform.localScale = Vector3.one;
+
+                            PlayerHand.Add(card);
                             NumPlayerHand++;
                             PlayerCardsInTable.Remove(card);
                             NumPlayerCardsInTable--;
                         }
                         else
                         {
-                            if (owner == "enemy" && EnemyPlayCards)
+                            if (owner == "enemy")
                             {
                                 cardObject.transform.SetParent(EnemyArea.transform, false);
-                                cardScript.transform.SetParent(EnemyArea.transform, false);
 
-                                EnemyDeck.Add(card);
+                                cardScript.OriginalSize = Vector3.one;
+                                cardScript.transform.localScale = Vector3.one;
+
+                                EnemyHand.Add(card);
                                 NumEnemyHand++;
                                 EnemyCardsInTable.Remove(card);
                                 NumEnemyCardsInTable--;
@@ -802,7 +865,7 @@ public class AgentServer : MonoBehaviour
                 }
             }
 
-            CardsInTable = CardsInTable.Except(PlayerDeck).ToList();
+            // CardsInTable = CardsInTable.Except(PlayerDeck).ToList();
 
             if (!EnemyPlayCards)
             {

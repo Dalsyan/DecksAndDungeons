@@ -235,8 +235,8 @@ class Actions:
         user = self.owl.verify_user_login(name, password)
         return user
 
-    def set_scores(self, winner):
-        self.owl.verify_user_login(winner)
+    def set_scores(self, player, winner):
+        self.owl.set_scores(player, winner)
 
     # SEARCH IN ONTOLOGY    
     def search_for_decks(self, player):

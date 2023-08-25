@@ -162,11 +162,7 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     {
         pos = pos.Trim('(', ')');
         var partes = pos.Split(',');
-
-        string dataJson = JsonConvert.SerializeObject(partes);
-
-        print($"{dataJson}, {partes.Length}");
-
+             
         if (partes.Length != 2)
         {
             throw new ArgumentException("El formato debe ser (x, y)");
@@ -193,7 +189,6 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             MeleeAttack script = a.GetComponent<MeleeAttack>();
 
             int dirInt = 0;
-            print(dir);
             if (dir == new Vector2(0, 1)) dirInt = 0;
             else if (dir == new Vector2(-1, 0)) dirInt = 1;
             else if(dir == new Vector2(0, -1)) dirInt = 2;
