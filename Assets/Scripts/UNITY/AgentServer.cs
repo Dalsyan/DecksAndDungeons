@@ -825,6 +825,8 @@ public class AgentServer : MonoBehaviour
     {
         ActionsQueue.Enqueue(() =>
         {
+            var cardsToRemove = new List<Dictionary<string, object>>(); // Nueva lista temporal
+
             foreach (var card in CardsInTable)
             {
                 if (card.TryGetValue("Name", out object cardName) && cardName is string name)
@@ -845,6 +847,8 @@ public class AgentServer : MonoBehaviour
                             NumPlayerHand++;
                             PlayerCardsInTable.Remove(card);
                             NumPlayerCardsInTable--;
+
+                            cardsToRemove.Add(card); // Agregar a la lista temporal
                         }
                         else
                         {
@@ -859,22 +863,25 @@ public class AgentServer : MonoBehaviour
                                 NumEnemyHand++;
                                 EnemyCardsInTable.Remove(card);
                                 NumEnemyCardsInTable--;
+
+                                cardsToRemove.Add(card); // Agregar a la lista temporal
                             }
                         }
                     }
                 }
             }
 
-            // CardsInTable = CardsInTable.Except(PlayerDeck).ToList();
-
-            if (!EnemyPlayCards)
+            foreach (var cardToRemove in cardsToRemove)
             {
-                Timer.SetActive(false);
-                var timerScript = Timer.GetComponent<TimerScript>();
-                timerScript.RestartCounter();
+                CardsInTable.Remove(cardToRemove); // Eliminar de CardsInTable
             }
+
+            Timer.SetActive(false);
+            var timerScript = Timer.GetComponent<TimerScript>();
+            timerScript.RestartCounter();
         });
     }
+
 
     #endregion
 
