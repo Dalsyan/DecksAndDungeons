@@ -24,7 +24,9 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     private TextMeshProUGUI DexText;
     private TextMeshProUGUI MagText;
     private TextMeshProUGUI DamageText;
-    [SerializeField] private GameObject meleeAttack;
+    [SerializeField] private GameObject MeleeAttack;
+    [SerializeField] private GameObject RangedAttack;
+    [SerializeField] private GameObject Shield;
 
     public Transform ParentAfterDrag;
     public Vector3 OriginalSize;
@@ -185,7 +187,7 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         if(range == 1)
         {
             Vector2 dir = targetPosV2 - currPosV2;
-            GameObject a = Instantiate(meleeAttack, transform.position, Quaternion.identity, GameObject.Find("Weapons").transform);
+            GameObject a = Instantiate(MeleeAttack, transform.position, Quaternion.identity, GameObject.Find("Weapons").transform);
             MeleeAttack script = a.GetComponent<MeleeAttack>();
 
             int dirInt = 0;
@@ -197,6 +199,42 @@ public class CardScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             script.Init(dirInt);
             script.Attack();
         }
+        else
+        {
+            Vector2 dir = targetPosV2 - currPosV2;
+            GameObject a = Instantiate(RangedAttack, transform.position, Quaternion.identity, GameObject.Find("Weapons").transform);
+            MeleeAttack script = a.GetComponent<MeleeAttack>();
+
+            int dirInt = 0;
+            if (dir == new Vector2(0, 1)) dirInt = 0;
+            else if (dir == new Vector2(-1, 0)) dirInt = 1;
+            else if (dir == new Vector2(0, -1)) dirInt = 2;
+            else dirInt = 3;
+
+            script.Init(dirInt);
+            script.Attack();
+        }
+    }
+
+    public void ShieldAction(bool shield)
+    {
+        GameObject escudo = null;
+
+        if (shield)
+            escudo = Instantiate(Shield, transform.position, Quaternion.identity, GameObject.Find("Weapons").transform);
+        else
+            if (escudo != null)
+                Destroy(escudo);
+    }
+
+    public void Magic()
+    {
+        
+    }
+
+    public void DeathAction()
+    {
+        transform.GetComponent<Image>().color = Color.black;
     }
 
     #endregion

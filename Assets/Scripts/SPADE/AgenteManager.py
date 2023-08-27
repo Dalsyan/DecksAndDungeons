@@ -458,10 +458,12 @@ class CardActions(State):
 
             if len(self.agent.player_card_agents) == 0:
                 self.agent.enemy_score += 1
+                await self.agent.actions.send_action_to_socket({"action" : "win_round", "data" : "enemy"})
                 print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
 
             elif len(self.agent.enemy_card_agents) == 0:
                 self.agent.player_score += 1
+                await self.agent.actions.send_action_to_socket({"action" : "win_round", "data" : "player"})
                 print(f"player score: {self.agent.player_score}\n      vs \nenemy score {self.agent.enemy_score}")
 
             if self.agent.player_score >= 2:

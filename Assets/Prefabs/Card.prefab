@@ -951,7 +951,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Card: {fileID: 5039315420785451892}
   HpText: {fileID: 0}
-  meleeAttack: {fileID: 6205759127041238783, guid: cc8f8bb61c6b4c74fb2fd442f66983b5, type: 3}
+  MeleeAttack: {fileID: 6205759127041238783, guid: cc8f8bb61c6b4c74fb2fd442f66983b5, type: 3}
+  RangedAttack: {fileID: 5674102075637539429, guid: 2f6db8080ad49e0448b6c7842ec74c54, type: 3}
+  Shield: {fileID: 5924533586397247757, guid: 34b974d9de319cd42b7b226666b626dd, type: 3}
   ParentAfterDrag: {fileID: 0}
   OriginalSize: {x: 0, y: 0, z: 0}
   PublicName: 

@@ -11,6 +11,7 @@ using DG.Tweening;
 using UnityEngine.SocialPlatforms;
 using System.Linq;
 using UnityEditor;
+using TMPro;
 
 public class AgentServer : MonoBehaviour
 {
@@ -71,8 +72,15 @@ public class AgentServer : MonoBehaviour
     public bool PlayerPlayCards = false;
     public bool EnemyPlayCards = false;
 
+    // Timer
     public GameObject Timer;
     public bool IsTimer;
+
+    // Score
+    public GameObject PlayerScore;
+    public GameObject EnemyScore;
+    public GameObject GameOverMenu;
+    public GameObject GameOverMenuText;
 
     #endregion
 
@@ -273,6 +281,10 @@ public class AgentServer : MonoBehaviour
                             HealCardAction(messageDict, dataString);
                             break;
 
+                        case "win_round":
+                            WinRound(messageDict, dataString);
+                            break;
+
                         default:
                             UnityEngine.Debug.LogWarning("Unknown action.");
                             break;
@@ -345,6 +357,47 @@ public class AgentServer : MonoBehaviour
     }
 
     #region CARD ACTIONS
+    private void WinRound(Dictionary<string, object> messageDict, string dataString)
+    {
+        ActionsQueue.Enqueue(() => {
+            var isPlayerWin = dataString == "player";
+            var scoreToUpdate = isPlayerWin ? PlayerScore : EnemyScore;
+            var scoreText = scoreToUpdate.GetComponent<TextMeshProUGUI>().text;
+            var score = Convert.ToInt32(scoreText);
+
+            score++; // Incrementar la puntuación
+            scoreToUpdate.GetComponent<TextMeshProUGUI>().text = score.ToString();
+
+            if (score >= 2)
+            {
+                GameOverMenu.SetActive(true);
+
+                if (isPlayerWin)
+                {
+                    GameOverMenuText.GetComponent<TextMeshProUGUI>().text = "Victory";
+
+                    if (PlayerPrefs.HasKey("Wins"))
+                    {
+                        var wins = PlayerPrefs.GetInt("Wins");
+                        wins++; // Incrementar el contador de victorias
+                        PlayerPrefs.SetInt("Wins", wins);
+                    }
+                }
+                else
+                {
+                    GameOverMenuText.GetComponent<TextMeshProUGUI>().text = "Defeat";
+
+                    if (PlayerPrefs.HasKey("Loses"))
+                    {
+                        var loses = PlayerPrefs.GetInt("Loses");
+                        loses++; // Incrementar el contador de victorias
+                        PlayerPrefs.SetInt("Loses", loses);
+                    }
+                }
+            }
+        });
+    }
+
 
     private void MoveCardAction(Dictionary<string, object> messageDict, string dataString)
     {
@@ -399,6 +452,7 @@ public class AgentServer : MonoBehaviour
             var targetList = cardScript.Owner == "player" ? PlayerCardsInTable : EnemyCardsInTable;
             targetList.RemoveAll(c => c.ContainsKey("Name") && c["Name"].ToString() == cardScript.Name);
 
+            cardScript.DeathAction();
             Destroy(card);
         });
     }
@@ -414,10 +468,12 @@ public class AgentServer : MonoBehaviour
             if (is_shielded is bool)
             {
                 cardScript.shield = true;
+                cardScript.ShieldAction(true);
             }
             else
             {
                 cardScript.shield = false;
+                cardScript.ShieldAction(false);
             }
         });
     }
